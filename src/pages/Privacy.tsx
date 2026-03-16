@@ -25,7 +25,7 @@ const sections = [
     list: [
       "A short interview (5–10 minutes)",
       "A hand-drawn portrait (optional)",
-      "A short "story card" with a few questions (optional)",
+      'A short "story card" with a few questions (optional)',
       "A QR code that links to a page (only if they consent)",
     ],
   },
