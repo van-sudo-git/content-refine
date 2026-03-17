@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
+import qrCode from "@/assets/qr-who-am-i.png";
 
 const About = () => {
   return (
@@ -35,6 +36,18 @@ const About = () => {
                   <p>
                     Through <em>Now We See You</em>, I want to explore whether making someone's story visible can change how a community treats them—and whether technology, used thoughtfully, can make appreciation a habit rather than an afterthought.
                   </p>
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-border">
+                  <p className="text-sm font-semibold text-foreground mb-4">Page QR Code</p>
+                  <div className="w-40 h-40 bg-card rounded-xl overflow-hidden border border-border shadow-sm">
+                    <img
+                      src={qrCode}
+                      alt="QR code linking to Who Am I page"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Scan to visit the original page</p>
                 </div>
               </AnimatedSection>
             </div>

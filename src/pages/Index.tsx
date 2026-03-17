@@ -30,8 +30,8 @@ const Index = () => {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="font-display text-5xl sm:text-6xl md:text-8xl text-primary-foreground mb-6 leading-[1.05] tracking-tight"
             >
-              Every Face <br />
-              <span className="text-secondary">Has a Story.</span>
+              Visibility <br />
+              <span className="text-secondary">in Motion.</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
