@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
+import bradPortrait from "@/assets/brad-portrait.jpeg";
 
 const BradFisher = () => {
   return (
@@ -14,10 +15,10 @@ const BradFisher = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl">
             <AnimatedSection>
-              <div className="aspect-[4/5] bg-muted rounded-2xl overflow-hidden sticky top-28">
+              <div className="aspect-[4/5] bg-muted rounded-2xl overflow-hidden sticky top-28 shadow-lg">
                 <img
-                  src="https://lh3.googleusercontent.com/sitesv/APaQ0SR_o5P6BmZrLt1Mc9_rHh8jOd2A7T3hlHYnO9CwpdOKkwYs3Q2i-hGf9E-9NV3VsRSk6OFy6Ton4MXkFJ0eMItbFVCDVQI3b2oYyJLmB3kyLLAcxe2lRyzQiWPf0YkG2jtjqNJZK4nyTQayc-lU3Gh5PB5C5mJbxD8H4kwPJ-dRddvHszUqjUGC4qxkjPX81UOl3yGFgkB0Iv9SUTKaNgs1vTKBJ9Gn8Shxul8=w1280"
-                  alt="Brad Fisher, Custodian at LWHS"
+                  src={bradPortrait}
+                  alt="Brad Fisher — hand-drawn portrait"
                   className="w-full h-full object-cover"
                 />
               </div>

@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
+import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 
 const About = () => {
   return (
@@ -8,16 +9,16 @@ const About = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto">
             <AnimatedSection>
-              <p className="text-secondary font-medium mb-2">The Person Behind the Project</p>
+              <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-sm">The Person Behind the Project</p>
               <h1 className="font-display text-5xl md:text-6xl text-foreground mb-12">Meet Evaan Ahlawat</h1>
             </AnimatedSection>
 
             <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-12 items-start">
               <AnimatedSection>
-                <div className="aspect-square bg-muted rounded-2xl overflow-hidden">
+                <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden shadow-lg">
                   <img
-                    src="https://lh3.googleusercontent.com/sitesv/APaQ0STLnMZrJvUoOMXcAt9-tLwfyJzkboY2_y2xOauIa0FC8kNheZf6JH1c8ujsHoJ0-KNFksWvFOb8cUaSlMH2fLI7ietIb4HqEPx4C5BqhM0D8oNESo3kN6gApK7nowKBaWHZN89rYpVVHQUunwG3eoPcdMqqkfWMXT65YJASshTMuvLMqPXxhpQGouUHFKTakNU0K0X--YyyLoxkAE1f3-3JfWgChsnHaqq_YmA=w1280"
-                    alt="Evaan Ahlawat"
+                    src={evaanPortrait}
+                    alt="Evaan Ahlawat — self-portrait drawing"
                     className="w-full h-full object-cover"
                   />
                 </div>
