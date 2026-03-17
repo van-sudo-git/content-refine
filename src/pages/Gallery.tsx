@@ -51,7 +51,7 @@ const Gallery = () => {
           {galleryItems.length === 1 && (
             <AnimatedSection delay={0.3}>
               <div className="text-center mt-16 p-12 bg-card rounded-2xl border border-border max-w-lg mx-auto">
-                <p className="text-muted-foreground mb-4">More stories coming soon as staff choose to participate.</p>
+                <p className="text-muted-foreground mb-4">More portraits are on the way — new staff stories will be added as participants join the project.</p>
                 <Link
                   to="/nominate"
                   className="inline-flex items-center gap-2 text-secondary font-medium hover:underline"
