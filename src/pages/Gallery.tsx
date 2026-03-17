@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
+import bradPortrait from "@/assets/brad-portrait.jpeg";
 
 const galleryItems = [
   {
     name: "Brad Fisher",
     role: "Custodian, LWHS",
-    image: "https://lh3.googleusercontent.com/sitesv/APaQ0SQy2BLmeFK5YfjUWyKW88RkJqmlPObY2JJ7i1c9ECXuy3rmISzd6s7oz_HZslD-t03uNY_0cWwlguX3xlu7qY63YraBPsMc8UQAmTzCblrcMWtnY1kpd6HPjh3aYWNnNNA1Vic1pVD_a8g-3sCC8WMyXnnEjIOu2z1qloohuFN_qqBXWTFdCCB6dolv958W2yeBdxxzhFMP0PBA-J6W7C93ZX9WXvvhNqmL=w1280",
+    image: bradPortrait,
     slug: "brad-fisher",
   },
 ];
@@ -19,7 +20,7 @@ const Gallery = () => {
         <div className="container mx-auto px-6">
           <AnimatedSection>
             <div className="text-center mb-16">
-              <p className="text-secondary font-medium mb-2">The People Behind the Scenes</p>
+              <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-sm">The People Behind the Scenes</p>
               <h1 className="font-display text-5xl md:text-6xl text-foreground mb-4">Gallery</h1>
               <p className="text-muted-foreground max-w-xl mx-auto">
                 Meet the unsung heroes who keep our school running. Each portrait and story is shared with full consent.
@@ -31,7 +32,7 @@ const Gallery = () => {
             {galleryItems.map((item, i) => (
               <AnimatedSection key={item.slug} delay={i * 0.1}>
                 <Link to={`/gallery/${item.slug}`} className="group block">
-                  <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4">
+                  <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-shadow">
                     <img
                       src={item.image}
                       alt={item.name}
