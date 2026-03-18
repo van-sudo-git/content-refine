@@ -6,11 +6,11 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 async function checkPositiveIntent(message: string): Promise<{ approved: boolean; reason: string }> {
-  const response = await fetch("https://api.lovable.dev/v1/chat/completions", {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -48,6 +48,11 @@ Respond with ONLY valid JSON: {"approved": true/false, "reason": "brief explanat
       max_tokens: 100,
     }),
   });
+
+  if (!response.ok) {
+    console.error("AI gateway error:", response.status, await response.text());
+    return { approved: false, reason: "Moderation service unavailable" };
+  }
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content?.trim() ?? "";
