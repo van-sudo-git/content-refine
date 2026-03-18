@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Eye, Heart, BarChart3, Users, QrCode, Shield } from "lucide-react";
+import { ArrowRight, Eye, Heart, BarChart3, Users, QrCode, Shield, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
@@ -10,110 +10,134 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-primary">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-secondary/20" />
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+        {/* Soft gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-lavender/40 to-background" />
+        {/* Decorative circles */}
+        <div className="absolute top-20 right-[10%] w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
+        <div className="absolute bottom-20 left-[5%] w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
+
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mb-5"
+              >
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-semibold tracking-wide uppercase">
+                  <Sparkles size={13} /> A Student-Led Initiative
+                </span>
+              </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, y: 25 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground mb-5 leading-[1.1] tracking-tight"
+              >
+                Visibility{" "}
+                <span className="text-gradient">in Motion.</span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-muted-foreground text-base md:text-lg mb-8 leading-relaxed max-w-lg"
+              >
+                We see the people who keep our school running every day — through hand-drawn portraits, real stories, and the power of human connection.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-col sm:flex-row gap-3"
+              >
+                <Link
+                  to="/gallery"
+                  className="inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
+                >
+                  Explore Stories <ArrowRight size={16} />
+                </Link>
+                <Link
+                  to="/nominate"
+                  className="inline-flex items-center justify-center gap-2 border border-border text-foreground px-7 py-3.5 rounded-xl font-medium hover:bg-muted transition-colors text-sm"
+                >
+                  Nominate Someone
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Right: Portrait preview cards */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              className="mb-6"
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="relative hidden lg:block"
             >
-              <span className="inline-block px-4 py-1.5 rounded-full border border-secondary/40 text-secondary text-sm font-medium tracking-wide uppercase">
-                A Student-Led Initiative
-              </span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="font-display text-5xl sm:text-6xl md:text-8xl text-primary-foreground mb-6 leading-[1.05] tracking-tight"
-            >
-              Visibility <br />
-              <span className="text-secondary">in Motion.</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-primary-foreground/70 text-lg md:text-xl mb-12 leading-relaxed max-w-2xl mx-auto"
-            >
-              We see the people who keep our school running every day—through hand-drawn portraits, real stories, and the power of human connection.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
-              <Link
-                to="/gallery"
-                className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition-opacity text-base"
-              >
-                Explore Stories <ArrowRight size={18} />
-              </Link>
-              <Link
-                to="/nominate"
-                className="inline-flex items-center gap-2 border border-primary-foreground/25 text-primary-foreground px-8 py-4 rounded-lg font-medium hover:bg-primary-foreground/5 transition-colors text-base"
-              >
-                Nominate Someone
-              </Link>
+              <div className="relative">
+                {/* Main card */}
+                <div className="rounded-2xl overflow-hidden shadow-xl border border-border bg-card">
+                  <img src={bradPortrait} alt="Brad Fisher — hand-drawn portrait" className="w-full aspect-[4/5] object-cover" />
+                  <div className="p-5">
+                    <h3 className="font-display text-xl text-foreground">Brad Fisher</h3>
+                    <p className="text-muted-foreground text-sm mt-0.5">Custodian, LWHS — since 2018</p>
+                  </div>
+                </div>
+                {/* Floating accent card */}
+                <div className="absolute -bottom-6 -left-8 w-36 rounded-xl overflow-hidden shadow-lg border border-border bg-card">
+                  <img src={evaanPortrait} alt="Evaan Ahlawat" className="w-full aspect-square object-cover" />
+                  <div className="p-2.5">
+                    <p className="text-xs font-semibold text-foreground">Evaan Ahlawat</p>
+                    <p className="text-[10px] text-muted-foreground">Artist & Creator</p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Portraits Section */}
-      <section className="py-28">
+      {/* Mobile portraits — shown only on smaller screens */}
+      <section className="py-16 lg:hidden">
         <div className="container mx-auto px-6">
-          <AnimatedSection>
-            <div className="text-center mb-20">
-              <p className="text-secondary font-semibold mb-3 tracking-wide uppercase text-sm">The Portraits</p>
-              <h2 className="font-display text-4xl md:text-5xl text-foreground">Drawn by Hand. Told in Words.</h2>
-            </div>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-            <AnimatedSection delay={0.1}>
-              <Link to="/gallery/brad-fisher" className="group block">
-                <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-5 shadow-lg group-hover:shadow-xl transition-shadow">
-                  <img src={bradPortrait} alt="Brad Fisher — hand-drawn portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-                </div>
-                <h3 className="font-display text-2xl text-foreground group-hover:text-secondary transition-colors">Brad Fisher</h3>
-                <p className="text-muted-foreground text-sm mt-1">Custodian, LWHS — since 2018</p>
-              </Link>
-            </AnimatedSection>
-            <AnimatedSection delay={0.2}>
-              <Link to="/about" className="group block">
-                <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-5 shadow-lg group-hover:shadow-xl transition-shadow">
-                  <img src={evaanPortrait} alt="Evaan Ahlawat — self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-                </div>
-                <h3 className="font-display text-2xl text-foreground group-hover:text-secondary transition-colors">Evaan Ahlawat</h3>
-                <p className="text-muted-foreground text-sm mt-1">Artist & Creator of Now We See You</p>
-              </Link>
-            </AnimatedSection>
+          <div className="grid grid-cols-2 gap-4">
+            <Link to="/gallery/brad-fisher" className="group block">
+              <div className="aspect-[3/4] bg-card rounded-xl overflow-hidden border border-border shadow-sm">
+                <img src={bradPortrait} alt="Brad Fisher" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+              </div>
+              <h3 className="font-display text-base text-foreground mt-3">Brad Fisher</h3>
+              <p className="text-muted-foreground text-xs">Custodian, LWHS</p>
+            </Link>
+            <Link to="/about" className="group block">
+              <div className="aspect-[3/4] bg-card rounded-xl overflow-hidden border border-border shadow-sm">
+                <img src={evaanPortrait} alt="Evaan Ahlawat" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+              </div>
+              <h3 className="font-display text-base text-foreground mt-3">Evaan Ahlawat</h3>
+              <p className="text-muted-foreground text-xs">Artist & Creator</p>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-24 bg-card border-y border-border">
+      <section className="py-20">
         <div className="container mx-auto px-6">
           <AnimatedSection>
-            <div className="text-center mb-16">
-              <p className="text-secondary font-semibold mb-3 tracking-wide uppercase text-sm">The Process</p>
-              <h2 className="font-display text-4xl md:text-5xl text-foreground">How It Works</h2>
+            <div className="text-center mb-14">
+              <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-xs">The Process</p>
+              <h2 className="font-display text-3xl md:text-4xl text-foreground">How It Works</h2>
             </div>
           </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               {
                 icon: Users,
                 step: "01",
                 title: "Invite",
-                description: "Staff are invited to participate. It's always optional—anyone can say no.",
+                description: "Staff are invited to participate. It's always optional — anyone can say no.",
               },
               {
                 icon: Shield,
@@ -128,13 +152,13 @@ const Index = () => {
                 description: "QR codes link to story pages so anyone can learn about and thank these heroes.",
               },
             ].map((item, i) => (
-              <AnimatedSection key={item.step} delay={i * 0.15}>
-                <div className="bg-background rounded-2xl p-8 text-center border border-border hover:border-secondary/30 transition-colors">
-                  <div className="w-14 h-14 rounded-xl bg-secondary/10 flex items-center justify-center mx-auto mb-5">
-                    <item.icon size={24} className="text-secondary" />
+              <AnimatedSection key={item.step} delay={i * 0.12}>
+                <div className="bg-card rounded-2xl p-7 text-center border border-border hover:border-secondary/40 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                    <item.icon size={22} className="text-secondary" />
                   </div>
-                  <span className="text-xs font-semibold text-secondary tracking-widest">{item.step}</span>
-                  <h3 className="font-display text-2xl text-foreground mt-1 mb-3">{item.title}</h3>
+                  <span className="text-[10px] font-bold text-secondary tracking-widest uppercase">{item.step}</span>
+                  <h3 className="font-display text-xl text-foreground mt-1 mb-2">{item.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
                 </div>
               </AnimatedSection>
@@ -144,25 +168,25 @@ const Index = () => {
       </section>
 
       {/* Impact Pillars */}
-      <section className="py-24">
+      <section className="py-20 bg-lavender/30">
         <div className="container mx-auto px-6">
           <AnimatedSection>
-            <div className="text-center mb-16">
-              <h2 className="font-display text-4xl md:text-5xl text-foreground">See. Appreciate. Measure.</h2>
+            <div className="text-center mb-14">
+              <h2 className="font-display text-3xl md:text-4xl text-foreground">See. Appreciate. Measure.</h2>
             </div>
           </AnimatedSection>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
-              { icon: Eye, title: "See", desc: "QR-linked stories bring visibility to the people behind the scenes." },
-              { icon: Heart, title: "Appreciate", desc: "Leave a thank-you note to show gratitude for everyday contributions." },
-              { icon: BarChart3, title: "Measure", desc: "Privacy-safe analytics track reach and impact without identifying visitors." },
+              { icon: Eye, title: "See", desc: "QR-linked stories bring visibility to the people behind the scenes.", color: "text-secondary" },
+              { icon: Heart, title: "Appreciate", desc: "Leave a thank-you note to show gratitude for everyday contributions.", color: "text-accent" },
+              { icon: BarChart3, title: "Measure", desc: "Privacy-safe analytics track reach and impact without identifying visitors.", color: "text-secondary" },
             ].map((item, i) => (
-              <AnimatedSection key={item.title} delay={i * 0.15}>
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-5">
-                    <item.icon size={28} className="text-secondary" />
+              <AnimatedSection key={item.title} delay={i * 0.12}>
+                <div className="text-center bg-background/60 rounded-2xl p-7 border border-border">
+                  <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                    <item.icon size={26} className={item.color} />
                   </div>
-                  <h3 className="font-display text-2xl text-foreground mb-2">{item.title}</h3>
+                  <h3 className="font-display text-xl text-foreground mb-2">{item.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </AnimatedSection>
@@ -172,21 +196,26 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-24 bg-primary">
-        <div className="container mx-auto px-6 text-center">
+      <section className="py-20">
+        <div className="container mx-auto px-6">
           <AnimatedSection>
-            <h2 className="font-display text-4xl md:text-5xl text-primary-foreground mb-6">
-              Know an Unsung Hero?
-            </h2>
-            <p className="text-primary-foreground/60 text-lg mb-10 max-w-xl mx-auto">
-              Nominate a staff member who deserves to be seen and celebrated. Participation is always voluntary and consent-based.
-            </p>
-            <Link
-              to="/nominate"
-              className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg"
-            >
-              Nominate Someone <ArrowRight size={20} />
-            </Link>
+            <div className="max-w-2xl mx-auto text-center bg-card rounded-3xl p-10 md:p-14 border border-border shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
+                <Heart size={26} className="text-accent" />
+              </div>
+              <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">
+                Know an Unsung Hero?
+              </h2>
+              <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto leading-relaxed">
+                Nominate a staff member who deserves to be seen and celebrated. Participation is always voluntary and consent-based.
+              </p>
+              <Link
+                to="/nominate"
+                className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-8 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
+              >
+                Nominate Someone <ArrowRight size={16} />
+              </Link>
+            </div>
           </AnimatedSection>
         </div>
       </section>

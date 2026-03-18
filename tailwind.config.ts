@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Playfair Display"', 'serif'],
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        display: ['"DM Serif Display"', 'serif'],
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -55,6 +55,9 @@ export default {
         cream: "hsl(var(--warm-cream))",
         charcoal: "hsl(var(--deep-charcoal))",
         sage: "hsl(var(--soft-sage))",
+        lavender: "hsl(var(--lavender-mist))",
+        lilac: "hsl(var(--lilac))",
+        rose: "hsl(var(--rose-accent))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
