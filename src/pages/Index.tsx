@@ -37,7 +37,6 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="font-display text-5xl sm:text-6xl md:text-7xl text-foreground mb-5 leading-[1.1]"
               >
-              >
                 Visibility{" "}
                 <span className="text-gradient">in Motion.</span>
               </motion.h1>
