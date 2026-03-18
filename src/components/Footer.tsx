@@ -52,9 +52,14 @@ const Footer = () => {
           <p className="text-sm text-primary-foreground/50">
             © {new Date().getFullYear()} Now We See You. All rights reserved.
           </p>
-          <p className="text-sm text-primary-foreground/50 flex items-center gap-1">
-            Made with <Heart size={14} className="text-secondary" /> at LWHS
-          </p>
+          <div className="flex items-center gap-4">
+            <Link to="/admin/login" className="text-xs text-primary-foreground/30 hover:text-primary-foreground/60 transition-colors">
+              Admin
+            </Link>
+            <p className="text-sm text-primary-foreground/50 flex items-center gap-1">
+              Made with <Heart size={14} className="text-secondary" /> at LWHS
+            </p>
+          </div>
         </div>
       </div>
     </footer>
