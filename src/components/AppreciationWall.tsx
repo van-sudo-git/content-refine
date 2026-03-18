@@ -32,6 +32,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
       .from("appreciations")
       .select("id, author_name, message, created_at")
       .eq("profile_slug", profileSlug)
+      .eq("status", "approved")
       .order("created_at", { ascending: false });
     if (data) setAppreciations(data);
     setLoading(false);
