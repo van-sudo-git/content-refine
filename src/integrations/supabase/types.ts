@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      appreciations: {
+        Row: {
+          author_name: string
+          created_at: string
+          id: string
+          message: string
+          profile_slug: string
+          status: string
+        }
+        Insert: {
+          author_name: string
+          created_at?: string
+          id?: string
+          message: string
+          profile_slug: string
+          status?: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          id?: string
+          message?: string
+          profile_slug?: string
+          status?: string
+        }
+        Relationships: []
+      }
       nominations: {
         Row: {
           admin_notes: string | null
