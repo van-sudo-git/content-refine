@@ -65,8 +65,14 @@ const Nominate = () => {
     if (!schoolId) return;
 
     const { error } = await supabase.from("nominations").insert([{
-      ...values,
       school_id: schoolId,
+      nominee_name: values.nominee_name,
+      nominee_role: values.nominee_role,
+      nominee_department: values.nominee_department,
+      reason: values.reason,
+      nominator_name: values.nominator_name,
+      nominator_email: values.nominator_email,
+      nominee_informed: values.nominee_informed,
     }]);
 
     if (error) {
