@@ -10,114 +10,85 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+      <section className="relative overflow-hidden pt-12 pb-20">
         {/* Soft gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-lavender/40 to-background" />
-        {/* Decorative circles */}
         <div className="absolute top-20 right-[10%] w-72 h-72 rounded-full bg-secondary/10 blur-3xl" />
         <div className="absolute bottom-20 left-[5%] w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text */}
-            <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="mb-5"
-              >
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-semibold tracking-wide uppercase">
-                  <Sparkles size={13} /> A Student-Led Initiative
-                </span>
-              </motion.div>
-              <motion.h1
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="font-display font-bold text-6xl sm:text-7xl md:text-8xl text-foreground mb-5 leading-[1.05]"
-              >
-                Visibility{" "}
-                <span className="text-gradient">in Motion.</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-muted-foreground text-base md:text-lg mb-8 leading-relaxed max-w-lg"
-              >
-                We see the people who keep our school running every day — through hand-drawn portraits, real stories, and the power of human connection.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-3"
-              >
-                <Link
-                  to="/gallery"
-                  className="inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
-                >
-                  Explore Stories <ArrowRight size={16} />
-                </Link>
-                <Link
-                  to="/nominate"
-                  className="inline-flex items-center justify-center gap-2 border border-border text-foreground px-7 py-3.5 rounded-xl font-medium hover:bg-muted transition-colors text-sm"
-                >
-                  Nominate Someone
-                </Link>
-              </motion.div>
-            </div>
-
-            {/* Right: Portrait preview cards */}
+          {/* Text — centered */}
+          <div className="max-w-3xl mx-auto text-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="relative hidden lg:block"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-5"
             >
-              <div className="relative">
-                {/* Main card */}
-                <div className="rounded-2xl overflow-hidden shadow-xl border border-border bg-card">
-                  <img src={bradPortrait} alt="Brad Fisher — hand-drawn portrait" className="w-full aspect-[4/5] object-cover" />
-                  <div className="p-5">
-                    <h3 className="font-display text-xl text-foreground">Brad Fisher</h3>
-                    <p className="text-muted-foreground text-sm mt-0.5">Custodian, LWHS — since 2018</p>
-                  </div>
-                </div>
-                {/* Floating accent card */}
-                <div className="absolute -bottom-6 -left-8 w-36 rounded-xl overflow-hidden shadow-lg border border-border bg-card">
-                  <img src={evaanPortrait} alt="Evaan Ahlawat" className="w-full aspect-square object-cover" />
-                  <div className="p-2.5">
-                    <p className="text-xs font-semibold text-foreground">Evaan Ahlawat</p>
-                    <p className="text-[10px] text-muted-foreground">Artist & Creator</p>
-                  </div>
-                </div>
-              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-semibold tracking-wide uppercase">
+                <Sparkles size={13} /> A Student-Led Initiative
+              </span>
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="font-display font-bold text-6xl sm:text-7xl md:text-8xl text-foreground mb-5 leading-[1.05]"
+            >
+              Visibility{" "}
+              <span className="text-gradient">in Motion.</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-muted-foreground text-base md:text-lg mb-8 leading-relaxed max-w-xl mx-auto"
+            >
+              We see the people who keep our school running every day — through hand-drawn portraits, real stories, and the power of human connection.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-3 justify-center"
+            >
+              <Link
+                to="/gallery"
+                className="inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
+              >
+                Explore Stories <ArrowRight size={16} />
+              </Link>
+              <Link
+                to="/nominate"
+                className="inline-flex items-center justify-center gap-2 border border-border text-foreground px-7 py-3.5 rounded-xl font-medium hover:bg-muted transition-colors text-sm"
+              >
+                Nominate Someone
+              </Link>
             </motion.div>
           </div>
-        </div>
-      </section>
 
-      {/* Mobile portraits — shown only on smaller screens */}
-      <section className="py-16 lg:hidden">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 gap-4">
+          {/* Portraits — side by side, same size, below hero text */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mt-14"
+          >
             <Link to="/gallery/brad-fisher" className="group block">
-              <div className="aspect-[3/4] bg-card rounded-xl overflow-hidden border border-border shadow-sm">
-                <img src={bradPortrait} alt="Brad Fisher" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+              <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
+                <img src={bradPortrait} alt="Brad Fisher — hand-drawn portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
               </div>
-              <h3 className="font-display text-base text-foreground mt-3">Brad Fisher</h3>
-              <p className="text-muted-foreground text-xs">Custodian, LWHS</p>
+              <h3 className="font-display text-lg text-foreground mt-3">Brad Fisher</h3>
+              <p className="text-muted-foreground text-xs">Custodian, LWHS — since 2018</p>
             </Link>
             <Link to="/about" className="group block">
-              <div className="aspect-[3/4] bg-card rounded-xl overflow-hidden border border-border shadow-sm">
-                <img src={evaanPortrait} alt="Evaan Ahlawat" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+              <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
+                <img src={evaanPortrait} alt="Evaan Ahlawat — self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
               </div>
-              <h3 className="font-display text-base text-foreground mt-3">Evaan Ahlawat</h3>
+              <h3 className="font-display text-lg text-foreground mt-3">Evaan Ahlawat</h3>
               <p className="text-muted-foreground text-xs">Artist & Creator</p>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
