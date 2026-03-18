@@ -32,6 +32,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
       .from("appreciations")
       .select("id, author_name, message, created_at")
       .eq("profile_slug", profileSlug)
+      .eq("status", "approved")
       .order("created_at", { ascending: false });
     if (data) setAppreciations(data);
     setLoading(false);
@@ -163,7 +164,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
                 {isAdmin && (
                   <button
                     onClick={() => handleDelete(a.id)}
-                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    className="absolute top-3 right-3 text-muted-foreground hover:text-destructive transition-colors"
                     title="Delete appreciation"
                   >
                     <Trash2 size={14} />
