@@ -64,10 +64,10 @@ const Nominate = () => {
   const onSubmit = async (values: NominationFormValues) => {
     if (!schoolId) return;
 
-    const { error } = await supabase.from("nominations").insert({
+    const { error } = await supabase.from("nominations").insert([{
       ...values,
       school_id: schoolId,
-    });
+    }]);
 
     if (error) {
       toast({
