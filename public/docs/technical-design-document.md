@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** March 18, 2026  
-**Author:** Auto-generated  
+**Author:** Evaan Ahlawat  
 
 ---
 
