@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,33 +6,33 @@
 
 @layer base {
   :root {
-    --background: 30 30% 97%;
-    --foreground: 250 15% 22%;
+    --background: 35 33% 96%;
+    --foreground: 30 8% 25%;
 
-    --card: 30 25% 95%;
-    --card-foreground: 250 15% 22%;
+    --card: 35 30% 94%;
+    --card-foreground: 30 8% 25%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 250 15% 22%;
+    --popover: 35 30% 97%;
+    --popover-foreground: 30 8% 25%;
 
-    --primary: 250 15% 22%;
-    --primary-foreground: 30 30% 97%;
+    --primary: 30 8% 25%;
+    --primary-foreground: 35 33% 96%;
 
-    --secondary: 265 45% 72%;
-    --secondary-foreground: 250 15% 22%;
+    --secondary: 262 35% 65%;
+    --secondary-foreground: 35 33% 96%;
 
-    --muted: 30 15% 93%;
-    --muted-foreground: 250 8% 50%;
+    --muted: 35 20% 92%;
+    --muted-foreground: 30 6% 48%;
 
-    --accent: 330 55% 65%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 262 30% 58%;
+    --accent-foreground: 35 33% 96%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 260 10% 90%;
-    --input: 260 10% 88%;
-    --ring: 265 45% 72%;
+    --border: 35 15% 88%;
+    --input: 35 15% 86%;
+    --ring: 262 35% 65%;
 
     --radius: 0.75rem;
 
@@ -45,14 +45,14 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    --warm-gold: 36 60% 52%;
-    --warm-cream: 30 30% 97%;
-    --deep-charcoal: 250 15% 22%;
-    --soft-sage: 265 30% 80%;
-    --teal-dark: 265 35% 55%;
-    --lavender-mist: 265 40% 95%;
-    --lilac: 265 45% 72%;
-    --rose-accent: 330 55% 65%;
+    --warm-gold: 36 55% 55%;
+    --warm-cream: 35 33% 96%;
+    --deep-charcoal: 30 8% 25%;
+    --soft-sage: 262 25% 78%;
+    --teal-dark: 262 30% 50%;
+    --lavender-mist: 262 35% 94%;
+    --lilac: 262 35% 65%;
+    --rose-accent: 262 30% 58%;
   }
 
   .dark {
@@ -64,17 +64,17 @@
     --popover-foreground: 40 20% 92%;
     --primary: 40 20% 92%;
     --primary-foreground: 260 25% 8%;
-    --secondary: 265 45% 72%;
+    --secondary: 262 35% 65%;
     --secondary-foreground: 0 0% 100%;
     --muted: 260 18% 18%;
     --muted-foreground: 260 10% 55%;
-    --accent: 330 55% 65%;
+    --accent: 262 30% 58%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 260 18% 20%;
     --input: 260 18% 20%;
-    --ring: 265 45% 72%;
+    --ring: 262 35% 65%;
   }
 }
 
@@ -88,13 +88,13 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Special Elite', cursive;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Special Elite', cursive;
   }
 
   .font-body {

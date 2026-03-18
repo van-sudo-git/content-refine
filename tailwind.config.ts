@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"DM Serif Display"', 'serif'],
+        display: ['"Special Elite"', 'cursive'],
         sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
