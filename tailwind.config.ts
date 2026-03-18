@@ -55,6 +55,9 @@ export default {
         cream: "hsl(var(--warm-cream))",
         charcoal: "hsl(var(--deep-charcoal))",
         sage: "hsl(var(--soft-sage))",
+        lavender: "hsl(var(--lavender-mist))",
+        lilac: "hsl(var(--lilac))",
+        rose: "hsl(var(--rose-accent))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
