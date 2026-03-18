@@ -9,6 +9,8 @@ import BradFisher from "./pages/BradFisher.tsx";
 import About from "./pages/About.tsx";
 import Nominate from "./pages/Nominate.tsx";
 import Privacy from "./pages/Privacy.tsx";
+import Admin from "./pages/Admin.tsx";
+import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/nominate" element={<Nominate />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
