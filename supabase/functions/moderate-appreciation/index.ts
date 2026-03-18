@@ -72,9 +72,9 @@ Deno.serve(async (req) => {
   try {
     const { author_name, message, profile_slug } = await req.json();
 
-    if (!author_name?.trim() || !message?.trim() || !profile_slug?.trim()) {
+    if (!message?.trim() || !profile_slug?.trim()) {
       return new Response(
-        JSON.stringify({ error: "All fields are required" }),
+        JSON.stringify({ error: "Message and profile are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
