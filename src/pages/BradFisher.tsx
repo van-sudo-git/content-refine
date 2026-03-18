@@ -60,23 +60,17 @@ const BradFisher = () => {
                   </p>
                 </blockquote>
 
-                <div className="pt-6">
-                  <a
-                    href="https://docs.google.com/forms/d/e/1FAIpQLSf-cBs6BJ59ah8ctV3MHDZsqFVdcA83J-ZLV_PgRg6EQD0TIg/viewform"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-lg font-medium hover:opacity-90 transition-opacity"
-                  >
-                    Send a Thank You Note
-                  </a>
-                </div>
-
-                <p className="text-xs text-muted-foreground pt-4">
+                <p className="text-xs text-muted-foreground pt-6">
                   Published with permission. See{" "}
                   <Link to="/privacy" className="text-secondary hover:underline">Privacy, Consent & Ethics</Link>.
                 </p>
               </div>
             </AnimatedSection>
+          </div>
+
+          {/* Appreciation Wall */}
+          <div className="max-w-6xl mt-8">
+            <AppreciationWall profileSlug="brad-fisher" personName="Brad" />
           </div>
         </div>
       </section>
