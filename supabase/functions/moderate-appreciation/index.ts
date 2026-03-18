@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     const status = moderation.approved ? "approved" : "rejected";
 
     const { error } = await supabase.from("appreciations").insert({
-      author_name: author_name.trim(),
+      author_name: author_name?.trim() || null,
       message: message.trim(),
       profile_slug: profile_slug.trim(),
       status,
