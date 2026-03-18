@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
+import AppreciationWall from "@/components/AppreciationWall";
 import bradPortrait from "@/assets/brad-portrait.jpeg";
 
 const BradFisher = () => {
