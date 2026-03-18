@@ -14,13 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      nominations: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          nominator_email: string
+          nominator_name: string
+          nominee_department: string
+          nominee_informed: boolean
+          nominee_name: string
+          nominee_role: string
+          reason: string
+          school_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          nominator_email: string
+          nominator_name: string
+          nominee_department: string
+          nominee_informed?: boolean
+          nominee_name: string
+          nominee_role: string
+          reason: string
+          school_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          nominator_email?: string
+          nominator_name?: string
+          nominee_department?: string
+          nominee_informed?: boolean
+          nominee_name?: string
+          nominee_role?: string
+          reason?: string
+          school_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nominations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_admins: {
+        Row: {
+          added_at: string
+          email: string
+          id: string
+          school_id: string
+        }
+        Insert: {
+          added_at?: string
+          email: string
+          id?: string
+          school_id: string
+        }
+        Update: {
+          added_at?: string
+          email?: string
+          id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_admins_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          created_at: string
+          district: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          district?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          district?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_any_school_admin: { Args: { _email: string }; Returns: boolean }
+      is_school_admin: {
+        Args: { _email: string; _school_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
