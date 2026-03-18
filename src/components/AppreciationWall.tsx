@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Send } from "lucide-react";
+import { Heart, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 
 interface Appreciation {
   id: string;
-  author_name: string;
+  author_name: string | null;
   message: string;
   created_at: string;
 }
@@ -25,6 +25,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const loadAppreciations = async () => {
     const { data } = await supabase
@@ -38,17 +39,29 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
 
   useEffect(() => {
     loadAppreciations();
+
+    // Check if current user is admin
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        const { data } = await supabase.rpc("is_any_school_admin", {
+          _email: session.user.email,
+        });
+        setIsAdmin(!!data);
+      }
+    };
+    checkAdmin();
   }, [profileSlug]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authorName.trim() || !message.trim()) return;
+    if (!message.trim()) return;
     setSubmitting(true);
 
     try {
       const res = await supabase.functions.invoke("moderate-appreciation", {
         body: {
-          author_name: authorName.trim(),
+          author_name: authorName.trim() || null,
           message: message.trim(),
           profile_slug: profileSlug,
         },
@@ -75,6 +88,16 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
     }
   };
 
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("appreciations").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Deleted" });
+    setAppreciations((prev) => prev.filter((a) => a.id !== id));
+  };
+
   return (
     <div className="mt-16">
       <AnimatedSection>
@@ -90,10 +113,9 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              placeholder="Your name"
+              placeholder="Your name (optional — leave blank to post anonymously)"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
-              required
               maxLength={100}
             />
             <Textarea
@@ -128,14 +150,25 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {appreciations.map((a) => (
-              <div key={a.id} className="bg-card rounded-xl border border-border p-5">
+              <div key={a.id} className="bg-card rounded-xl border border-border p-5 relative group">
                 <p className="text-foreground/80 text-sm leading-relaxed mb-3">{a.message}</p>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-foreground">{a.author_name}</p>
+                  <p className="text-xs font-medium text-foreground">
+                    {a.author_name || "Anonymous"}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(a.created_at).toLocaleDateString()}
                   </p>
                 </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDelete(a.id)}
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    title="Delete appreciation"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             ))}
           </div>

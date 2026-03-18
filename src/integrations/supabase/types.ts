@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       appreciations: {
         Row: {
-          author_name: string
+          author_name: string | null
           created_at: string
           id: string
           message: string
@@ -24,7 +24,7 @@ export type Database = {
           status: string
         }
         Insert: {
-          author_name: string
+          author_name?: string | null
           created_at?: string
           id?: string
           message: string
@@ -32,7 +32,7 @@ export type Database = {
           status?: string
         }
         Update: {
-          author_name?: string
+          author_name?: string | null
           created_at?: string
           id?: string
           message?: string
