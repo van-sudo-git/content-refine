@@ -7,7 +7,7 @@ import bradPortrait from "@/assets/brad-portrait.jpeg";
 const galleryItems = [
   {
     name: "Brad Fisher",
-    role: "Custodian, LWHS",
+    role: "Head Custodian, LWHS",
     image: bradPortrait,
     slug: "brad-fisher",
   },
