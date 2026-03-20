@@ -29,7 +29,7 @@ const BradFisher = () => {
               <div className="space-y-6">
                 <div>
                   <h1 className="font-display text-4xl md:text-5xl text-foreground mb-1">Brad Fisher</h1>
-                  <p className="text-secondary font-medium text-lg">Custodian — Lake Washington High School</p>
+                  <p className="text-secondary font-medium text-lg">Head Custodian — Lake Washington High School</p>
                   <p className="text-muted-foreground text-sm mt-1">Working here since 2018</p>
                 </div>
 

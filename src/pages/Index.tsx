@@ -79,7 +79,7 @@ const Index = () => {
                 <img src={bradPortrait} alt="Brad Fisher — hand-drawn portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
               </div>
               <h3 className="font-display text-lg text-foreground mt-3">Brad Fisher</h3>
-              <p className="text-muted-foreground text-xs">Custodian, LWHS — since 2018</p>
+              <p className="text-muted-foreground text-xs">Head Custodian, LWHS — since 2018</p>
             </Link>
             <Link to="/about" className="group block">
               <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
