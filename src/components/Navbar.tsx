@@ -11,6 +11,8 @@ const navLinks = [
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
 
+const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
