@@ -56,6 +56,15 @@ const BradFisher = () => {
                   </p>
                 </div>
 
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="rounded-xl overflow-hidden shadow-md">
+                    <img src={bradPhoto} alt="Brad Fisher photo" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex items-center justify-center bg-white rounded-xl p-4 shadow-md">
+                    <img src={bradQr} alt="QR code for Brad Fisher" className="w-full h-auto" />
+                  </div>
+                </div>
+
                 <blockquote className="border-l-4 border-secondary pl-6 py-2">
                   <p className="font-display text-2xl text-foreground italic">
                     "Be flexible. Try to understand people. Everyone is different."
@@ -65,6 +74,7 @@ const BradFisher = () => {
                 <p className="text-xs text-muted-foreground pt-6">
                   Published with permission. See{" "}
                   <Link to="/privacy" className="text-secondary hover:underline">Privacy, Consent & Ethics</Link>.
+                </p>
                 </p>
               </div>
             </AnimatedSection>
