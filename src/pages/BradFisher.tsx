@@ -4,6 +4,8 @@ import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import AppreciationWall from "@/components/AppreciationWall";
 import bradPortrait from "@/assets/brad-portrait.jpeg";
+import bradPhoto from "@/assets/brad-photo.jpeg";
+import bradQr from "@/assets/brad-qr.jpeg";
 
 const BradFisher = () => {
   return (
@@ -52,6 +54,15 @@ const BradFisher = () => {
                   <p>
                     Outside of work, Brad enjoys working on small engines, as well as camping and fishing. When asked about the biggest fish he has ever caught, he laughed and said it was about ten pounds.
                   </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="rounded-xl overflow-hidden shadow-md">
+                    <img src={bradPhoto} alt="Brad Fisher photo" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex items-center justify-center bg-white rounded-xl p-4 shadow-md">
+                    <img src={bradQr} alt="QR code for Brad Fisher" className="w-full h-auto" />
+                  </div>
                 </div>
 
                 <blockquote className="border-l-4 border-secondary pl-6 py-2">
