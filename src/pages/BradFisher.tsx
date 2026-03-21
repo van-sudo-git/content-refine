@@ -4,6 +4,8 @@ import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import AppreciationWall from "@/components/AppreciationWall";
 import bradPortrait from "@/assets/brad-portrait.jpeg";
+import bradPhoto from "@/assets/brad-photo.jpeg";
+import bradQr from "@/assets/brad-qr.jpeg";
 
 const BradFisher = () => {
   return (
