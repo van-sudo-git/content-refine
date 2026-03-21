@@ -5,6 +5,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import AppreciationWall from "@/components/AppreciationWall";
 import bradPortrait from "@/assets/brad-portrait.jpeg";
 import bradPhoto from "@/assets/brad-photo.jpeg";
+import bradAction from "@/assets/brad-action.jpeg";
 import bradQr from "@/assets/brad-qr.jpeg";
 
 const BradFisher = () => {
@@ -35,16 +36,44 @@ const BradFisher = () => {
                   <p className="text-muted-foreground text-sm mt-1">Working here since 2018</p>
                 </div>
 
+                <div className="flex gap-8 items-start">
+                  <div className="flex-1 space-y-4 text-muted-foreground leading-relaxed">
+                    <p>
+                      Every school runs because of many people working behind the scenes. One of those people is Brad Fisher, who has been a custodian at Lake Washington High School since August 2018.
+                    </p>
+                    <p>
+                      Brad says what he enjoys most about the school is the environment and the opportunity to interact with students and staff. For him, the job isn't just about cleaning or maintenance — it's also about helping people and solving problems.
+                    </p>
+                    <p>
+                      A typical day for Brad rarely looks the same. Some mornings start with opening the school and setting up lunch tables. Other moments involve vacuuming hallways, picking up garbage, addressing heating or lighting issues, and supporting the kitchen staff. Every day brings different challenges.
+                    </p>
+                  </div>
+
+                  <div className="hidden sm:flex flex-col items-center flex-shrink-0">
+                    <div className="w-32 h-32 bg-card rounded-xl overflow-hidden border border-border shadow-sm">
+                      <img
+                        src={bradQr}
+                        alt="QR code for Brad Fisher"
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2 text-center">Scan to visit<br />this page</p>
+                  </div>
+                </div>
+
+                {/* Mobile QR */}
+                <div className="sm:hidden pt-4 border-t border-border flex items-center gap-4">
+                  <div className="w-24 h-24 bg-card rounded-xl overflow-hidden border border-border shadow-sm flex-shrink-0">
+                    <img
+                      src={bradQr}
+                      alt="QR code for Brad Fisher"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Scan to visit this page</p>
+                </div>
+
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
-                  <p>
-                    Every school runs because of many people working behind the scenes. One of those people is Brad Fisher, who has been a custodian at Lake Washington High School since August 2018.
-                  </p>
-                  <p>
-                    Brad says what he enjoys most about the school is the environment and the opportunity to interact with students and staff. For him, the job isn't just about cleaning or maintenance — it's also about helping people and solving problems.
-                  </p>
-                  <p>
-                    A typical day for Brad rarely looks the same. Some mornings start with opening the school and setting up lunch tables. Other moments involve vacuuming hallways, picking up garbage, addressing heating or lighting issues, and supporting the kitchen staff. Every day brings different challenges.
-                  </p>
                   <p>
                     His main responsibility, he says, is making sure the school remains clean, safe, and welcoming for everyone who learns and works there.
                   </p>
@@ -58,10 +87,10 @@ const BradFisher = () => {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="rounded-xl overflow-hidden shadow-md">
-                    <img src={bradPhoto} alt="Brad Fisher photo" className="w-full h-full object-cover" />
+                    <img src={bradPhoto} alt="Brad Fisher portrait photo" className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex items-center justify-center bg-white rounded-xl p-4 shadow-md">
-                    <img src={bradQr} alt="QR code for Brad Fisher" className="w-full h-auto" />
+                  <div className="rounded-xl overflow-hidden shadow-md">
+                    <img src={bradAction} alt="Brad Fisher cleaning tables at school" className="w-full h-full object-cover" />
                   </div>
                 </div>
 
