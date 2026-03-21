@@ -11,6 +11,8 @@ const navLinks = [
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
 
+const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -24,7 +26,7 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {desktopNavLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
