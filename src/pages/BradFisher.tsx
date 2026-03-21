@@ -75,7 +75,6 @@ const BradFisher = () => {
                   Published with permission. See{" "}
                   <Link to="/privacy" className="text-secondary hover:underline">Privacy, Consent & Ethics</Link>.
                 </p>
-                </p>
               </div>
             </AnimatedSection>
           </div>
