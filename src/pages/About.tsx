@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
-import qrCode from "@/assets/qr-who-am-i.png";
+import qrCode from "@/assets/about-qr.jpeg";
 
 const About = () => {
   return (
