@@ -34,10 +34,10 @@ const ProfilePage = () => {
       if (!slug) return;
 
       // Track page view (fire-and-forget)
-      supabase.rpc("increment_page_view", {
+      void supabase.rpc("increment_page_view", {
         p_slug: slug,
         p_day: new Date().toISOString().slice(0, 10),
-      }).then(() => {}).catch(() => {});
+      });
 
       const { data: profileData, error } = await supabase
         .from("profiles")
