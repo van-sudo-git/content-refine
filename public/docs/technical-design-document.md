@@ -1,6 +1,6 @@
 # Now We See You — Technical Design Document
 
-**Version:** 2.0  
+**Version:** 3.0  
 **Date:** March 24, 2026  
 **Author:** Evaan Ahlawat  
 
@@ -32,7 +32,7 @@
 
 - **Students/community** to nominate staff members for recognition
 - **Students/community** to leave AI-moderated appreciation messages (including anonymous posts) on featured profiles
-- **School admins** to review nominations, manage other admins, moderate content, and delete inappropriate appreciation messages
+- **School admins** to review nominations, create and publish dynamic gallery profiles, manage other admins, moderate content, and delete inappropriate appreciation messages
 
 ### Tech Stack
 
@@ -47,6 +47,7 @@
 | Database | PostgreSQL (via Supabase) |
 | Auth | Supabase Auth (email/password) |
 | Edge Functions | Deno (Supabase Edge Functions) |
+| Storage | Supabase Storage (profile-images bucket) |
 | AI Moderation | Lovable AI Gateway (Google Gemini 2.5 Flash Lite) |
 | Analytics | Google Analytics 4 (G-Y5B9N202G7) |
 
@@ -96,6 +97,11 @@
                     │  └────────────────────────────┘  │
                     │                                   │
                     │  ┌────────────────────────────┐  │
+                    │  │   Supabase Storage         │  │
+                    │  │  (profile-images bucket)   │  │
+                    │  └────────────────────────────┘  │
+                    │                                   │
+                    │  ┌────────────────────────────┐  │
                     │  │   Edge Functions (Deno)    │  │
                     │  │  moderate-appreciation     │──┼──► Lovable AI Gateway
                     │  └────────────────────────────┘  │
@@ -111,13 +117,13 @@
 | Route | Component | Auth Required | Purpose |
 |-------|-----------|:------------:|---------|
 | `/` | `Index.tsx` | No | Landing — hero image, mission statement, featured profiles grid |
-| `/gallery` | `Gallery.tsx` | No | Grid of all featured staff |
-| `/gallery/brad-fisher` | `BradFisher.tsx` | No | Individual profile + QR code + appreciation wall |
+| `/gallery` | `Gallery.tsx` | No | Dynamic grid of all published profiles (pulled from DB) |
+| `/gallery/:slug` | `ProfilePage.tsx` | No | Dynamic profile page with portrait, bio, QR code, photos, and appreciation wall |
 | `/about` | `About.tsx` | No | About the project creator (with QR code) |
 | `/nominate` | `Nominate.tsx` | No | Public nomination form (Zod-validated) |
 | `/privacy` | `Privacy.tsx` | No | Privacy & ethics policy |
 | `/admin/login` | `AdminLogin.tsx` | No (redirects if already authed) | Admin sign-in/sign-up |
-| `/admin` | `Admin.tsx` | Yes (admin) | Dashboard for nominations & admin management |
+| `/admin` | `Admin.tsx` | Yes (admin) | Dashboard for nominations, profiles, & admin management |
 | `*` | `NotFound.tsx` | No | 404 fallback |
 
 ### 2.2 Major Components
@@ -129,6 +135,7 @@
 | `Footer` | `Footer.tsx` | Site footer |
 | `AnimatedSection` | `AnimatedSection.tsx` | Framer Motion scroll-reveal wrapper |
 | `AppreciationWall` | `AppreciationWall.tsx` | Appreciation form (supports anonymous posts) + message grid + admin delete (trash icon) |
+| `AdminProfileManager` | `AdminProfileManager.tsx` | Full profile CRUD: create/edit profiles, upload images (portrait, QR, additional), publish/unpublish, delete |
 | `NavLink` | `NavLink.tsx` | Active-state navigation link helper |
 
 ### 2.3 Navigation
@@ -142,6 +149,7 @@ The "Who Am I" link is intentionally hidden on desktop but accessible via mobile
 
 - Uses `react-router-dom` v6 with `BrowserRouter`
 - All routes defined in `App.tsx` as flat `<Route>` elements
+- Dynamic profile pages via `/gallery/:slug` parameter
 - No nested route layouts or `<Outlet>` usage
 - No route guards/wrappers — admin protection is **imperative** (redirect in `useEffect`)
 
@@ -173,6 +181,13 @@ All database operations use the Supabase JS SDK, which calls auto-generated REST
 | `SELECT` | `school_admins` | School admin | `supabase.from("school_admins").select(...)` |
 | `INSERT` | `school_admins` | School admin | `supabase.from("school_admins").insert(...)` |
 | `DELETE` | `school_admins` | School admin | `supabase.from("school_admins").delete(...)` |
+| `SELECT` | `profiles` | Public (published) / Admin (all) | `supabase.from("profiles").select(...)` |
+| `INSERT` | `profiles` | Admin | `supabase.from("profiles").insert(...)` |
+| `UPDATE` | `profiles` | Admin | `supabase.from("profiles").update(...)` |
+| `DELETE` | `profiles` | Admin | `supabase.from("profiles").delete(...)` |
+| `SELECT` | `profile_images` | Public (published profiles) / Admin | `supabase.from("profile_images").select(...)` |
+| `INSERT` | `profile_images` | Admin | `supabase.from("profile_images").insert(...)` |
+| `DELETE` | `profile_images` | Admin | `supabase.from("profile_images").delete(...)` |
 
 ### 3.2 Edge Functions
 
@@ -247,6 +262,26 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
     }
+    profiles {
+        uuid id PK
+        text slug UK
+        text name
+        text role
+        text department
+        text bio
+        uuid school_id FK
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    profile_images {
+        uuid id PK
+        uuid profile_id FK
+        text image_url
+        text image_type
+        integer sort_order
+        timestamptz created_at
+    }
     appreciations {
         uuid id PK
         text message
@@ -257,6 +292,8 @@ erDiagram
     }
     schools ||--o{ school_admins : "has admins"
     schools ||--o{ nominations : "receives nominations"
+    schools ||--o{ profiles : "has profiles (optional)"
+    profiles ||--o{ profile_images : "has images"
 ```
 
 ### 4.2 Table Details
@@ -297,6 +334,32 @@ erDiagram
 | `created_at` | `timestamptz` | No | `now()` | Submission time |
 | `updated_at` | `timestamptz` | No | `now()` | Last update (auto-updated via trigger) |
 
+#### `profiles`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|:--------:|---------|-------|
+| `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
+| `slug` | `text` | No | — | Unique URL slug (e.g., "brad-fisher") |
+| `name` | `text` | No | — | Person's display name |
+| `role` | `text` | No | — | Job title (e.g., "Head Custodian") |
+| `department` | `text` | Yes | — | Department or school name |
+| `bio` | `text` | Yes | — | Multi-paragraph bio (newline-separated) |
+| `school_id` | `uuid` | Yes | — | FK → `schools.id` (optional — supports community profiles) |
+| `status` | `text` | No | `'draft'` | draft / published |
+| `created_at` | `timestamptz` | No | `now()` | Creation timestamp |
+| `updated_at` | `timestamptz` | No | `now()` | Last update (auto-updated via trigger) |
+
+#### `profile_images`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|:--------:|---------|-------|
+| `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
+| `profile_id` | `uuid` | No | — | FK → `profiles.id` ON DELETE CASCADE |
+| `image_url` | `text` | No | — | Full public URL from storage bucket |
+| `image_type` | `text` | No | `'additional'` | portrait / qr / additional |
+| `sort_order` | `integer` | No | `0` | Display ordering |
+| `created_at` | `timestamptz` | No | `now()` | Upload timestamp |
+
 #### `appreciations`
 
 | Column | Type | Nullable | Default | Notes |
@@ -304,7 +367,7 @@ erDiagram
 | `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
 | `message` | `text` | No | — | The appreciation text |
 | `author_name` | `text` | Yes | — | Null = anonymous (displayed as "Anonymous" on wall) |
-| `profile_slug` | `text` | No | — | Soft link to profile page route |
+| `profile_slug` | `text` | No | — | Soft link to profile slug |
 | `status` | `text` | No | `'pending'` | pending / approved / rejected |
 | `created_at` | `timestamptz` | No | `now()` | When posted |
 
@@ -312,17 +375,20 @@ erDiagram
 
 | From | To | On Delete |
 |------|----|-----------|
-| `school_admins.school_id` | `schools.id` | (default — no cascade specified) |
-| `nominations.school_id` | `schools.id` | (default — no cascade specified) |
+| `school_admins.school_id` | `schools.id` | (default — no cascade) |
+| `nominations.school_id` | `schools.id` | (default — no cascade) |
+| `profiles.school_id` | `schools.id` | (default — no cascade) |
+| `profile_images.profile_id` | `profiles.id` | **CASCADE** |
 
 ### 4.4 Indexes
 
-Only default primary key indexes exist. No additional indexes on:
-- `appreciations.profile_slug` (should be indexed)
-- `appreciations.status` (should be indexed)
-- `nominations.school_id` (should be indexed)
-- `nominations.status` (should be indexed)
-- `school_admins.email` (should be indexed)
+| Index | Table | Column(s) | Purpose |
+|-------|-------|-----------|---------|
+| `idx_profiles_slug` | `profiles` | `slug` | Fast profile lookup by URL slug |
+| `idx_profiles_status` | `profiles` | `status` | Filter published/draft profiles |
+| `idx_profiles_school_id` | `profiles` | `school_id` | Filter by school |
+| `idx_profile_images_profile_id` | `profile_images` | `profile_id` | Join images to profile |
+| `idx_profile_images_type` | `profile_images` | `image_type` | Filter by image type |
 
 ### 4.5 Row-Level Security Policies
 
@@ -353,24 +419,69 @@ Only default primary key indexes exist. No additional indexes on:
 | Admins can view all appreciations | SELECT | authenticated | `is_any_school_admin(jwt.email)` |
 | Admins can delete appreciations | DELETE | authenticated | `is_any_school_admin(jwt.email)` |
 
+#### `profiles`
+| Policy | Command | Roles | Condition |
+|--------|---------|-------|-----------|
+| Published profiles are public | SELECT | public | `status = 'published'` |
+| Admins can manage profiles | ALL | authenticated | `is_any_school_admin(jwt.email)` |
+
+#### `profile_images`
+| Policy | Command | Roles | Condition |
+|--------|---------|-------|-----------|
+| Profile images for published profiles are public | SELECT | public | `EXISTS (SELECT 1 FROM profiles WHERE id = profile_id AND status = 'published')` |
+| Admins can manage profile images | ALL | authenticated | `is_any_school_admin(jwt.email)` |
+
 ---
 
 ## 5. Storage Design
 
-**No storage buckets exist.** All media assets are static files committed to the repository:
+### 5.1 Storage Bucket
 
-| File | Location | Purpose |
-|------|----------|---------|
-| `brad-portrait.jpeg` | `src/assets/` | Brad Fisher's hand-drawn portrait |
-| `brad-photo.jpeg` | `src/assets/` | Brad Fisher photo |
-| `brad-action.jpeg` | `src/assets/` | Brad Fisher additional photo |
-| `brad-qr.jpeg` | `src/assets/` | QR code linking to Brad's profile |
-| `evaan-portrait.jpeg` | `src/assets/` | Project creator portrait |
-| `about-qr.jpeg` | `src/assets/` | QR code for About page |
-| `hero-community.jpg` | `src/assets/` | Hero section image on landing page |
-| `qr-who-am-i.png` | `src/assets/` | Legacy QR code (About page) |
+| Property | Value |
+|----------|-------|
+| Bucket name | `profile-images` |
+| Public | Yes (public read access) |
+| Purpose | Stores all profile-related images (portraits, QR codes, additional photos) |
 
-**Implication:** Adding new profiles requires committing new image files. A scalable solution would use a storage bucket with upload capabilities.
+### 5.2 File Organization
+
+```
+profile-images/
+├── brad-fisher/
+│   ├── portrait.jpeg      — Main portrait photo
+│   ├── qr.jpeg            — QR code linking to profile page
+│   ├── photo.jpeg          — Additional photo
+│   └── action.jpeg         — Additional photo
+├── jane-doe/
+│   ├── portrait.jpeg
+│   └── qr.jpeg
+└── {slug}/
+    └── {timestamp}.{ext}   — Uploaded via admin UI
+```
+
+### 5.3 Naming Conventions
+
+- **Directory:** Profile slug (e.g., `brad-fisher/`)
+- **Files uploaded via admin UI:** `{timestamp}.{ext}` (e.g., `1711234567890.jpeg`)
+- **Manually uploaded (migration):** Descriptive names (e.g., `portrait.jpeg`, `qr.jpeg`)
+
+### 5.4 Access Rules (Storage RLS)
+
+| Policy | Command | Roles | Condition |
+|--------|---------|-------|-----------|
+| Anyone can view profile images | SELECT | public | `bucket_id = 'profile-images'` |
+| Admins can upload profile images | INSERT | authenticated | `bucket_id = 'profile-images' AND is_any_school_admin(jwt.email)` |
+| Admins can delete profile images | DELETE | authenticated | `bucket_id = 'profile-images' AND is_any_school_admin(jwt.email)` |
+
+### 5.5 Static Assets (Repository)
+
+These legacy/non-profile images remain as static files in `src/assets/`:
+
+| File | Purpose |
+|------|---------|
+| `evaan-portrait.jpeg` | Project creator portrait (About page) |
+| `about-qr.jpeg` | QR code for About page |
+| `hero-community.jpg` | Hero section image on landing page |
 
 ---
 
@@ -443,12 +554,13 @@ The system uses a **table-based admin model** (not a roles enum):
 - Two `SECURITY DEFINER` functions abstract the lookup and are used in RLS policies
 - This means admin access is **school-scoped** — an admin for School A cannot see School B's data
 - Admin detection also runs on public pages (e.g., AppreciationWall) to conditionally show moderation controls
+- Profile management uses `is_any_school_admin` (not school-scoped) since profiles can be community-wide
 
 ### 6.3 Permission Matrix
 
 | Action | Public | Authenticated (non-admin) | School Admin | Any Admin |
 |--------|:------:|:------------------------:|:------------:|:---------:|
-| View gallery & profiles | ✅ | ✅ | ✅ | ✅ |
+| View gallery & published profiles | ✅ | ✅ | ✅ | ✅ |
 | Submit nomination | ✅ | ✅ | ✅ | ✅ |
 | Submit appreciation (incl. anonymous) | ✅ | ✅ | ✅ | ✅ |
 | View approved appreciations | ✅ | ✅ | ✅ | ✅ |
@@ -458,6 +570,9 @@ The system uses a **table-based admin model** (not a roles enum):
 | Update nomination status | ❌ | ❌ | ✅ (own school) | ✅ (own school) |
 | Add/remove school admins | ❌ | ❌ | ✅ (own school) | ✅ (own school) |
 | View school admins list | ❌ | ❌ | ✅ (own school) | ✅ (own school) |
+| Create/edit/publish profiles | ❌ | ❌ | ❌ | ✅ |
+| Upload/delete profile images | ❌ | ❌ | ❌ | ✅ |
+| View draft profiles | ❌ | ❌ | ❌ | ✅ |
 
 ### 6.4 Security Layers
 
@@ -470,13 +585,18 @@ Layer 2: RPC gate (application-level)
 
 Layer 3: RLS policies (database-level)
   └─ is_school_admin() — scopes data access per school
+  └─ is_any_school_admin() — scopes profile/appreciation management
   └─ Even if someone bypasses the UI, the DB won't return unauthorized data
 
-Layer 4: Edge Function (service role)
+Layer 4: Storage policies (bucket-level)
+  └─ Only admins can upload/delete from profile-images bucket
+  └─ Public can read all stored images
+
+Layer 5: Edge Function (service role)
   └─ moderate-appreciation uses SERVICE_ROLE_KEY
   └─ Bypasses RLS intentionally to insert moderated content
 
-Layer 5: AI Moderation (content-level)
+Layer 6: AI Moderation (content-level)
   └─ Gemini Flash Lite checks message intent before insertion
   └─ Rejects negative, inappropriate, or non-appreciative content
 ```
@@ -536,14 +656,24 @@ AS $$ SELECT EXISTS (
 ```
 /admin
 ├── Tab: Nominations
+│   ├── Stats: Total | Pending | Approved | Featured
 │   ├── List of nominations (filtered by school via RLS)
 │   ├── Status badges: Pending | Approved | Declined | Featured
 │   ├── Click to expand → view full details
-│   ├── Update status dropdown
+│   ├── Update status (Approve / Feature / Decline / Reset)
 │   ├── Admin notes textarea
 │   └── Save changes
 │
-└── Tab: Admins
+├── Tab: Profiles
+│   ├── List of all profiles (draft + published)
+│   ├── Create New Profile button
+│   ├── Edit existing profiles
+│   ├── Upload images (portrait, QR code, additional photos)
+│   ├── Image management grid with type badges
+│   ├── Publish / Unpublish toggle
+│   └── Delete profile (with confirmation)
+│
+└── Tab: Manage Admins
     ├── List of current admins for the school
     ├── Add admin by email
     └── Remove admin (with confirmation)
@@ -574,9 +704,36 @@ AS $$ SELECT EXISTS (
 6. Admin sets status to `approved`, `declined`, or `featured`
 7. `updated_at` auto-updated via database trigger
 
-**Current gap:** No automated transition from "approved" nomination to a live gallery profile. This is a manual code process today.
+### 7.3 Profile Creation & Publishing Workflow
 
-### 7.3 Appreciation Moderation Workflow
+```
+┌──────────────────────────────────────────────────────┐
+│  PROFILE LIFECYCLE                                   │
+│                                                      │
+│  1. Admin goes to Profiles tab → clicks New Profile  │
+│  2. Fills in: Name, URL slug, role, department, bio  │
+│  3. Uploads images:                                  │
+│     - Portrait (main profile photo)                  │
+│     - QR code (links to profile page)                │
+│     - Additional photos (action shots, etc.)         │
+│  4. Saves → profile created as DRAFT                 │
+│  5. Admin reviews in profile list                    │
+│  6. Clicks Publish → status = "published"            │
+│  7. Profile appears in gallery automatically         │
+│  8. Appreciation wall auto-enabled via profile slug  │
+│  9. Admin can Unpublish to hide from gallery         │
+│ 10. Admin can Delete (removes profile + all images)  │
+└──────────────────────────────────────────────────────┘
+```
+
+**Image upload flow:**
+1. Admin clicks "Upload Portrait" / "Upload QR Code" / "Upload Additional Photo"
+2. File uploaded to `profile-images/{slug}/{timestamp}.{ext}` in storage
+3. Public URL generated and stored in `profile_images` table
+4. Images displayed in management grid with type badges
+5. Admin can delete individual images
+
+### 7.4 Appreciation Moderation Workflow
 
 ```
 User submits message (optionally anonymous)
@@ -622,7 +779,7 @@ User submits message (optionally anonymous)
 - Delete inappropriate messages that passed AI moderation via trash icon
 - Trash icons are conditionally rendered only when admin is authenticated
 
-### 7.4 Admin Management Workflow
+### 7.5 Admin Management Workflow
 
 ```
 Existing Admin
@@ -637,30 +794,6 @@ Existing Admin
 ```
 
 **Important:** Adding an admin email to `school_admins` does NOT create an auth account. The new admin must separately sign up at `/admin/login`. Their email must match the one in `school_admins`.
-
-### 7.5 Future: Create/Edit/Publish Profile Workflow (Not Yet Built)
-
-```
-┌──────────────────────────────────────────────────────┐
-│  PROPOSED WORKFLOW                                   │
-│                                                      │
-│  1. Admin approves nomination → status = "approved"  │
-│  2. Admin clicks "Create Profile" button             │
-│  3. Form appears: upload portrait, write bio,        │
-│     add quotes, set slug                             │
-│  4. Profile saved as draft in `profiles` table       │
-│  5. Admin previews profile                           │
-│  6. Admin clicks "Publish"                           │
-│  7. Profile appears in gallery automatically         │
-│  8. Appreciation wall auto-enabled via profile_slug  │
-└──────────────────────────────────────────────────────┘
-```
-
-This requires:
-- A `profiles` table (id, slug, name, role, department, bio, portrait_url, status, school_id)
-- A storage bucket for portrait uploads
-- Dynamic profile page route (`/gallery/:slug`)
-- Admin UI for profile editing
 
 ---
 
@@ -737,7 +870,32 @@ sequenceDiagram
     end
 ```
 
-### 8.4 Admin Deletes Appreciation (Sequence)
+### 8.4 Admin Creates Profile (Sequence)
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant Browser
+    participant Storage as Supabase Storage
+    participant DB as PostgreSQL
+
+    Admin->>Browser: Clicks "New Profile" in Profiles tab
+    Admin->>Browser: Fills name, slug, role, department, bio
+    Admin->>Browser: Uploads portrait image
+    Browser->>Storage: PUT profile-images/{slug}/{timestamp}.jpeg
+    Storage-->>Browser: Public URL
+    Admin->>Browser: Clicks "Save Profile"
+    Browser->>DB: INSERT INTO profiles (status='draft')
+    DB-->>Browser: Profile row (with id)
+    Browser->>DB: INSERT INTO profile_images (profile_id, image_url, type='portrait')
+    DB-->>Browser: Success
+    Admin->>Browser: Clicks "Publish"
+    Browser->>DB: UPDATE profiles SET status='published' WHERE id=X
+    DB-->>Browser: Success
+    Note over Browser: Profile now visible in Gallery<br/>and at /gallery/{slug}
+```
+
+### 8.5 Admin Deletes Appreciation (Sequence)
 
 ```mermaid
 sequenceDiagram
@@ -755,7 +913,7 @@ sequenceDiagram
     Browser->>Admin: "Deleted" toast
 ```
 
-### 8.5 Admin Adds Another Admin
+### 8.6 Admin Adds Another Admin
 
 ```mermaid
 sequenceDiagram
@@ -782,44 +940,22 @@ sequenceDiagram
 3. Admin signs up at `/admin/login`
 4. RLS automatically scopes their data
 
-### 9.2 Adding Dynamic Profiles (CMS)
+### 9.2 Adding Community Profiles (No School)
 
-**Required changes:**
+Profiles already support `school_id = NULL`, making them community-wide:
+1. Admin creates profile without specifying a school
+2. Profile appears in the global gallery
+3. Future: Gallery page can filter by school or show all
 
-```sql
--- New table
-CREATE TABLE public.profiles (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    slug text UNIQUE NOT NULL,
-    name text NOT NULL,
-    role text NOT NULL,
-    department text,
-    bio text,
-    portrait_url text,
-    school_id uuid REFERENCES schools(id),
-    status text NOT NULL DEFAULT 'draft', -- draft, published
-    nomination_id uuid REFERENCES nominations(id),
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
-);
+### 9.3 Linking Nominations to Profiles
 
--- RLS
-CREATE POLICY "Published profiles are public"
-ON profiles FOR SELECT TO public
-USING (status = 'published');
+**Not yet implemented.** To enable "Create Profile from Nomination":
+1. Add `nomination_id uuid REFERENCES nominations(id)` to profiles table
+2. Add "Create Profile" button on approved nominations
+3. Pre-fill profile form with nominee data
+4. Link provides traceability from nomination → profile
 
-CREATE POLICY "Admins manage their school profiles"
-ON profiles FOR ALL TO authenticated
-USING (is_school_admin(auth.jwt()->>'email', school_id));
-```
-
-**Frontend changes:**
-- Replace hardcoded `BradFisher.tsx` with dynamic `/gallery/:slug` route
-- Fetch profile data from `profiles` table
-- Admin dashboard gets "Profiles" tab for CRUD
-- Storage bucket for portrait uploads
-
-### 9.3 Adding Notifications
+### 9.4 Adding Notifications
 
 **Email on new nomination:**
 ```sql
@@ -832,7 +968,7 @@ USING (is_school_admin(auth.jwt()->>'email', school_id));
 2. Realtime subscription in admin dashboard for live updates
 3. Daily digest edge function via pg_cron
 
-### 9.4 Adding Rate Limiting
+### 9.5 Adding Rate Limiting
 
 **At Edge Function level:**
 ```typescript
@@ -841,11 +977,11 @@ USING (is_school_admin(auth.jwt()->>'email', school_id));
 // Store attempts in a rate_limits table or use in-memory counter
 ```
 
-### 9.5 Multi-School Gallery
+### 9.6 Multi-School Gallery
 
-Currently gallery items are hardcoded. To support multiple schools:
-1. Add `school_id` to `profiles` table
-2. Gallery page filters by school or shows all
+Gallery currently shows all published profiles globally. To support per-school filtering:
+1. Profiles already have optional `school_id`
+2. Add school filter/tabs to Gallery page
 3. Each school could have a subdomain or route prefix
 
 ---
@@ -854,14 +990,14 @@ Currently gallery items are hardcoded. To support multiple schools:
 
 ### 10.1 Lovable Cloud (Auto-Provisioned)
 
-| Service | Purpose |
-|---------|---------|
-| PostgreSQL database | All persistent data |
-| Supabase Auth | Email/password authentication |
-| PostgREST API | Auto-generated REST from schema |
-| Edge Functions (Deno) | Server-side logic (moderation) |
-| Realtime | Available but not currently used |
-| Storage | Available but not currently used |
+| Service | Purpose | Status |
+|---------|---------|--------|
+| PostgreSQL database | All persistent data | ✅ Active |
+| Supabase Auth | Email/password authentication | ✅ Active |
+| PostgREST API | Auto-generated REST from schema | ✅ Active |
+| Edge Functions (Deno) | Server-side logic (moderation) | ✅ Active |
+| Storage | Profile image uploads | ✅ Active (profile-images bucket) |
+| Realtime | Available but not currently used | ⬜ Available |
 
 ### 10.2 Client Environment Variables (`.env` — auto-managed)
 
@@ -902,20 +1038,24 @@ GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
 
 | # | Issue | Severity | Impact | Suggested Fix |
 |---|-------|----------|--------|---------------|
-| 1 | No dynamic profile CMS | **High** | New profiles require code changes | Build profiles table + admin UI |
-| 2 | No notification system | **Medium** | Admins must manually check for nominations | Add email via edge function + webhook |
-| 3 | No global auth context | **Low** | Session checked independently per page; could lead to inconsistencies | Create AuthProvider with React Context |
-| 4 | react-query underutilized | **Low** | Missing caching, deduplication, background refetch | Migrate to useQuery/useMutation hooks |
-| 5 | profile_slug is a soft reference | **Medium** | No referential integrity; orphaned appreciations possible | Create profiles table with FK |
-| 6 | No database indexes beyond PKs | **Low** | Slow queries at scale | Add indexes on profile_slug, school_id, status, email |
-| 7 | Status fields are freeform text | **Low** | Typo risk, no DB validation | Convert to PostgreSQL enums |
-| 8 | Admin signup exposed | **Low** | Anyone can create auth accounts (but can't access admin) | Hide signup, use invite-only flow |
-| 9 | No rate limiting | **Medium** | Abuse via spam submissions | Add IP-based rate limits in edge function |
-| 10 | No image upload capability | **Medium** | Portraits must be committed as code | Add storage bucket + upload UI |
-| 11 | No password reset flow | **Low** | Admins can't recover accounts | Add forgot-password + /reset-password page |
-| 12 | No audit logging | **Low** | No trail of admin actions | Add audit_log table |
-| 13 | CASCADE behavior undefined | **Low** | Deleting a school may leave orphaned records | Add ON DELETE CASCADE to FKs |
-| 14 | No custom GA4 events | **Low** | Limited analytics insight | Add events for nomination submit, appreciation post, admin actions |
+| 1 | No notification system | **Medium** | Admins must manually check for nominations | Add email via edge function + webhook |
+| 2 | No global auth context | **Low** | Session checked independently per page; could lead to inconsistencies | Create AuthProvider with React Context |
+| 3 | react-query underutilized | **Low** | Missing caching, deduplication, background refetch | Migrate to useQuery/useMutation hooks |
+| 4 | profile_slug is a soft reference | **Medium** | No referential integrity between appreciations and profiles | Add FK from appreciations.profile_slug to profiles.slug |
+| 5 | Status fields are freeform text | **Low** | Typo risk, no DB validation | Convert to PostgreSQL enums |
+| 6 | Admin signup exposed | **Low** | Anyone can create auth accounts (but can't access admin) | Hide signup, use invite-only flow |
+| 7 | No rate limiting | **Medium** | Abuse via spam submissions | Add IP-based rate limits in edge function |
+| 8 | No password reset flow | **Low** | Admins can't recover accounts | Add forgot-password + /reset-password page |
+| 9 | No audit logging | **Low** | No trail of admin actions | Add audit_log table |
+| 10 | CASCADE behavior on schools | **Low** | Deleting a school may leave orphaned nominations/admins | Add ON DELETE CASCADE to FKs |
+| 11 | No custom GA4 events | **Low** | Limited analytics insight | Add events for nomination submit, appreciation post, admin actions |
+| 12 | No nomination-to-profile link | **Low** | Profiles created independently from nominations | Add nomination_id FK to profiles |
+
+### Resolved Since v2.0
+- ✅ Dynamic profile CMS (profiles + profile_images tables + admin UI)
+- ✅ Storage bucket for image uploads (profile-images)
+- ✅ Database indexes on profiles, profile_images
+- ✅ Brad Fisher migrated from hardcoded to dynamic system
 
 ---
 
@@ -924,7 +1064,7 @@ GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
 ```sql
 -- =============================================
 -- FULL SQL SCHEMA — Now We See You
--- Version 2.0 — March 24, 2026
+-- Version 3.0 — March 24, 2026
 -- =============================================
 
 -- Schools
@@ -970,6 +1110,41 @@ CREATE POLICY "Anyone can submit nominations" ON public.nominations FOR INSERT T
 CREATE POLICY "Admins can view their school nominations" ON public.nominations FOR SELECT TO public USING (is_school_admin((auth.jwt() ->> 'email'), school_id));
 CREATE POLICY "Admins can update their school nominations" ON public.nominations FOR UPDATE TO public USING (is_school_admin((auth.jwt() ->> 'email'), school_id));
 
+-- Profiles
+CREATE TABLE public.profiles (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug text UNIQUE NOT NULL,
+    name text NOT NULL,
+    role text NOT NULL,
+    department text,
+    bio text,
+    school_id uuid REFERENCES public.schools(id),
+    status text NOT NULL DEFAULT 'draft',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Published profiles are public" ON public.profiles FOR SELECT TO public USING (status = 'published');
+CREATE POLICY "Admins can manage profiles" ON public.profiles FOR ALL TO authenticated
+    USING (is_any_school_admin((auth.jwt() ->> 'email')))
+    WITH CHECK (is_any_school_admin((auth.jwt() ->> 'email')));
+
+-- Profile Images
+CREATE TABLE public.profile_images (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    image_url text NOT NULL,
+    image_type text NOT NULL DEFAULT 'additional',
+    sort_order integer NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.profile_images ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Profile images for published profiles are public" ON public.profile_images FOR SELECT TO public
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = profile_id AND status = 'published'));
+CREATE POLICY "Admins can manage profile images" ON public.profile_images FOR ALL TO authenticated
+    USING (is_any_school_admin((auth.jwt() ->> 'email')))
+    WITH CHECK (is_any_school_admin((auth.jwt() ->> 'email')));
+
 -- Appreciations
 CREATE TABLE public.appreciations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -984,6 +1159,23 @@ CREATE POLICY "Anyone can submit appreciations" ON public.appreciations FOR INSE
 CREATE POLICY "Approved appreciations are public" ON public.appreciations FOR SELECT TO public USING (status = 'approved');
 CREATE POLICY "Admins can view all appreciations" ON public.appreciations FOR SELECT TO authenticated USING (is_any_school_admin((auth.jwt() ->> 'email')));
 CREATE POLICY "Admins can delete appreciations" ON public.appreciations FOR DELETE TO authenticated USING (is_any_school_admin((auth.jwt() ->> 'email')));
+
+-- Indexes
+CREATE INDEX idx_profiles_slug ON public.profiles(slug);
+CREATE INDEX idx_profiles_status ON public.profiles(status);
+CREATE INDEX idx_profiles_school_id ON public.profiles(school_id);
+CREATE INDEX idx_profile_images_profile_id ON public.profile_images(profile_id);
+CREATE INDEX idx_profile_images_type ON public.profile_images(image_type);
+
+-- Storage
+INSERT INTO storage.buckets (id, name, public) VALUES ('profile-images', 'profile-images', true);
+CREATE POLICY "Anyone can view profile images" ON storage.objects FOR SELECT TO public USING (bucket_id = 'profile-images');
+CREATE POLICY "Admins can upload profile images" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'profile-images' AND is_any_school_admin((auth.jwt() ->> 'email')));
+CREATE POLICY "Admins can delete profile images" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'profile-images' AND is_any_school_admin((auth.jwt() ->> 'email')));
+
+-- Triggers
+CREATE TRIGGER update_nominations_updated_at BEFORE UPDATE ON public.nominations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Functions
 CREATE OR REPLACE FUNCTION public.is_any_school_admin(_email text)
@@ -1013,9 +1205,9 @@ $$;
 **Request:**
 ```json
 {
-  "author_name": "Jane",         // optional, null/empty for anonymous
-  "message": "Thank you for everything!",  // required, max 500 chars
-  "profile_slug": "brad-fisher"  // required
+  "author_name": "Jane",
+  "message": "Thank you for everything!",
+  "profile_slug": "brad-fisher"
 }
 ```
 
@@ -1037,14 +1229,78 @@ $$;
 }
 ```
 
-**Response (error):**
-```json
-{
-  "error": "Message and profile are required"
-}
+### Supabase SDK Examples
+
+**Fetch published profiles for gallery:**
+```typescript
+const { data } = await supabase
+  .from("profiles")
+  .select("id, slug, name, role, department")
+  .eq("status", "published")
+  .order("created_at", { ascending: true });
 ```
 
-### Supabase SDK Examples
+**Fetch profile by slug:**
+```typescript
+const { data } = await supabase
+  .from("profiles")
+  .select("id, slug, name, role, department, bio")
+  .eq("slug", "brad-fisher")
+  .eq("status", "published")
+  .single();
+```
+
+**Fetch profile images:**
+```typescript
+const { data } = await supabase
+  .from("profile_images")
+  .select("id, image_url, image_type, sort_order")
+  .eq("profile_id", profileId)
+  .order("sort_order");
+```
+
+**Admin: Create profile:**
+```typescript
+const { data, error } = await supabase
+  .from("profiles")
+  .insert({
+    name: "Jane Doe",
+    slug: "jane-doe",
+    role: "Cafeteria Manager",
+    department: "Food Services",
+    bio: "Jane has been...",
+    school_id: schoolId, // optional
+    status: "draft",
+  })
+  .select()
+  .single();
+```
+
+**Admin: Upload profile image:**
+```typescript
+const { error } = await supabase.storage
+  .from("profile-images")
+  .upload(`jane-doe/${Date.now()}.jpeg`, file);
+
+const { data } = supabase.storage
+  .from("profile-images")
+  .getPublicUrl(`jane-doe/${Date.now()}.jpeg`);
+
+await supabase.from("profile_images").insert({
+  profile_id: profileId,
+  image_url: data.publicUrl,
+  image_type: "portrait",
+  sort_order: 0,
+});
+```
+
+**Admin: Publish profile:**
+```typescript
+await supabase
+  .from("profiles")
+  .update({ status: "published" })
+  .eq("id", profileId);
+```
 
 **Fetch approved appreciations:**
 ```typescript
@@ -1068,29 +1324,6 @@ const { error } = await supabase.from("nominations").insert({
   school_id: "uuid-here",
   nominee_informed: true,
 });
-```
-
-**Admin: Update nomination status:**
-```typescript
-const { error } = await supabase
-  .from("nominations")
-  .update({ status: "approved", admin_notes: "Great candidate" })
-  .eq("id", nominationId);
-```
-
-**Admin: Delete appreciation:**
-```typescript
-const { error } = await supabase
-  .from("appreciations")
-  .delete()
-  .eq("id", appreciationId);
-```
-
-**Admin: Add school admin:**
-```typescript
-const { error } = await supabase
-  .from("school_admins")
-  .insert({ email: "newadmin@school.edu", school_id: schoolId });
 ```
 
 ---
