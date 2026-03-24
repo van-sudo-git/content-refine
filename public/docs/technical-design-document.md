@@ -1,7 +1,7 @@
 # Now We See You — Technical Design Document
 
-**Version:** 1.0  
-**Date:** March 18, 2026  
+**Version:** 2.0  
+**Date:** March 24, 2026  
 **Author:** Evaan Ahlawat  
 
 ---
@@ -31,16 +31,16 @@
 **Now We See You** is a student-led web application that celebrates unsung school heroes — custodians, cafeteria workers, aides, and other support staff. The platform allows:
 
 - **Students/community** to nominate staff members for recognition
-- **Students/community** to leave AI-moderated appreciation messages on featured profiles
-- **School admins** to review nominations, manage other admins, and moderate content
+- **Students/community** to leave AI-moderated appreciation messages (including anonymous posts) on featured profiles
+- **School admins** to review nominations, manage other admins, moderate content, and delete inappropriate appreciation messages
 
 ### Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| Frontend | React 18, TypeScript, Vite 8, Tailwind CSS 3 |
 | UI Library | shadcn/ui (Radix primitives) |
-| Animation | Framer Motion |
+| Animation | Framer Motion 12 |
 | Forms | react-hook-form + Zod |
 | Server State | @tanstack/react-query (QueryClient provisioned) |
 | Backend | Lovable Cloud (Supabase-backed) |
@@ -48,6 +48,19 @@
 | Auth | Supabase Auth (email/password) |
 | Edge Functions | Deno (Supabase Edge Functions) |
 | AI Moderation | Lovable AI Gateway (Google Gemini 2.5 Flash Lite) |
+| Analytics | Google Analytics 4 (G-Y5B9N202G7) |
+
+### Design System
+
+| Property | Value |
+|----------|-------|
+| Display Font | Cormorant Garamond (400–700, italic) |
+| Body Font | DM Sans (300–600) |
+| Background | Warm cream `hsl(40, 40%, 95%)` |
+| Primary Text | Deep charcoal `hsl(25, 12%, 18%)` |
+| Accent / Secondary | Lilac-purple `hsl(270, 40%, 50%)` |
+| Card Background | `hsl(38, 35%, 92%)` |
+| Muted Text | `hsl(25, 8%, 42%)` |
 
 ### High-Level Architecture
 
@@ -58,6 +71,10 @@
 │  ┌──────────┐ ┌──────────┐ ┌───────────────────┐   │
 │  │  Pages   │ │Components│ │ Supabase JS SDK   │   │
 │  └──────────┘ └──────────┘ └─────────┬─────────┘   │
+│                                      │              │
+│  ┌────────────────────────────────┐  │              │
+│  │  Google Analytics (gtag.js)   │  │              │
+│  └────────────────────────────────┘  │              │
 └──────────────────────────────────────┼──────────────┘
                                        │ HTTPS
                     ┌──────────────────┼──────────────┐
@@ -93,11 +110,11 @@
 
 | Route | Component | Auth Required | Purpose |
 |-------|-----------|:------------:|---------|
-| `/` | `Index.tsx` | No | Landing — hero, mission, featured profiles |
+| `/` | `Index.tsx` | No | Landing — hero image, mission statement, featured profiles grid |
 | `/gallery` | `Gallery.tsx` | No | Grid of all featured staff |
-| `/gallery/brad-fisher` | `BradFisher.tsx` | No | Individual profile + appreciation wall |
-| `/about` | `About.tsx` | No | About the project creator |
-| `/nominate` | `Nominate.tsx` | No | Public nomination form |
+| `/gallery/brad-fisher` | `BradFisher.tsx` | No | Individual profile + QR code + appreciation wall |
+| `/about` | `About.tsx` | No | About the project creator (with QR code) |
+| `/nominate` | `Nominate.tsx` | No | Public nomination form (Zod-validated) |
 | `/privacy` | `Privacy.tsx` | No | Privacy & ethics policy |
 | `/admin/login` | `AdminLogin.tsx` | No (redirects if already authed) | Admin sign-in/sign-up |
 | `/admin` | `Admin.tsx` | Yes (admin) | Dashboard for nominations & admin management |
@@ -108,20 +125,27 @@
 | Component | File | Responsibility |
 |-----------|------|---------------|
 | `Layout` | `Layout.tsx` | Shared shell wrapping Navbar + Footer |
-| `Navbar` | `Navbar.tsx` | Responsive navigation with mobile hamburger |
+| `Navbar` | `Navbar.tsx` | Responsive navigation; "Who Am I" hidden on desktop, shown in mobile menu |
 | `Footer` | `Footer.tsx` | Site footer |
 | `AnimatedSection` | `AnimatedSection.tsx` | Framer Motion scroll-reveal wrapper |
-| `AppreciationWall` | `AppreciationWall.tsx` | Appreciation form + message grid + admin delete |
+| `AppreciationWall` | `AppreciationWall.tsx` | Appreciation form (supports anonymous posts) + message grid + admin delete (trash icon) |
 | `NavLink` | `NavLink.tsx` | Active-state navigation link helper |
 
-### 2.3 Routing
+### 2.3 Navigation
+
+**Desktop nav links:** Home, Gallery, Nominate, Privacy & Ethics  
+**Mobile nav links:** Home, Gallery, Who Am I, Nominate, Privacy & Ethics  
+
+The "Who Am I" link is intentionally hidden on desktop but accessible via mobile hamburger menu and linked from the home page.
+
+### 2.4 Routing
 
 - Uses `react-router-dom` v6 with `BrowserRouter`
 - All routes defined in `App.tsx` as flat `<Route>` elements
 - No nested route layouts or `<Outlet>` usage
 - No route guards/wrappers — admin protection is **imperative** (redirect in `useEffect`)
 
-### 2.4 State Management
+### 2.5 State Management
 
 | Type | Mechanism | Notes |
 |------|-----------|-------|
@@ -166,8 +190,13 @@ All database operations use the Supabase JS SDK, which calls auto-generated REST
 2. Validate: message required, ≤500 chars
 3. Call AI gateway with system prompt defining approval/rejection criteria
 4. Parse AI JSON response `{ approved: bool, reason: string }`
-5. Insert into `appreciations` with `status = "approved"` or `"rejected"`
-6. Return result to client
+5. If approved → insert into `appreciations` with `status = "approved"`
+6. If rejected → insert into `appreciations` with `status = "rejected"`
+7. Return result to client with reason
+
+**Rejection UX:** When a message is rejected, the user sees: *"This message wasn't posted as it doesn't appear to be positive or appreciative. Please try again with a kinder message."*
+
+**Anonymous posting:** If `author_name` is empty/null, the appreciation is posted as "Anonymous" on the wall.
 
 ### 3.3 Database Functions (RPC)
 
@@ -257,7 +286,7 @@ erDiagram
 | `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
 | `school_id` | `uuid` | No | — | FK → `schools.id` |
 | `nominee_name` | `text` | No | — | Name of person nominated |
-| `nominee_role` | `text` | No | — | Their role (e.g., "Custodian") |
+| `nominee_role` | `text` | No | — | Their role (e.g., "Head Custodian") |
 | `nominee_department` | `text` | No | — | Department (e.g., "Facilities") |
 | `reason` | `text` | No | — | Why they deserve recognition |
 | `nominator_name` | `text` | No | — | Who submitted the nomination |
@@ -274,7 +303,7 @@ erDiagram
 |--------|------|:--------:|---------|-------|
 | `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
 | `message` | `text` | No | — | The appreciation text |
-| `author_name` | `text` | Yes | — | Null = anonymous |
+| `author_name` | `text` | Yes | — | Null = anonymous (displayed as "Anonymous" on wall) |
 | `profile_slug` | `text` | No | — | Soft link to profile page route |
 | `status` | `text` | No | `'pending'` | pending / approved / rejected |
 | `created_at` | `timestamptz` | No | `now()` | When posted |
@@ -332,12 +361,16 @@ Only default primary key indexes exist. No additional indexes on:
 
 | File | Location | Purpose |
 |------|----------|---------|
-| `brad-portrait.jpeg` | `src/assets/` | Brad Fisher's portrait |
+| `brad-portrait.jpeg` | `src/assets/` | Brad Fisher's hand-drawn portrait |
+| `brad-photo.jpeg` | `src/assets/` | Brad Fisher photo |
+| `brad-action.jpeg` | `src/assets/` | Brad Fisher additional photo |
+| `brad-qr.jpeg` | `src/assets/` | QR code linking to Brad's profile |
 | `evaan-portrait.jpeg` | `src/assets/` | Project creator portrait |
-| `hero-community.jpg` | `src/assets/` | Hero section background |
-| `qr-who-am-i.png` | `src/assets/` | QR code for About page |
+| `about-qr.jpeg` | `src/assets/` | QR code for About page |
+| `hero-community.jpg` | `src/assets/` | Hero section image on landing page |
+| `qr-who-am-i.png` | `src/assets/` | Legacy QR code (About page) |
 
-**Implication:** Adding new profiles requires committing new image files. A scalable solution would use a Supabase Storage bucket with upload capabilities.
+**Implication:** Adding new profiles requires committing new image files. A scalable solution would use a storage bucket with upload capabilities.
 
 ---
 
@@ -372,6 +405,12 @@ Only default primary key indexes exist. No additional indexes on:
 │     Admin → clicks Logout button                            │
 │     App → supabase.auth.signOut()                           │
 │     App → navigate("/admin/login")                          │
+│                                                             │
+│  5. ADMIN DETECTION ON PUBLIC PAGES                         │
+│     AppreciationWall checks session on mount:               │
+│     supabase.auth.getSession() → if session exists →        │
+│     supabase.rpc("is_any_school_admin") →                   │
+│     if true → show trash icons on appreciation cards        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -403,6 +442,7 @@ The system uses a **table-based admin model** (not a roles enum):
 - Instead, `school_admins` table links emails to schools
 - Two `SECURITY DEFINER` functions abstract the lookup and are used in RLS policies
 - This means admin access is **school-scoped** — an admin for School A cannot see School B's data
+- Admin detection also runs on public pages (e.g., AppreciationWall) to conditionally show moderation controls
 
 ### 6.3 Permission Matrix
 
@@ -410,10 +450,10 @@ The system uses a **table-based admin model** (not a roles enum):
 |--------|:------:|:------------------------:|:------------:|:---------:|
 | View gallery & profiles | ✅ | ✅ | ✅ | ✅ |
 | Submit nomination | ✅ | ✅ | ✅ | ✅ |
-| Submit appreciation | ✅ | ✅ | ✅ | ✅ |
+| Submit appreciation (incl. anonymous) | ✅ | ✅ | ✅ | ✅ |
 | View approved appreciations | ✅ | ✅ | ✅ | ✅ |
 | View ALL appreciations | ❌ | ❌ | ❌ | ✅ |
-| Delete appreciations | ❌ | ❌ | ❌ | ✅ |
+| Delete appreciations (trash icon) | ❌ | ❌ | ❌ | ✅ |
 | View nominations | ❌ | ❌ | ✅ (own school) | ✅ (own school) |
 | Update nomination status | ❌ | ❌ | ✅ (own school) | ✅ (own school) |
 | Add/remove school admins | ❌ | ❌ | ✅ (own school) | ✅ (own school) |
@@ -435,6 +475,10 @@ Layer 3: RLS policies (database-level)
 Layer 4: Edge Function (service role)
   └─ moderate-appreciation uses SERVICE_ROLE_KEY
   └─ Bypasses RLS intentionally to insert moderated content
+
+Layer 5: AI Moderation (content-level)
+  └─ Gemini Flash Lite checks message intent before insertion
+  └─ Rejects negative, inappropriate, or non-appreciative content
 ```
 
 ### 6.5 How to Expand Authentication
@@ -535,7 +579,7 @@ AS $$ SELECT EXISTS (
 ### 7.3 Appreciation Moderation Workflow
 
 ```
-User submits message
+User submits message (optionally anonymous)
        │
        ▼
 ┌──────────────────┐
@@ -556,8 +600,10 @@ User submits message
     ▼         ▼
 ┌────────┐ ┌──────────┐
 │APPROVED│ │ REJECTED │
-│ (shown │ │ (hidden, │
-│ on wall│ │  stored) │
+│ (shown │ │ (stored  │
+│ on wall│ │  but not │
+│  with  │ │  shown)  │
+│  toast)│ │          │
 └────────┘ └──────────┘
          │
          ▼ (admin can)
@@ -568,10 +614,13 @@ User submits message
     └──────────┘
 ```
 
+**Rejection message shown to user:**
+> "This message wasn't posted as it doesn't appear to be positive or appreciative. Please try again with a kinder message."
+
 **Admin moderation capabilities:**
 - View all approved messages on any profile page
-- Delete inappropriate messages that passed AI moderation
-- Trash icon visible on each appreciation card when admin is logged in
+- Delete inappropriate messages that passed AI moderation via trash icon
+- Trash icons are conditionally rendered only when admin is authenticated
 
 ### 7.4 Admin Management Workflow
 
@@ -627,7 +676,8 @@ sequenceDiagram
     participant AI as Lovable AI Gateway
     participant DB as PostgreSQL
 
-    User->>Browser: Types message, clicks Post
+    User->>Browser: Types message (optionally leaves name blank for anon)
+    User->>Browser: Clicks Post
     Browser->>EdgeFn: POST {author_name?, message, profile_slug}
     EdgeFn->>EdgeFn: Validate (message required, ≤500 chars)
     EdgeFn->>AI: POST /v1/chat/completions (Gemini Flash Lite)
@@ -637,9 +687,9 @@ sequenceDiagram
     EdgeFn-->>Browser: {success, approved, reason}
     alt Approved
         Browser->>DB: SELECT approved appreciations (reload wall)
-        Browser->>User: Success toast + message appears
+        Browser->>User: "Thank you! 💜" toast + message appears
     else Rejected
-        Browser->>User: Rejection toast with guidance
+        Browser->>User: "Message not posted" toast with guidance
     end
 ```
 
@@ -656,9 +706,9 @@ sequenceDiagram
     alt Validation fails
         Browser->>User: Show field errors
     else Validation passes
-        Browser->>DB: INSERT INTO nominations (status=pending, school_id from dropdown)
+        Browser->>DB: INSERT INTO nominations (status=pending, school_id from lookup)
         DB-->>Browser: Success (201)
-        Browser->>User: Show confirmation screen
+        Browser->>User: Show confirmation screen with checkmark
     end
 ```
 
@@ -696,11 +746,12 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     Note over Admin: Already authenticated + on profile page
-    Admin->>Browser: Clicks trash icon on appreciation
+    Note over Browser: Trash icons visible because isAdmin=true
+    Admin->>Browser: Clicks trash icon on appreciation card
     Browser->>DB: DELETE FROM appreciations WHERE id = X
     Note over DB: RLS checks: is_any_school_admin(jwt.email)
     DB-->>Browser: Success
-    Browser->>Browser: Remove card from UI (optimistic)
+    Browser->>Browser: Remove card from UI (state update)
     Browser->>Admin: "Deleted" toast
 ```
 
@@ -833,9 +884,17 @@ Currently gallery items are hardcoded. To support multiple schools:
 
 ### 10.4 External Integrations
 
-| Service | Endpoint | Purpose |
-|---------|----------|---------|
-| Lovable AI Gateway | `https://ai.gateway.lovable.dev/v1/chat/completions` | AI content moderation |
+| Service | Endpoint / ID | Purpose |
+|---------|---------------|---------|
+| Lovable AI Gateway | `https://ai.gateway.lovable.dev/v1/chat/completions` | Content moderation |
+| Google Analytics 4 | Measurement ID: `G-Y5B9N202G7` | Website analytics & traffic tracking |
+
+### 10.5 Google Analytics Integration
+
+GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
+- Page views (automatic)
+- User engagement (automatic)
+- No custom events configured yet
 
 ---
 
@@ -856,6 +915,7 @@ Currently gallery items are hardcoded. To support multiple schools:
 | 11 | No password reset flow | **Low** | Admins can't recover accounts | Add forgot-password + /reset-password page |
 | 12 | No audit logging | **Low** | No trail of admin actions | Add audit_log table |
 | 13 | CASCADE behavior undefined | **Low** | Deleting a school may leave orphaned records | Add ON DELETE CASCADE to FKs |
+| 14 | No custom GA4 events | **Low** | Limited analytics insight | Add events for nomination submit, appreciation post, admin actions |
 
 ---
 
@@ -864,6 +924,7 @@ Currently gallery items are hardcoded. To support multiple schools:
 ```sql
 -- =============================================
 -- FULL SQL SCHEMA — Now We See You
+-- Version 2.0 — March 24, 2026
 -- =============================================
 
 -- Schools
@@ -952,7 +1013,7 @@ $$;
 **Request:**
 ```json
 {
-  "author_name": "Jane",         // optional, null for anonymous
+  "author_name": "Jane",         // optional, null/empty for anonymous
   "message": "Thank you for everything!",  // required, max 500 chars
   "profile_slug": "brad-fisher"  // required
 }
@@ -972,7 +1033,7 @@ $$;
 {
   "success": true,
   "approved": false,
-  "reason": "Your message couldn't be posted. Please ensure it's a positive, appreciative message."
+  "reason": "This message wasn't posted as it doesn't appear to be positive or appreciative. Please try again with a kinder message."
 }
 ```
 
@@ -999,7 +1060,7 @@ const { data } = await supabase
 ```typescript
 const { error } = await supabase.from("nominations").insert({
   nominee_name: "Brad Fisher",
-  nominee_role: "Custodian",
+  nominee_role: "Head Custodian",
   nominee_department: "Facilities",
   reason: "Goes above and beyond every day...",
   nominator_name: "Jane Doe",
@@ -1046,9 +1107,10 @@ const { error } = await supabase
 | `VITE_SUPABASE_URL` | Client `.env` | Client-side API URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Client `.env` | Client-side anon key |
 
-| External Service | URL | Auth Method | Purpose |
-|-----------------|-----|-------------|---------|
+| External Service | URL / ID | Auth Method | Purpose |
+|-----------------|----------|-------------|---------|
 | Lovable AI Gateway | `https://ai.gateway.lovable.dev/v1/chat/completions` | Bearer token (`LOVABLE_API_KEY`) | Content moderation |
+| Google Analytics 4 | `G-Y5B9N202G7` | Public measurement ID | Website analytics |
 
 ---
 
