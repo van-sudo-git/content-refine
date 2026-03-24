@@ -137,6 +137,7 @@
 | `AnimatedSection` | `AnimatedSection.tsx` | Framer Motion scroll-reveal wrapper |
 | `AppreciationWall` | `AppreciationWall.tsx` | Appreciation form (supports anonymous posts) + message grid + admin delete (trash icon) |
 | `AdminProfileManager` | `AdminProfileManager.tsx` | Full profile CRUD: create/edit profiles, upload images (portrait, QR, additional), publish/unpublish, delete |
+| `AdminAnalytics` | `AdminAnalytics.tsx` | Analytics dashboard: page views, QR scans (from external project), appreciation message stats, 30-day trend chart, per-profile breakdown |
 | `NavLink` | `NavLink.tsx` | Active-state navigation link helper |
 
 ### 2.3 Navigation
