@@ -177,23 +177,25 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         <h3 className="font-display text-xl text-foreground mb-4 flex items-center gap-2">
           <BarChart3 size={20} /> 30-Day Trend
         </h3>
-        <div className="flex items-end gap-[2px] h-40">
+        <div className="flex items-end gap-[2px]" style={{ height: '160px' }}>
           {dailyStats.map((d) => {
-            const viewHeight = maxDailyValue > 0 ? (d.views / maxDailyValue) * 100 : 0;
-            const scanHeight = maxDailyValue > 0 ? (d.scans / maxDailyValue) * 100 : 0;
+            const maxH = 160;
+            const viewH = maxDailyValue > 0 ? Math.max((d.views / maxDailyValue) * maxH, d.views > 0 ? 4 : 1) : 1;
+            const scanH = maxDailyValue > 0 ? Math.max((d.scans / maxDailyValue) * maxH, d.scans > 0 ? 4 : 1) : 1;
             return (
               <div
                 key={d.day}
-                className="flex-1 flex flex-col items-center gap-[1px] group relative"
+                className="flex-1 flex flex-col items-end justify-end gap-[1px] group relative"
+                style={{ height: `${maxH}px` }}
                 title={`${d.day}\nWebsite Views: ${d.views}\nQR Scans: ${d.scans}`}
               >
                 <div
                   className="w-full bg-blue-400/60 rounded-t-sm transition-all hover:bg-blue-500/80"
-                  style={{ height: `${Math.max(viewHeight, 2)}%` }}
+                  style={{ height: `${viewH}px` }}
                 />
                 <div
                   className="w-full bg-secondary/60 rounded-t-sm transition-all hover:bg-secondary/80"
-                  style={{ height: `${Math.max(scanHeight, 1)}%` }}
+                  style={{ height: `${scanH}px` }}
                 />
               </div>
             );
