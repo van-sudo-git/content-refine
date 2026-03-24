@@ -1,6 +1,6 @@
 # Now We See You — Technical Design Document
 
-**Version:** 3.0  
+**Version:** 4.0  
 **Date:** March 24, 2026  
 **Author:** Evaan Ahlawat  
 
