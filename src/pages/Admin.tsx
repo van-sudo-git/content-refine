@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -31,20 +32,24 @@ const Admin = () => {
   const [adminNotes, setAdminNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user, isReady } = useAuthReady();
 
   useEffect(() => {
+    if (!isReady) return;
+
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (!user?.email) {
+        setLoading(false);
         navigate("/admin/login", { replace: true });
         return;
       }
 
-      const email = session.user.email ?? "";
+      const email = user.email ?? "";
       setUserEmail(email);
 
       const { data: isAdmin } = await supabase.rpc("is_any_school_admin", { _email: email });
       if (!isAdmin) {
+        setLoading(false);
         navigate("/admin/login", { replace: true });
         return;
       }
@@ -62,8 +67,9 @@ const Admin = () => {
       }
       setLoading(false);
     };
+
     init();
-  }, [navigate]);
+  }, [isReady, navigate, user]);
 
   const loadData = async (sid: string) => {
     const [nomRes, adminRes] = await Promise.all([
