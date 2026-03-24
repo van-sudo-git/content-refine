@@ -20,18 +20,33 @@ const Navbar = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        const { data } = await supabase.rpc("is_any_school_admin", { _email: session.user.email });
-        setIsAdmin(!!data);
-      } else {
-        setIsAdmin(false);
+    let cancelled = false;
+
+    const checkAdmin = async (email: string | undefined) => {
+      if (!email) {
+        if (!cancelled) setIsAdmin(false);
+        return;
       }
+      const { data } = await supabase.rpc("is_any_school_admin", { _email: email });
+      if (!cancelled) setIsAdmin(!!data);
     };
-    checkAdmin();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => checkAdmin());
-    return () => subscription.unsubscribe();
+
+    // Initial check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!cancelled) checkAdmin(session?.user?.email ?? undefined);
+    });
+
+    // Listen for sign-in / sign-out only
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        checkAdmin(session?.user?.email ?? undefined);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
