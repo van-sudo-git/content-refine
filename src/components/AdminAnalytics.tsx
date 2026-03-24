@@ -3,11 +3,26 @@ import { BarChart3, Eye, QrCode, MessageCircle, XCircle, TrendingUp } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { herosRedirectClient } from "@/lib/herosRedirectClient";
 
+// Maps heros-redirect QR IDs to profile slugs
+const QR_ID_TO_SLUG: Record<string, string> = {
+  brad: "brad-fisher",
+  bradflyer: "brad-fisher",
+};
+
+// Human-readable labels for QR code IDs
+const QR_LABELS: Record<string, string> = {
+  brad: "Brad QR",
+  bradflyer: "Brad Flyer QR",
+  about: "About QR",
+  gallery: "Gallery QR",
+  whoami: "Who Am I QR",
+};
+
 interface ProfileStat {
   slug: string;
   name: string;
   totalViews: number;
-  totalScans: number;
+  qrScans: Record<string, number>; // per QR ID
   approvedMessages: number;
   pendingMessages: number;
   rejectedMessages: number;
@@ -19,15 +34,10 @@ interface DailyStat {
   scans: number;
 }
 
-// Maps heros-redirect QR IDs to profile slugs in this project
-const QR_ID_TO_SLUG: Record<string, string> = {
-  brad: "brad-fisher",
-  bradflyer: "brad-fisher",
-};
-
 const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
   const [profileStats, setProfileStats] = useState<ProfileStat[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
+  const [allQrIds, setAllQrIds] = useState<string[]>([]);
   const [totals, setTotals] = useState({
     views: 0,
     scans: 0,
@@ -56,7 +66,6 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
 
     const slugs = profiles.map((p) => p.slug);
 
-    // Fetch local data + external QR scan data in parallel
     const [pageViewsRes, appreciationsRes, qrDailyRes] = await Promise.all([
       supabase.from("page_views").select("profile_slug, day, views").in("profile_slug", slugs),
       supabase.from("appreciations").select("profile_slug, status").in("profile_slug", slugs),
@@ -67,15 +76,29 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
     const appreciations = appreciationsRes.data ?? [];
     const qrDaily = (qrDailyRes.data ?? []) as { id: string; day: string; count: number }[];
 
+    // Collect all unique QR IDs that map to profiles
+    const profileQrIds = new Set<string>();
+    Object.entries(QR_ID_TO_SLUG).forEach(([qrId, slug]) => {
+      if (slugs.includes(slug)) profileQrIds.add(qrId);
+    });
+    setAllQrIds(Array.from(profileQrIds).sort());
+
     const stats: ProfileStat[] = profiles.map((p) => {
       const views = pageViews
         .filter((v) => v.profile_slug === p.slug)
         .reduce((sum, v) => sum + v.views, 0);
 
-      // Sum QR scans from all redirect IDs that map to this profile slug
-      const scans = qrDaily
-        .filter((rd) => QR_ID_TO_SLUG[rd.id] === p.slug)
-        .reduce((sum, rd) => sum + rd.count, 0);
+      // Per-QR-ID scan counts for this profile
+      const qrIds = Object.entries(QR_ID_TO_SLUG)
+        .filter(([, slug]) => slug === p.slug)
+        .map(([qrId]) => qrId);
+
+      const qrScans: Record<string, number> = {};
+      qrIds.forEach((qrId) => {
+        qrScans[qrId] = qrDaily
+          .filter((rd) => rd.id === qrId)
+          .reduce((sum, rd) => sum + rd.count, 0);
+      });
 
       const profileAppreciations = appreciations.filter((a) => a.profile_slug === p.slug);
 
@@ -83,7 +106,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         slug: p.slug,
         name: p.name,
         totalViews: views,
-        totalScans: scans,
+        qrScans,
         approvedMessages: profileAppreciations.filter((a) => a.status === "approved").length,
         pendingMessages: profileAppreciations.filter((a) => a.status === "pending").length,
         rejectedMessages: profileAppreciations.filter((a) => a.status === "rejected").length,
@@ -92,7 +115,6 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
 
     setProfileStats(stats);
 
-    // Also count scans for QR codes not mapped to a profile (e.g. "about", "gallery")
     const allScans = qrDaily.reduce((sum, rd) => sum + rd.count, 0);
 
     setTotals({
@@ -143,7 +165,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard icon={Eye} label="Page Views" value={totals.views} color="text-blue-600" />
+        <StatCard icon={Eye} label="Website Views" value={totals.views} color="text-blue-600" />
         <StatCard icon={QrCode} label="QR Scans" value={totals.scans} color="text-secondary" />
         <StatCard icon={MessageCircle} label="Approved Messages" value={totals.approved} color="text-emerald-600" />
         <StatCard icon={TrendingUp} label="Pending Messages" value={totals.pending} color="text-amber-600" />
@@ -163,7 +185,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
               <div
                 key={d.day}
                 className="flex-1 flex flex-col items-center gap-[1px] group relative"
-                title={`${d.day}\nViews: ${d.views}\nQR Scans: ${d.scans}`}
+                title={`${d.day}\nWebsite Views: ${d.views}\nQR Scans: ${d.scans}`}
               >
                 <div
                   className="w-full bg-blue-400/60 rounded-t-sm transition-all hover:bg-blue-500/80"
@@ -179,7 +201,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         </div>
         <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-blue-400/60" /> Page Views
+            <span className="w-3 h-3 rounded-sm bg-blue-400/60" /> Website Views
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-secondary/60" /> QR Scans
@@ -198,8 +220,15 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="pb-3 font-medium">Profile</th>
-                  <th className="pb-3 font-medium text-center">Page Views</th>
-                  <th className="pb-3 font-medium text-center">QR Scans</th>
+                  <th className="pb-3 font-medium text-center">Website Views</th>
+                  {allQrIds.map((qrId) => (
+                    <th key={qrId} className="pb-3 font-medium text-center">
+                      <span className="flex items-center justify-center gap-1">
+                        <QrCode size={12} />
+                        {QR_LABELS[qrId] || qrId}
+                      </span>
+                    </th>
+                  ))}
                   <th className="pb-3 font-medium text-center">Approved</th>
                   <th className="pb-3 font-medium text-center">Pending</th>
                   <th className="pb-3 font-medium text-center">Rejected</th>
@@ -210,7 +239,11 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
                   <tr key={p.slug} className="border-b border-border/50 last:border-0">
                     <td className="py-3 font-medium text-foreground">{p.name}</td>
                     <td className="py-3 text-center text-blue-600 font-medium">{p.totalViews}</td>
-                    <td className="py-3 text-center text-secondary font-medium">{p.totalScans}</td>
+                    {allQrIds.map((qrId) => (
+                      <td key={qrId} className="py-3 text-center text-secondary font-medium">
+                        {p.qrScans[qrId] ?? "—"}
+                      </td>
+                    ))}
                     <td className="py-3 text-center text-emerald-600 font-medium">{p.approvedMessages}</td>
                     <td className="py-3 text-center text-amber-600 font-medium">{p.pendingMessages}</td>
                     <td className="py-3 text-center text-red-600 font-medium">{p.rejectedMessages}</td>
