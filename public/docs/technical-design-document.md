@@ -1113,7 +1113,7 @@ GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
 ```sql
 -- =============================================
 -- FULL SQL SCHEMA — Now We See You
--- Version 3.0 — March 24, 2026
+-- Version 4.0 — March 24, 2026
 -- =============================================
 
 -- Schools
