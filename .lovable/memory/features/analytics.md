@@ -1,22 +1,25 @@
 Analytics system for QR code tracking, page views, and appreciation stats.
 
-## Tables
-- `redirects`: maps QR code IDs to profile slugs + destination URLs
-- `redirect_daily`: daily hit counts per redirect (unique on redirect_id + day)
+## Tables (this project)
 - `page_views`: daily view counts per profile_slug (unique on profile_slug + day)
+- `appreciations`: messages with status (approved/pending/rejected)
 
-## RPC Functions
-- `increment_redirect_daily(p_id uuid, p_day date)`: upserts daily QR scan count
+## External Data (heros-redirect project)
+- Supabase URL: https://iqywlsxdxhhduvbhotwx.supabase.co
+- Client: src/lib/herosRedirectClient.ts (uses publishable anon key)
+- `redirects` table: columns `id` (text, e.g. "brad"), `destination_url`, `active`
+- `redirect_events_daily` table: columns `id` (redirect id), `day`, `count`
+- QR ID to slug mapping in AdminAnalytics.tsx: { brad: "brad-fisher", bradflyer: "brad-fisher" }
+- Other QR IDs: "about", "whoami", "gallery" (not profile-specific)
+
+## RPC Functions (this project)
 - `increment_page_view(p_slug text, p_day date)`: upserts daily page view count
-
-## Edge Function
-- `qr-redirect`: accepts `?id=<redirect_id>`, logs scan via RPC, redirects to destination_url
-- QR code URL format: `https://mxhkpmqaoifrufzpqszl.supabase.co/functions/v1/qr-redirect?id=<redirect_id>`
 
 ## Frontend
 - `ProfilePage.tsx`: fires `increment_page_view` on load (fire-and-forget)
 - `AdminAnalytics.tsx`: Analytics tab showing summary cards, 30-day bar chart, per-profile breakdown
 - Admin.tsx: has 4 tabs — Nominations, Profiles, Admins, Analytics
 
-## Data Source (inspiration)
-- Based on github.com/van-sudo-git/heros-redirect pattern
+## Important
+- When adding new profiles with QR codes, update QR_ID_TO_SLUG map in AdminAnalytics.tsx
+- QR codes point to heros-redirect Vercel project which handles redirect + logging

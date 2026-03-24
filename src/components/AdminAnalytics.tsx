@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Eye, MessageCircle, XCircle, TrendingUp } from "lucide-react";
+import { BarChart3, Eye, QrCode, MessageCircle, XCircle, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { herosRedirectClient } from "@/lib/herosRedirectClient";
 
 interface ProfileStat {
   slug: string;
   name: string;
   totalViews: number;
+  totalScans: number;
   approvedMessages: number;
   pendingMessages: number;
   rejectedMessages: number;
@@ -14,13 +16,21 @@ interface ProfileStat {
 interface DailyStat {
   day: string;
   views: number;
+  scans: number;
 }
+
+// Maps heros-redirect QR IDs to profile slugs in this project
+const QR_ID_TO_SLUG: Record<string, string> = {
+  brad: "brad-fisher",
+  bradflyer: "brad-fisher",
+};
 
 const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
   const [profileStats, setProfileStats] = useState<ProfileStat[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
   const [totals, setTotals] = useState({
     views: 0,
+    scans: 0,
     approved: 0,
     pending: 0,
     rejected: 0,
@@ -46,18 +56,26 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
 
     const slugs = profiles.map((p) => p.slug);
 
-    const [pageViewsRes, appreciationsRes] = await Promise.all([
+    // Fetch local data + external QR scan data in parallel
+    const [pageViewsRes, appreciationsRes, qrDailyRes] = await Promise.all([
       supabase.from("page_views").select("profile_slug, day, views").in("profile_slug", slugs),
       supabase.from("appreciations").select("profile_slug, status").in("profile_slug", slugs),
+      herosRedirectClient.from("redirect_events_daily").select("id, day, count"),
     ]);
 
     const pageViews = pageViewsRes.data ?? [];
     const appreciations = appreciationsRes.data ?? [];
+    const qrDaily = (qrDailyRes.data ?? []) as { id: string; day: string; count: number }[];
 
     const stats: ProfileStat[] = profiles.map((p) => {
       const views = pageViews
         .filter((v) => v.profile_slug === p.slug)
         .reduce((sum, v) => sum + v.views, 0);
+
+      // Sum QR scans from all redirect IDs that map to this profile slug
+      const scans = qrDaily
+        .filter((rd) => QR_ID_TO_SLUG[rd.id] === p.slug)
+        .reduce((sum, rd) => sum + rd.count, 0);
 
       const profileAppreciations = appreciations.filter((a) => a.profile_slug === p.slug);
 
@@ -65,6 +83,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         slug: p.slug,
         name: p.name,
         totalViews: views,
+        totalScans: scans,
         approvedMessages: profileAppreciations.filter((a) => a.status === "approved").length,
         pendingMessages: profileAppreciations.filter((a) => a.status === "pending").length,
         rejectedMessages: profileAppreciations.filter((a) => a.status === "rejected").length,
@@ -73,8 +92,12 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
 
     setProfileStats(stats);
 
+    // Also count scans for QR codes not mapped to a profile (e.g. "about", "gallery")
+    const allScans = qrDaily.reduce((sum, rd) => sum + rd.count, 0);
+
     setTotals({
       views: stats.reduce((s, p) => s + p.totalViews, 0),
+      scans: allScans,
       approved: stats.reduce((s, p) => s + p.approvedMessages, 0),
       pending: stats.reduce((s, p) => s + p.pendingMessages, 0),
       rejected: stats.reduce((s, p) => s + p.rejectedMessages, 0),
@@ -92,7 +115,11 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         .filter((v) => v.day === dayStr)
         .reduce((sum, v) => sum + v.views, 0);
 
-      days.push({ day: dayStr, views: dayViews });
+      const dayScans = qrDaily
+        .filter((rd) => rd.day === dayStr)
+        .reduce((sum, rd) => sum + rd.count, 0);
+
+      days.push({ day: dayStr, views: dayViews, scans: dayScans });
     }
     setDailyStats(days);
 
@@ -107,13 +134,17 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
     );
   }
 
-  const maxDailyValue = Math.max(...dailyStats.map((d) => d.views), 1);
+  const maxDailyValue = Math.max(
+    ...dailyStats.map((d) => Math.max(d.views, d.scans)),
+    1
+  );
 
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard icon={Eye} label="Page Views" value={totals.views} color="text-blue-600" />
+        <StatCard icon={QrCode} label="QR Scans" value={totals.scans} color="text-secondary" />
         <StatCard icon={MessageCircle} label="Approved Messages" value={totals.approved} color="text-emerald-600" />
         <StatCard icon={TrendingUp} label="Pending Messages" value={totals.pending} color="text-amber-600" />
         <StatCard icon={XCircle} label="Rejected Messages" value={totals.rejected} color="text-red-600" />
@@ -127,15 +158,20 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         <div className="flex items-end gap-[2px] h-40">
           {dailyStats.map((d) => {
             const viewHeight = maxDailyValue > 0 ? (d.views / maxDailyValue) * 100 : 0;
+            const scanHeight = maxDailyValue > 0 ? (d.scans / maxDailyValue) * 100 : 0;
             return (
               <div
                 key={d.day}
-                className="flex-1 flex flex-col items-center group relative"
-                title={`${d.day}\nViews: ${d.views}`}
+                className="flex-1 flex flex-col items-center gap-[1px] group relative"
+                title={`${d.day}\nViews: ${d.views}\nQR Scans: ${d.scans}`}
               >
                 <div
                   className="w-full bg-blue-400/60 rounded-t-sm transition-all hover:bg-blue-500/80"
                   style={{ height: `${Math.max(viewHeight, 2)}%` }}
+                />
+                <div
+                  className="w-full bg-secondary/60 rounded-t-sm transition-all hover:bg-secondary/80"
+                  style={{ height: `${Math.max(scanHeight, 1)}%` }}
                 />
               </div>
             );
@@ -144,6 +180,9 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-blue-400/60" /> Page Views
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm bg-secondary/60" /> QR Scans
           </span>
         </div>
       </div>
@@ -160,6 +199,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="pb-3 font-medium">Profile</th>
                   <th className="pb-3 font-medium text-center">Page Views</th>
+                  <th className="pb-3 font-medium text-center">QR Scans</th>
                   <th className="pb-3 font-medium text-center">Approved</th>
                   <th className="pb-3 font-medium text-center">Pending</th>
                   <th className="pb-3 font-medium text-center">Rejected</th>
@@ -170,6 +210,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
                   <tr key={p.slug} className="border-b border-border/50 last:border-0">
                     <td className="py-3 font-medium text-foreground">{p.name}</td>
                     <td className="py-3 text-center text-blue-600 font-medium">{p.totalViews}</td>
+                    <td className="py-3 text-center text-secondary font-medium">{p.totalScans}</td>
                     <td className="py-3 text-center text-emerald-600 font-medium">{p.approvedMessages}</td>
                     <td className="py-3 text-center text-amber-600 font-medium">{p.pendingMessages}</td>
                     <td className="py-3 text-center text-red-600 font-medium">{p.rejectedMessages}</td>
