@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -16,19 +17,43 @@ const AdminLogin = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, isReady } = useAuthReady();
 
   useEffect(() => {
+    if (!isReady || !user?.email) return;
+
+    let cancelled = false;
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      try {
         const { data } = await supabase.rpc("is_any_school_admin", {
-          _email: session.user.email ?? "",
+          _email: user.email ?? "",
         });
-        if (data) navigate("/admin", { replace: true });
+
+        if (cancelled) return;
+
+        if (data) {
+          navigate("/admin", { replace: true });
+          return;
+        }
+
+        await supabase.auth.signOut();
+        toast({
+          title: "Access denied",
+          description: "This email is not registered as an admin.",
+          variant: "destructive",
+        });
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
+
     checkSession();
-  }, [navigate]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isReady, navigate, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,22 +72,6 @@ const AdminLogin = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (error) throw error;
-
-        const { data: isAdmin } = await supabase.rpc("is_any_school_admin", {
-          _email: normalizedEmail,
-        });
-
-        if (!isAdmin) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Access denied",
-            description: "This email is not registered as an admin.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        navigate("/admin", { replace: true });
       }
     } catch (error: any) {
       toast({
@@ -71,7 +80,9 @@ const AdminLogin = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (isSignUp) {
+        setLoading(false);
+      }
     }
   };
 

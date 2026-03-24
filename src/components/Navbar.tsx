@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -17,33 +18,18 @@ const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
   const location = useLocation();
+  const { user, isReady } = useAuthReady();
 
   useEffect(() => {
     let cancelled = false;
+    const authEmail = user?.email?.toLowerCase() ?? null;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!cancelled) {
-        setAuthEmail(session?.user?.email?.toLowerCase() ?? null);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const nextEmail = session?.user?.email?.toLowerCase() ?? null;
-      window.setTimeout(() => {
-        if (!cancelled) setAuthEmail(nextEmail);
-      }, 0);
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
+    if (!isReady) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (!authEmail) {
       setIsAdmin(false);
@@ -60,7 +46,7 @@ const Navbar = () => {
     return () => {
       cancelled = true;
     };
-  }, [authEmail]);
+  }, [isReady, user]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
