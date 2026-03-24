@@ -102,6 +102,17 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className={`inline-flex items-center gap-1.5 text-base font-medium transition-colors ${
+                    location.pathname === "/admin" ? "text-secondary" : "text-muted-foreground"
+                  }`}
+                >
+                  <Shield size={16} /> Admin Dashboard
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
