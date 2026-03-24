@@ -15,6 +15,7 @@ const navLinks = [
 const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
 
 const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
 
