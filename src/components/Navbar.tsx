@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -15,7 +16,23 @@ const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        const { data } = await supabase.rpc("is_any_school_admin", { _email: session.user.email });
+        setIsAdmin(!!data);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => checkAdmin());
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -39,6 +56,16 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-secondary ${
+                location.pathname === "/admin" ? "text-secondary" : "text-muted-foreground"
+              }`}
+            >
+              <Shield size={14} /> Admin
+            </Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -75,6 +102,17 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className={`inline-flex items-center gap-1.5 text-base font-medium transition-colors ${
+                    location.pathname === "/admin" ? "text-secondary" : "text-muted-foreground"
+                  }`}
+                >
+                  <Shield size={16} /> Admin Dashboard
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
