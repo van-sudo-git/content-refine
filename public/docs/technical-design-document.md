@@ -1,6 +1,6 @@
 # Now We See You — Technical Design Document
 
-**Version:** 3.0  
+**Version:** 4.0  
 **Date:** March 24, 2026  
 **Author:** Evaan Ahlawat  
 
@@ -49,7 +49,8 @@
 | Edge Functions | Deno (Supabase Edge Functions) |
 | Storage | Supabase Storage (profile-images bucket) |
 | AI Moderation | Lovable AI Gateway (Google Gemini 2.5 Flash Lite) |
-| Analytics | Google Analytics 4 (G-Y5B9N202G7) |
+| Analytics | Google Analytics 4 (G-Y5B9N202G7) + Custom admin analytics dashboard |
+| QR Tracking | External heros-redirect Supabase project (cross-project read) |
 
 ### Design System
 
@@ -123,7 +124,7 @@
 | `/nominate` | `Nominate.tsx` | No | Public nomination form (Zod-validated) |
 | `/privacy` | `Privacy.tsx` | No | Privacy & ethics policy |
 | `/admin/login` | `AdminLogin.tsx` | No (redirects if already authed) | Admin sign-in/sign-up |
-| `/admin` | `Admin.tsx` | Yes (admin) | Dashboard for nominations, profiles, & admin management |
+| `/admin` | `Admin.tsx` | Yes (admin) | Dashboard with tabs: Nominations, Profiles, Admins, Analytics |
 | `*` | `NotFound.tsx` | No | 404 fallback |
 
 ### 2.2 Major Components
@@ -136,6 +137,7 @@
 | `AnimatedSection` | `AnimatedSection.tsx` | Framer Motion scroll-reveal wrapper |
 | `AppreciationWall` | `AppreciationWall.tsx` | Appreciation form (supports anonymous posts) + message grid + admin delete (trash icon) |
 | `AdminProfileManager` | `AdminProfileManager.tsx` | Full profile CRUD: create/edit profiles, upload images (portrait, QR, additional), publish/unpublish, delete |
+| `AdminAnalytics` | `AdminAnalytics.tsx` | Analytics dashboard: page views, QR scans (from external project), appreciation message stats, 30-day trend chart, per-profile breakdown |
 | `NavLink` | `NavLink.tsx` | Active-state navigation link helper |
 
 ### 2.3 Navigation
@@ -219,9 +221,32 @@ All database operations use the Supabase JS SDK, which calls auto-generated REST
 |----------|-----------|----------|---------|
 | `is_any_school_admin` | `(_email text) → boolean` | `SECURITY DEFINER` | Check if email exists in any school's admin list |
 | `is_school_admin` | `(_email text, _school_id uuid) → boolean` | `SECURITY DEFINER` | Check if email is admin for a specific school |
+| `increment_page_view` | `(p_slug text, p_day date) → void` | `SECURITY DEFINER` | Upsert daily page view count for a profile |
 | `update_updated_at_column` | `() → trigger` | — | Auto-update `updated_at` on row change |
 
 Both admin-check functions use `SECURITY DEFINER` to bypass RLS and prevent recursive policy evaluation.
+
+### 3.4 Cross-Project Data Access (QR Scan Analytics)
+
+The admin analytics dashboard reads QR scan data from an **external Supabase project** (`heros-redirect`) using its publishable anon key. This project handles QR code redirects and logs daily scan counts.
+
+| Property | Value |
+|----------|-------|
+| External project | `iqywlsxdxhhduvbhotwx` (heros-redirect) |
+| Client | `src/lib/herosRedirectClient.ts` |
+| Auth | Publishable anon key (read-only) |
+| Tables read | `redirects` (id, destination_url, active), `redirect_events_daily` (id, day, count) |
+
+**QR ID → Profile Slug mapping** is maintained in `AdminAnalytics.tsx`:
+| QR ID | Profile Slug | Destination |
+|-------|-------------|-------------|
+| `brad` | `brad-fisher` | `/gallery/brad-fisher` |
+| `bradflyer` | `brad-fisher` | `/gallery/brad-fisher` |
+| `about` | (site-wide) | `/about` |
+| `gallery` | (site-wide) | `/gallery` |
+| `whoami` | (site-wide) | `/about` |
+
+When adding new profiles with QR codes, this mapping must be updated.
 
 ### 3.4 Notification Logic
 
@@ -371,6 +396,17 @@ erDiagram
 | `status` | `text` | No | `'pending'` | pending / approved / rejected |
 | `created_at` | `timestamptz` | No | `now()` | When posted |
 
+#### `page_views`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|:--------:|---------|-------|
+| `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
+| `profile_slug` | `text` | No | — | Which profile was viewed |
+| `day` | `date` | No | `CURRENT_DATE` | Date of views |
+| `views` | `integer` | No | `1` | Count of views that day |
+
+**Unique constraint:** `(profile_slug, day)` — one row per profile per day, upserted via `increment_page_view` RPC.
+
 ### 4.3 Foreign Keys
 
 | From | To | On Delete |
@@ -430,6 +466,12 @@ erDiagram
 |--------|---------|-------|-----------|
 | Profile images for published profiles are public | SELECT | public | `EXISTS (SELECT 1 FROM profiles WHERE id = profile_id AND status = 'published')` |
 | Admins can manage profile images | ALL | authenticated | `is_any_school_admin(jwt.email)` |
+
+#### `page_views`
+| Policy | Command | Roles | Condition |
+|--------|---------|-------|-----------|
+| Anyone can insert page views | INSERT | public | `true` |
+| Admins can view page analytics | SELECT | authenticated | `is_any_school_admin(jwt.email)` |
 
 ---
 
@@ -1057,6 +1099,13 @@ GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
 - ✅ Database indexes on profiles, profile_images
 - ✅ Brad Fisher migrated from hardcoded to dynamic system
 
+### Resolved Since v3.0
+- ✅ Admin analytics dashboard with page views, QR scans, and appreciation stats
+- ✅ Page view tracking via `increment_page_view` RPC (fires on profile page load)
+- ✅ Cross-project QR scan analytics from heros-redirect Supabase
+- ✅ `page_views` table with RLS policies for admin read + public insert
+- ✅ Persistent admin navbar link across all pages
+
 ---
 
 ## Appendix A: SQL Schema
@@ -1064,7 +1113,7 @@ GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
 ```sql
 -- =============================================
 -- FULL SQL SCHEMA — Now We See You
--- Version 3.0 — March 24, 2026
+-- Version 4.0 — March 24, 2026
 -- =============================================
 
 -- Schools
@@ -1344,6 +1393,7 @@ const { error } = await supabase.from("nominations").insert({
 |-----------------|----------|-------------|---------|
 | Lovable AI Gateway | `https://ai.gateway.lovable.dev/v1/chat/completions` | Bearer token (`LOVABLE_API_KEY`) | Content moderation |
 | Google Analytics 4 | `G-Y5B9N202G7` | Public measurement ID | Website analytics |
+| heros-redirect Supabase | `iqywlsxdxhhduvbhotwx` | Publishable anon key | QR scan tracking (cross-project read) |
 
 ---
 
