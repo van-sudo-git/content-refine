@@ -17,30 +17,23 @@ const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     let cancelled = false;
 
-    const checkAdmin = async (email: string | undefined) => {
-      if (!email) {
-        if (!cancelled) setIsAdmin(false);
-        return;
-      }
-      const { data } = await supabase.rpc("is_any_school_admin", { _email: email });
-      if (!cancelled) setIsAdmin(!!data);
-    };
-
-    // Initial check
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!cancelled) checkAdmin(session?.user?.email ?? undefined);
+      if (!cancelled) {
+        setAuthEmail(session?.user?.email?.toLowerCase() ?? null);
+      }
     });
 
-    // Listen for sign-in / sign-out only
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        checkAdmin(session?.user?.email ?? undefined);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextEmail = session?.user?.email?.toLowerCase() ?? null;
+      window.setTimeout(() => {
+        if (!cancelled) setAuthEmail(nextEmail);
+      }, 0);
     });
 
     return () => {
@@ -48,6 +41,26 @@ const Navbar = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!authEmail) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const checkAdmin = async () => {
+      const { data } = await supabase.rpc("is_any_school_admin", { _email: authEmail });
+      if (!cancelled) setIsAdmin(!!data);
+    };
+
+    checkAdmin();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authEmail]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
