@@ -467,6 +467,12 @@ erDiagram
 | Profile images for published profiles are public | SELECT | public | `EXISTS (SELECT 1 FROM profiles WHERE id = profile_id AND status = 'published')` |
 | Admins can manage profile images | ALL | authenticated | `is_any_school_admin(jwt.email)` |
 
+#### `page_views`
+| Policy | Command | Roles | Condition |
+|--------|---------|-------|-----------|
+| Anyone can insert page views | INSERT | public | `true` |
+| Admins can view page analytics | SELECT | authenticated | `is_any_school_admin(jwt.email)` |
+
 ---
 
 ## 5. Storage Design
