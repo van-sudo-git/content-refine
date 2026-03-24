@@ -1,19 +1,64 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
-import bradPortrait from "@/assets/brad-portrait.jpeg";
+import { supabase } from "@/integrations/supabase/client";
 
-const galleryItems = [
-  {
-    name: "Brad Fisher",
-    role: "Head Custodian, LWHS",
-    image: bradPortrait,
-    slug: "brad-fisher",
-  },
-];
+interface GalleryProfile {
+  id: string;
+  slug: string;
+  name: string;
+  role: string;
+  department: string | null;
+  portrait_url: string | null;
+}
 
 const Gallery = () => {
+  const [profiles, setProfiles] = useState<GalleryProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfiles = async () => {
+      // Fetch published profiles
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, slug, name, role, department")
+        .eq("status", "published")
+        .order("created_at", { ascending: true });
+
+      if (!profilesData) {
+        setLoading(false);
+        return;
+      }
+
+      // Fetch portrait images for these profiles
+      const profileIds = (profilesData as GalleryProfile[]).map((p) => p.id);
+      const { data: imagesData } = await supabase
+        .from("profile_images")
+        .select("profile_id, image_url")
+        .in("profile_id", profileIds)
+        .eq("image_type", "portrait");
+
+      const portraitMap = new Map<string, string>();
+      if (imagesData) {
+        for (const img of imagesData) {
+          portraitMap.set(img.profile_id, img.image_url);
+        }
+      }
+
+      setProfiles(
+        (profilesData as GalleryProfile[]).map((p) => ({
+          ...p,
+          portrait_url: portraitMap.get(p.id) || null,
+        }))
+      );
+      setLoading(false);
+    };
+
+    loadProfiles();
+  }, []);
+
   return (
     <Layout>
       <section className="py-24">
@@ -23,40 +68,68 @@ const Gallery = () => {
               <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-sm">The People Behind the Scenes</p>
               <h1 className="font-display text-5xl md:text-6xl text-foreground mb-4">Gallery</h1>
               <p className="text-muted-foreground max-w-xl mx-auto">
-                Meet the unsung heroes who keep our school running. Each portrait and story is shared with full consent.
+                Meet the unsung heroes who keep our communities running. Each portrait and story is shared with full consent.
               </p>
             </div>
           </AnimatedSection>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {galleryItems.map((item, i) => (
-              <AnimatedSection key={item.slug} delay={i * 0.1}>
-                <Link to={`/gallery/${item.slug}`} className="group block">
-                  <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-shadow">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
-                    {item.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">{item.role}</p>
-                </Link>
-              </AnimatedSection>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading profiles...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {profiles.map((profile, i) => (
+                <AnimatedSection key={profile.id} delay={i * 0.1}>
+                  <Link to={`/gallery/${profile.slug}`} className="group block">
+                    <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-shadow">
+                      {profile.portrait_url ? (
+                        <img
+                          src={profile.portrait_url}
+                          alt={profile.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <span className="font-display text-4xl opacity-30">{profile.name[0]}</span>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
+                      {profile.name}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {profile.role}
+                      {profile.department && `, ${profile.department}`}
+                    </p>
+                  </Link>
+                </AnimatedSection>
+              ))}
+            </div>
+          )}
 
-          {galleryItems.length === 1 && (
+          {!loading && profiles.length === 0 && (
             <AnimatedSection delay={0.3}>
-              <div className="text-center mt-16 p-12 bg-card rounded-2xl border border-border max-w-lg mx-auto">
-                <p className="text-muted-foreground mb-4">More portraits are on the way — new staff stories will be added as participants join the project.</p>
+              <div className="text-center mt-4 p-12 bg-card rounded-2xl border border-border max-w-lg mx-auto">
+                <p className="text-muted-foreground mb-4">Profiles are being prepared. Check back soon!</p>
                 <Link
                   to="/nominate"
                   className="inline-flex items-center gap-2 text-secondary font-medium hover:underline"
                 >
                   Nominate someone <ArrowRight size={16} />
+                </Link>
+              </div>
+            </AnimatedSection>
+          )}
+
+          {!loading && profiles.length > 0 && (
+            <AnimatedSection delay={profiles.length * 0.1 + 0.2}>
+              <div className="text-center mt-16">
+                <Link
+                  to="/nominate"
+                  className="inline-flex items-center gap-2 text-secondary font-medium hover:underline"
+                >
+                  Know someone who deserves to be seen? Nominate them <ArrowRight size={16} />
                 </Link>
               </div>
             </AnimatedSection>

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import AdminProfileManager from "@/components/AdminProfileManager";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Nomination = Tables<"nominations">;
@@ -25,7 +26,7 @@ const Admin = () => {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"nominations" | "admins">("nominations");
+  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,6 @@ const Admin = () => {
         return;
       }
 
-      // Get school for this admin
       const { data: adminData } = await supabase
         .from("school_admins")
         .select("school_id")
@@ -190,6 +190,12 @@ const Admin = () => {
               Nominations
             </Button>
             <Button
+              variant={activeTab === "profiles" ? "secondary" : "outline"}
+              onClick={() => setActiveTab("profiles")}
+            >
+              Profiles
+            </Button>
+            <Button
               variant={activeTab === "admins" ? "secondary" : "outline"}
               onClick={() => setActiveTab("admins")}
             >
@@ -274,6 +280,11 @@ const Admin = () => {
                 })
               )}
             </div>
+          )}
+
+          {/* Profiles Tab */}
+          {activeTab === "profiles" && (
+            <AdminProfileManager schoolId={schoolId} />
           )}
 
           {/* Admins Tab */}
