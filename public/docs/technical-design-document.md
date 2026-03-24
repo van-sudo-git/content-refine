@@ -124,7 +124,7 @@
 | `/nominate` | `Nominate.tsx` | No | Public nomination form (Zod-validated) |
 | `/privacy` | `Privacy.tsx` | No | Privacy & ethics policy |
 | `/admin/login` | `AdminLogin.tsx` | No (redirects if already authed) | Admin sign-in/sign-up |
-| `/admin` | `Admin.tsx` | Yes (admin) | Dashboard for nominations, profiles, & admin management |
+| `/admin` | `Admin.tsx` | Yes (admin) | Dashboard with tabs: Nominations, Profiles, Admins, Analytics |
 | `*` | `NotFound.tsx` | No | 404 fallback |
 
 ### 2.2 Major Components
