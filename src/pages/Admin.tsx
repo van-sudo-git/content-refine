@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
+import AdminAnalytics from "@/components/AdminAnalytics";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Nomination = Tables<"nominations">;
@@ -27,7 +28,7 @@ const Admin = () => {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins">("nominations");
+  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [loading, setLoading] = useState(true);
@@ -207,6 +208,12 @@ const Admin = () => {
             >
               Manage Admins
             </Button>
+            <Button
+              variant={activeTab === "analytics" ? "secondary" : "outline"}
+              onClick={() => setActiveTab("analytics")}
+            >
+              Analytics
+            </Button>
           </div>
 
           {/* Nominations Tab */}
@@ -291,6 +298,11 @@ const Admin = () => {
           {/* Profiles Tab */}
           {activeTab === "profiles" && (
             <AdminProfileManager schoolId={schoolId} />
+          )}
+
+          {/* Analytics Tab */}
+          {activeTab === "analytics" && (
+            <AdminAnalytics schoolId={schoolId} />
           )}
 
           {/* Admins Tab */}
