@@ -78,7 +78,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
       } else {
         toast({
           title: "Message not posted",
-          description: data?.reason || "Please ensure your message is positive and appreciative.",
+          description: data?.reason || "This message wasn't posted as it doesn't appear to be positive or appreciative. Please try again with a kinder message.",
           variant: "destructive",
         });
       }
