@@ -49,7 +49,8 @@
 | Edge Functions | Deno (Supabase Edge Functions) |
 | Storage | Supabase Storage (profile-images bucket) |
 | AI Moderation | Lovable AI Gateway (Google Gemini 2.5 Flash Lite) |
-| Analytics | Google Analytics 4 (G-Y5B9N202G7) |
+| Analytics | Google Analytics 4 (G-Y5B9N202G7) + Custom admin analytics dashboard |
+| QR Tracking | External heros-redirect Supabase project (cross-project read) |
 
 ### Design System
 
