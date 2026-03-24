@@ -15,8 +15,23 @@ const navLinks = [
 const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        const { data } = await supabase.rpc("is_any_school_admin", { _email: session.user.email });
+        setIsAdmin(!!data);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => checkAdmin());
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
