@@ -396,6 +396,17 @@ erDiagram
 | `status` | `text` | No | `'pending'` | pending / approved / rejected |
 | `created_at` | `timestamptz` | No | `now()` | When posted |
 
+#### `page_views`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|:--------:|---------|-------|
+| `id` | `uuid` | No | `gen_random_uuid()` | Primary key |
+| `profile_slug` | `text` | No | — | Which profile was viewed |
+| `day` | `date` | No | `CURRENT_DATE` | Date of views |
+| `views` | `integer` | No | `1` | Count of views that day |
+
+**Unique constraint:** `(profile_slug, day)` — one row per profile per day, upserted via `increment_page_view` RPC.
+
 ### 4.3 Foreign Keys
 
 | From | To | On Delete |
