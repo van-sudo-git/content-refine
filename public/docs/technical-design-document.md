@@ -221,9 +221,32 @@ All database operations use the Supabase JS SDK, which calls auto-generated REST
 |----------|-----------|----------|---------|
 | `is_any_school_admin` | `(_email text) → boolean` | `SECURITY DEFINER` | Check if email exists in any school's admin list |
 | `is_school_admin` | `(_email text, _school_id uuid) → boolean` | `SECURITY DEFINER` | Check if email is admin for a specific school |
+| `increment_page_view` | `(p_slug text, p_day date) → void` | `SECURITY DEFINER` | Upsert daily page view count for a profile |
 | `update_updated_at_column` | `() → trigger` | — | Auto-update `updated_at` on row change |
 
 Both admin-check functions use `SECURITY DEFINER` to bypass RLS and prevent recursive policy evaluation.
+
+### 3.4 Cross-Project Data Access (QR Scan Analytics)
+
+The admin analytics dashboard reads QR scan data from an **external Supabase project** (`heros-redirect`) using its publishable anon key. This project handles QR code redirects and logs daily scan counts.
+
+| Property | Value |
+|----------|-------|
+| External project | `iqywlsxdxhhduvbhotwx` (heros-redirect) |
+| Client | `src/lib/herosRedirectClient.ts` |
+| Auth | Publishable anon key (read-only) |
+| Tables read | `redirects` (id, destination_url, active), `redirect_events_daily` (id, day, count) |
+
+**QR ID → Profile Slug mapping** is maintained in `AdminAnalytics.tsx`:
+| QR ID | Profile Slug | Destination |
+|-------|-------------|-------------|
+| `brad` | `brad-fisher` | `/gallery/brad-fisher` |
+| `bradflyer` | `brad-fisher` | `/gallery/brad-fisher` |
+| `about` | (site-wide) | `/about` |
+| `gallery` | (site-wide) | `/gallery` |
+| `whoami` | (site-wide) | `/about` |
+
+When adding new profiles with QR codes, this mapping must be updated.
 
 ### 3.4 Notification Logic
 
