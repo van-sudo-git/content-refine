@@ -56,6 +56,16 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-secondary ${
+                location.pathname === "/admin" ? "text-secondary" : "text-muted-foreground"
+              }`}
+            >
+              <Shield size={14} /> Admin
+            </Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
