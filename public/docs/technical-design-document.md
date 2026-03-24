@@ -1082,6 +1082,13 @@ GA4 is integrated via the global `gtag.js` snippet in `index.html`. It tracks:
 - ✅ Database indexes on profiles, profile_images
 - ✅ Brad Fisher migrated from hardcoded to dynamic system
 
+### Resolved Since v3.0
+- ✅ Admin analytics dashboard with page views, QR scans, and appreciation stats
+- ✅ Page view tracking via `increment_page_view` RPC (fires on profile page load)
+- ✅ Cross-project QR scan analytics from heros-redirect Supabase
+- ✅ `page_views` table with RLS policies for admin read + public insert
+- ✅ Persistent admin navbar link across all pages
+
 ---
 
 ## Appendix A: SQL Schema
