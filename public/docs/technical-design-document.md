@@ -1393,6 +1393,7 @@ const { error } = await supabase.from("nominations").insert({
 |-----------------|----------|-------------|---------|
 | Lovable AI Gateway | `https://ai.gateway.lovable.dev/v1/chat/completions` | Bearer token (`LOVABLE_API_KEY`) | Content moderation |
 | Google Analytics 4 | `G-Y5B9N202G7` | Public measurement ID | Website analytics |
+| heros-redirect Supabase | `iqywlsxdxhhduvbhotwx` | Publishable anon key | QR scan tracking (cross-project read) |
 
 ---
 
