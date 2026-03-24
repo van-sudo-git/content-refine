@@ -70,8 +70,27 @@ const AdminLogin = () => {
           description: "We sent you a confirmation link. Come back after confirming.",
         });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (error) throw error;
+
+        const signedInEmail = data.user?.email?.trim().toLowerCase() ?? normalizedEmail;
+        const { data: isAdmin, error: adminError } = await supabase.rpc("is_any_school_admin", {
+          _email: signedInEmail,
+        });
+
+        if (adminError) throw adminError;
+
+        if (!isAdmin) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access denied",
+            description: "This email is not registered as an admin.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        navigate("/admin", { replace: true });
       }
     } catch (error: any) {
       toast({
@@ -80,9 +99,7 @@ const AdminLogin = () => {
         variant: "destructive",
       });
     } finally {
-      if (isSignUp) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
