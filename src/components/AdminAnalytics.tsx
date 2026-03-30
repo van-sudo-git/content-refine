@@ -1,28 +1,12 @@
 import { useState, useEffect } from "react";
 import { BarChart3, Eye, QrCode, MessageCircle, XCircle, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { herosRedirectClient } from "@/lib/herosRedirectClient";
-
-// Maps heros-redirect QR IDs to profile slugs
-const QR_ID_TO_SLUG: Record<string, string> = {
-  brad: "brad-fisher",
-  bradflyer: "brad-fisher",
-};
-
-// Human-readable labels for QR code IDs
-const QR_LABELS: Record<string, string> = {
-  brad: "Brad QR",
-  bradflyer: "Brad Flyer QR",
-  about: "About QR",
-  gallery: "Gallery QR",
-  whoami: "Who Am I QR",
-};
 
 interface ProfileStat {
   slug: string;
   name: string;
   totalViews: number;
-  qrScans: Record<string, number>; // per QR ID
+  qrScans: Record<string, number>;
   approvedMessages: number;
   pendingMessages: number;
   rejectedMessages: number;
@@ -66,21 +50,29 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
 
     const slugs = profiles.map((p) => p.slug);
 
-    const [pageViewsRes, appreciationsRes, qrDailyRes] = await Promise.all([
+    // All data from THIS project's tables
+    const [pageViewsRes, appreciationsRes, redirectsRes, qrDailyRes] = await Promise.all([
       supabase.from("page_views").select("profile_slug, day, views").in("profile_slug", slugs),
       supabase.from("appreciations").select("profile_slug, status").in("profile_slug", slugs),
-      herosRedirectClient.from("redirect_events_daily").select("id, day, count"),
+      supabase.from("redirects").select("id, profile_slug").in("profile_slug", slugs),
+      supabase.from("redirect_events_daily").select("id, day, count"),
     ]);
 
     const pageViews = pageViewsRes.data ?? [];
     const appreciations = appreciationsRes.data ?? [];
+    const redirects = (redirectsRes.data ?? []) as { id: string; profile_slug: string }[];
     const qrDaily = (qrDailyRes.data ?? []) as { id: string; day: string; count: number }[];
 
-    // Collect all unique QR IDs that map to profiles
-    const profileQrIds = new Set<string>();
-    Object.entries(QR_ID_TO_SLUG).forEach(([qrId, slug]) => {
-      if (slugs.includes(slug)) profileQrIds.add(qrId);
+    // Build slug → qr IDs mapping dynamically from redirects table
+    const slugToQrIds: Record<string, string[]> = {};
+    redirects.forEach((r) => {
+      if (!slugToQrIds[r.profile_slug]) slugToQrIds[r.profile_slug] = [];
+      slugToQrIds[r.profile_slug].push(r.id);
     });
+
+    // Collect all QR IDs for the table header
+    const profileQrIds = new Set<string>();
+    redirects.forEach((r) => profileQrIds.add(r.id));
     setAllQrIds(Array.from(profileQrIds).sort());
 
     const stats: ProfileStat[] = profiles.map((p) => {
@@ -88,11 +80,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
         .filter((v) => v.profile_slug === p.slug)
         .reduce((sum, v) => sum + v.views, 0);
 
-      // Per-QR-ID scan counts for this profile
-      const qrIds = Object.entries(QR_ID_TO_SLUG)
-        .filter(([, slug]) => slug === p.slug)
-        .map(([qrId]) => qrId);
-
+      const qrIds = slugToQrIds[p.slug] || [];
       const qrScans: Record<string, number> = {};
       qrIds.forEach((qrId) => {
         qrScans[qrId] = qrDaily
@@ -227,7 +215,7 @@ const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
                     <th key={qrId} className="pb-3 font-medium text-center">
                       <span className="flex items-center justify-center gap-1">
                         <QrCode size={12} />
-                        {QR_LABELS[qrId] || qrId}
+                        {qrId}
                       </span>
                     </th>
                   ))}

@@ -17,7 +17,6 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    // Extract redirect ID from query param ?id=xxx
     const id = url.searchParams.get("id");
 
     if (!id) {
@@ -39,10 +38,10 @@ Deno.serve(async (req) => {
     }
 
     // Log the scan (fire-and-forget)
-    await supabase.rpc("increment_redirect_daily", {
+    supabase.rpc("increment_redirect_daily", {
       p_id: id,
       p_day: isoDay(new Date()),
-    });
+    }).then(() => {}).catch(console.error);
 
     let destination = redirect.destination_url.trim();
     if (!/^https?:\/\//i.test(destination)) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, X, Save, Eye, Trash2, Plus, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Save, Eye, Trash2, Plus, ArrowLeft, Image as ImageIcon, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import QRCode from "qrcode";
 
 interface ProfileImage {
   id: string;
@@ -103,6 +104,61 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     }));
   };
 
+  /** Generate a QR code PNG, upload to storage, and create a redirect entry */
+  const generateAndUploadQR = async (profileId: string, slug: string) => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const redirectId = slug; // use the slug as the redirect ID
+      const redirectUrl = `https://${projectId}.supabase.co/functions/v1/qr-redirect?id=${redirectId}`;
+
+      // Generate QR code as data URL
+      const qrDataUrl = await QRCode.toDataURL(redirectUrl, {
+        width: 512,
+        margin: 2,
+        color: { dark: "#1E293B", light: "#FFFFFF" },
+      });
+
+      // Convert data URL to blob
+      const response = await fetch(qrDataUrl);
+      const blob = await response.blob();
+
+      // Upload to storage
+      const path = `${slug}/qr-${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from("profile-images")
+        .upload(path, blob, { contentType: "image/png" });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("profile-images")
+        .getPublicUrl(path);
+
+      // Save as profile image with type "qr"
+      await supabase.from("profile_images").insert({
+        profile_id: profileId,
+        image_url: urlData.publicUrl,
+        image_type: "qr",
+        sort_order: 999,
+      });
+
+      // Create or update the redirect entry
+      const destinationUrl = `https://nowweseeyou.lovable.app/gallery/${slug}`;
+      await supabase.from("redirects").upsert({
+        id: redirectId,
+        profile_slug: slug,
+        destination_url: destinationUrl,
+        active: true,
+      }, { onConflict: "id" });
+
+      return urlData.publicUrl;
+    } catch (error: any) {
+      console.error("QR generation error:", error);
+      toast({ title: "QR generation failed", description: error.message, variant: "destructive" });
+      return null;
+    }
+  };
+
   const uploadImage = async (file: File, imageType: string) => {
     const profileId = editing?.id;
     if (!profileId && !isNew) return;
@@ -137,7 +193,6 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
         if (insertError) throw insertError;
         if (imgData) setImages((prev) => [...prev, imgData as ProfileImage]);
       } else {
-        // For new profiles, store temporarily
         setImages((prev) => [
           ...prev,
           {
@@ -197,19 +252,23 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
 
         if (error) throw error;
 
+        const newProfile = profile as Profile;
+
         // Save temp images
-        if (profile && images.length > 0) {
+        if (images.length > 0) {
           const imageInserts = images.map((img, idx) => ({
-            profile_id: (profile as Profile).id,
+            profile_id: newProfile.id,
             image_url: img.image_url,
             image_type: img.image_type,
             sort_order: idx,
           }));
-
           await supabase.from("profile_images").insert(imageInserts);
         }
 
-        toast({ title: "Profile created", description: "It's saved as a draft." });
+        // Auto-generate QR code
+        await generateAndUploadQR(newProfile.id, form.slug.trim());
+
+        toast({ title: "Profile created", description: "Saved as draft with QR code generated." });
       } else if (editing) {
         const { error } = await supabase
           .from("profiles")
@@ -223,6 +282,15 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           .eq("id", editing.id);
 
         if (error) throw error;
+
+        // Update redirect destination if slug changed
+        if (editing.slug !== form.slug.trim()) {
+          const destinationUrl = `https://nowweseeyou.lovable.app/gallery/${form.slug.trim()}`;
+          await supabase.from("redirects")
+            .update({ destination_url: destinationUrl, profile_slug: form.slug.trim() })
+            .eq("profile_slug", editing.slug);
+        }
+
         toast({ title: "Profile updated" });
       }
 
@@ -241,6 +309,17 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  /** Manually generate/regenerate a QR code for an existing profile */
+  const handleGenerateQR = async (profileId: string, slug: string) => {
+    setUploading(true);
+    const url = await generateAndUploadQR(profileId, slug);
+    if (url) {
+      toast({ title: "QR Code generated!", description: "QR code has been added to the profile images." });
+      await loadImages(profileId);
+    }
+    setUploading(false);
   };
 
   const toggleStatus = async (profile: Profile) => {
@@ -274,6 +353,8 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
 
   // Editor view
   if (isNew || editing) {
+    const hasQR = images.some((img) => img.image_type === "qr");
+
     return (
       <div className="space-y-6">
         <button
@@ -342,11 +423,10 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
         <div className="bg-card rounded-xl border border-border p-6 space-y-5">
           <h4 className="font-display text-lg text-foreground">Images</h4>
 
-          {/* Upload buttons by type */}
+          {/* Upload buttons */}
           <div className="flex flex-wrap gap-3">
             {[
               { type: "portrait", label: "Portrait" },
-              { type: "qr", label: "QR Code" },
               { type: "additional", label: "Additional Photo" },
             ].map(({ type, label }) => (
               <label key={type} className="cursor-pointer">
@@ -366,7 +446,26 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
                 </span>
               </label>
             ))}
+
+            {/* Generate QR button (only for existing profiles) */}
+            {editing && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleGenerateQR(editing.id, form.slug)}
+                disabled={uploading || !form.slug.trim()}
+                className="inline-flex items-center gap-2 px-4 py-2"
+              >
+                <QrCode size={14} /> {hasQR ? "Regenerate QR Code" : "Generate QR Code"}
+              </Button>
+            )}
           </div>
+
+          {isNew && form.slug && (
+            <p className="text-xs text-muted-foreground italic">
+              A QR code will be auto-generated when you save the profile.
+            </p>
+          )}
 
           {/* Image grid */}
           {images.length > 0 && (
@@ -413,7 +512,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground text-sm">
-          Create and manage gallery profiles. Upload images, write bios, and publish when ready.
+          Create and manage gallery profiles. QR codes are auto-generated on save.
         </p>
         <Button onClick={startNew} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
           <Plus size={14} /> New Profile
