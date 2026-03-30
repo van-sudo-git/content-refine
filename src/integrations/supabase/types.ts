@@ -200,6 +200,56 @@ export type Database = {
           },
         ]
       }
+      redirect_events_daily: {
+        Row: {
+          count: number
+          day: string
+          id: string
+        }
+        Insert: {
+          count?: number
+          day?: string
+          id: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redirect_events_daily_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "redirects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redirects: {
+        Row: {
+          active: boolean
+          created_at: string
+          destination_url: string
+          id: string
+          profile_slug: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          destination_url: string
+          id: string
+          profile_slug: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          destination_url?: string
+          id?: string
+          profile_slug?: string
+        }
+        Relationships: []
+      }
       school_admins: {
         Row: {
           added_at: string
@@ -257,6 +307,10 @@ export type Database = {
     Functions: {
       increment_page_view: {
         Args: { p_day: string; p_slug: string }
+        Returns: undefined
+      }
+      increment_redirect_daily: {
+        Args: { p_day: string; p_id: string }
         Returns: undefined
       }
       is_any_school_admin: { Args: { _email: string }; Returns: boolean }
