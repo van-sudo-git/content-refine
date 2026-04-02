@@ -131,7 +131,7 @@ const Admin = () => {
   };
 
   const removeAdmin = async (id: string, email: string) => {
-    if (email === userEmail) {
+    if (isDemo) { demoGuard(); return; }
       toast({ title: "Can't remove yourself", variant: "destructive" });
       return;
     }
