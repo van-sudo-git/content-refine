@@ -86,7 +86,12 @@ const Admin = () => {
     if (adminRes.data) setAdmins(adminRes.data);
   };
 
+  const demoGuard = () => {
+    toast({ title: "Demo Mode", description: "This action is disabled in demo mode.", variant: "destructive" });
+  };
+
   const updateStatus = async (id: string, status: string) => {
+    if (isDemo) { demoGuard(); return; }
     const { error } = await supabase
       .from("nominations")
       .update({ status, admin_notes: adminNotes || null })
