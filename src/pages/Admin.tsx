@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
+import DemoProfileManager from "@/components/DemoProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import type { Tables } from "@/integrations/supabase/types";
 import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
@@ -332,9 +333,7 @@ const Admin = () => {
           {/* Profiles Tab */}
           {activeTab === "profiles" && (
             isDemo ? (
-              <div className="bg-card rounded-xl border border-border p-12 text-center">
-                <p className="text-muted-foreground">Profile management is disabled in demo mode.</p>
-              </div>
+              <DemoProfileManager />
             ) : (
               <AdminProfileManager schoolId={schoolId} />
             )
