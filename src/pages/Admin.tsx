@@ -330,12 +330,18 @@ const Admin = () => {
 
           {/* Profiles Tab */}
           {activeTab === "profiles" && (
-            <AdminProfileManager schoolId={schoolId} />
+            isDemo ? (
+              <div className="bg-card rounded-xl border border-border p-12 text-center">
+                <p className="text-muted-foreground">Profile management is disabled in demo mode.</p>
+              </div>
+            ) : (
+              <AdminProfileManager schoolId={schoolId} />
+            )
           )}
 
           {/* Analytics Tab */}
           {activeTab === "analytics" && (
-            <AdminAnalytics schoolId={schoolId} />
+            <AdminAnalytics schoolId={schoolId} isDemo={isDemo} />
           )}
 
           {/* Admins Tab */}
