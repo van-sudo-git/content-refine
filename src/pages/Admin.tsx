@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { LogOut, CheckCircle, XCircle, Clock, Star, UserPlus, Trash2 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { LogOut, CheckCircle, XCircle, Clock, Star, UserPlus, Trash2, Eye } from "lucide-react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import type { Tables } from "@/integrations/supabase/types";
+import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 
 type Nomination = Tables<"nominations">;
 
