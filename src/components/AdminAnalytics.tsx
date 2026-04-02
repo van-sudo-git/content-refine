@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { BarChart3, Eye, QrCode, MessageCircle, XCircle, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DEMO_PROFILE_STATS,
+  DEMO_ALL_QR_IDS,
+  DEMO_DAILY_STATS,
+  DEMO_TOTALS,
+} from "@/lib/demoData";
 
 interface ProfileStat {
   slug: string;
@@ -18,22 +24,23 @@ interface DailyStat {
   scans: number;
 }
 
-const AdminAnalytics = ({ schoolId }: { schoolId: string | null }) => {
-  const [profileStats, setProfileStats] = useState<ProfileStat[]>([]);
-  const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
-  const [allQrIds, setAllQrIds] = useState<string[]>([]);
-  const [totals, setTotals] = useState({
+const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null; isDemo?: boolean }) => {
+  const [profileStats, setProfileStats] = useState<ProfileStat[]>(isDemo ? DEMO_PROFILE_STATS : []);
+  const [dailyStats, setDailyStats] = useState<DailyStat[]>(isDemo ? DEMO_DAILY_STATS : []);
+  const [allQrIds, setAllQrIds] = useState<string[]>(isDemo ? DEMO_ALL_QR_IDS : []);
+  const [totals, setTotals] = useState(isDemo ? DEMO_TOTALS : {
     views: 0,
     scans: 0,
     approved: 0,
     pending: 0,
     rejected: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isDemo);
 
   useEffect(() => {
+    if (isDemo) return;
     loadAnalytics();
-  }, [schoolId]);
+  }, [schoolId, isDemo]);
 
   const loadAnalytics = async () => {
     setLoading(true);

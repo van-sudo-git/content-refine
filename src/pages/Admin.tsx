@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { LogOut, CheckCircle, XCircle, Clock, Star, UserPlus, Trash2 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { LogOut, CheckCircle, XCircle, Clock, Star, UserPlus, Trash2, Eye } from "lucide-react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import type { Tables } from "@/integrations/supabase/types";
+import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 
 type Nomination = Tables<"nominations">;
 
@@ -23,19 +24,23 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 };
 
 const Admin = () => {
-  const [nominations, setNominations] = useState<Nomination[]>([]);
-  const [admins, setAdmins] = useState<{ id: string; email: string }[]>([]);
+  const [searchParams] = useSearchParams();
+  const isDemo = searchParams.get("demo") === "true";
+
+  const [nominations, setNominations] = useState<Nomination[]>(isDemo ? DEMO_NOMINATIONS : []);
+  const [admins, setAdmins] = useState<{ id: string; email: string }[]>(isDemo ? DEMO_ADMINS : []);
   const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [schoolId, setSchoolId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [schoolId, setSchoolId] = useState<string | null>(isDemo ? "demo-school" : null);
+  const [userEmail, setUserEmail] = useState<string | null>(isDemo ? DEMO_EMAIL : null);
   const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isDemo);
   const navigate = useNavigate();
   const { user, isReady } = useAuthReady();
 
   useEffect(() => {
+    if (isDemo) return; // skip auth check in demo mode
     if (!isReady) return;
 
     const init = async () => {
@@ -70,7 +75,7 @@ const Admin = () => {
     };
 
     init();
-  }, [isReady, navigate, user]);
+  }, [isReady, navigate, user, isDemo]);
 
   const loadData = async (sid: string) => {
     const [nomRes, adminRes] = await Promise.all([
@@ -81,7 +86,12 @@ const Admin = () => {
     if (adminRes.data) setAdmins(adminRes.data);
   };
 
+  const demoGuard = () => {
+    toast({ title: "Demo Mode", description: "This action is disabled in demo mode.", variant: "destructive" });
+  };
+
   const updateStatus = async (id: string, status: string) => {
+    if (isDemo) { demoGuard(); return; }
     const { error } = await supabase
       .from("nominations")
       .update({ status, admin_notes: adminNotes || null })
@@ -99,6 +109,7 @@ const Admin = () => {
   };
 
   const addAdmin = async () => {
+    if (isDemo) { demoGuard(); return; }
     if (!schoolId || !newAdminEmail.trim()) return;
 
     const { error } = await supabase.from("school_admins").insert({
@@ -121,6 +132,7 @@ const Admin = () => {
   };
 
   const removeAdmin = async (id: string, email: string) => {
+    if (isDemo) { demoGuard(); return; }
     if (email === userEmail) {
       toast({ title: "Can't remove yourself", variant: "destructive" });
       return;
@@ -137,6 +149,10 @@ const Admin = () => {
   };
 
   const handleSignOut = async () => {
+    if (isDemo) {
+      navigate("/admin/login", { replace: true });
+      return;
+    }
     await supabase.auth.signOut();
     navigate("/admin/login", { replace: true });
   };
@@ -162,14 +178,32 @@ const Admin = () => {
     <Layout>
       <section className="py-24">
         <div className="container mx-auto px-6">
+          {/* Demo Banner */}
+          {isDemo && (
+            <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-4 flex items-center gap-3">
+              <Eye size={20} className="text-amber-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Demo Mode</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  You're viewing sample data. Sign in with a real admin account to manage your school.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" className="ml-auto shrink-0" onClick={() => navigate("/admin/login")}>
+                Sign In
+              </Button>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="font-display text-4xl text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground text-sm mt-1">Signed in as {userEmail}</p>
+              <p className="text-muted-foreground text-sm mt-1">
+                {isDemo ? "Demo account" : `Signed in as ${userEmail}`}
+              </p>
             </div>
             <Button variant="outline" onClick={handleSignOut}>
-              <LogOut size={16} /> Sign Out
+              <LogOut size={16} /> {isDemo ? "Exit Demo" : "Sign Out"}
             </Button>
           </div>
 
@@ -297,12 +331,18 @@ const Admin = () => {
 
           {/* Profiles Tab */}
           {activeTab === "profiles" && (
-            <AdminProfileManager schoolId={schoolId} />
+            isDemo ? (
+              <div className="bg-card rounded-xl border border-border p-12 text-center">
+                <p className="text-muted-foreground">Profile management is disabled in demo mode.</p>
+              </div>
+            ) : (
+              <AdminProfileManager schoolId={schoolId} />
+            )
           )}
 
           {/* Analytics Tab */}
           {activeTab === "analytics" && (
-            <AdminAnalytics schoolId={schoolId} />
+            <AdminAnalytics schoolId={schoolId} isDemo={isDemo} />
           )}
 
           {/* Admins Tab */}

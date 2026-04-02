@@ -167,7 +167,7 @@ const AdminLogin = () => {
                   </Button>
                 </form>
 
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center space-y-2">
                   <button
                     type="button"
                     onClick={() => setIsSignUp(!isSignUp)}
@@ -177,6 +177,18 @@ const AdminLogin = () => {
                       ? "Already have an account? Sign in"
                       : "Need an account? Sign up"}
                   </button>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-border text-center">
+                  <p className="text-xs text-muted-foreground mb-3">Want to explore first?</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => navigate("/admin?demo=true")}
+                  >
+                    Try Demo Dashboard
+                  </Button>
                 </div>
               </div>
             </AnimatedSection>
