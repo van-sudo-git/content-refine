@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { BarChart3, Eye, QrCode, MessageCircle, XCircle, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DEMO_PROFILE_STATS,
+  DEMO_ALL_QR_IDS,
+  DEMO_DAILY_STATS,
+  DEMO_TOTALS,
+} from "@/lib/demoData";
 
 interface ProfileStat {
   slug: string;
