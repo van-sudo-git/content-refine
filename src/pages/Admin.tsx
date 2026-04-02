@@ -109,7 +109,7 @@ const Admin = () => {
   };
 
   const addAdmin = async () => {
-    if (!schoolId || !newAdminEmail.trim()) return;
+    if (isDemo) { demoGuard(); return; }
 
     const { error } = await supabase.from("school_admins").insert({
       school_id: schoolId,
