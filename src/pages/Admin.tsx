@@ -148,6 +148,10 @@ const Admin = () => {
   };
 
   const handleSignOut = async () => {
+    if (isDemo) {
+      navigate("/admin/login", { replace: true });
+      return;
+    }
     await supabase.auth.signOut();
     navigate("/admin/login", { replace: true });
   };
