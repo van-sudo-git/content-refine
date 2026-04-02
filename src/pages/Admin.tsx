@@ -177,14 +177,32 @@ const Admin = () => {
     <Layout>
       <section className="py-24">
         <div className="container mx-auto px-6">
+          {/* Demo Banner */}
+          {isDemo && (
+            <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-4 flex items-center gap-3">
+              <Eye size={20} className="text-amber-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Demo Mode</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  You're viewing sample data. Sign in with a real admin account to manage your school.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" className="ml-auto shrink-0" onClick={() => navigate("/admin/login")}>
+                Sign In
+              </Button>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="font-display text-4xl text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground text-sm mt-1">Signed in as {userEmail}</p>
+              <p className="text-muted-foreground text-sm mt-1">
+                {isDemo ? "Demo account" : `Signed in as ${userEmail}`}
+              </p>
             </div>
             <Button variant="outline" onClick={handleSignOut}>
-              <LogOut size={16} /> Sign Out
+              <LogOut size={16} /> {isDemo ? "Exit Demo" : "Sign Out"}
             </Button>
           </div>
 
