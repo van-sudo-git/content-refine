@@ -24,19 +24,23 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 };
 
 const Admin = () => {
-  const [nominations, setNominations] = useState<Nomination[]>([]);
-  const [admins, setAdmins] = useState<{ id: string; email: string }[]>([]);
+  const [searchParams] = useSearchParams();
+  const isDemo = searchParams.get("demo") === "true";
+
+  const [nominations, setNominations] = useState<Nomination[]>(isDemo ? DEMO_NOMINATIONS : []);
+  const [admins, setAdmins] = useState<{ id: string; email: string }[]>(isDemo ? DEMO_ADMINS : []);
   const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [schoolId, setSchoolId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [schoolId, setSchoolId] = useState<string | null>(isDemo ? "demo-school" : null);
+  const [userEmail, setUserEmail] = useState<string | null>(isDemo ? DEMO_EMAIL : null);
   const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isDemo);
   const navigate = useNavigate();
   const { user, isReady } = useAuthReady();
 
   useEffect(() => {
+    if (isDemo) return; // skip auth check in demo mode
     if (!isReady) return;
 
     const init = async () => {
@@ -71,7 +75,7 @@ const Admin = () => {
     };
 
     init();
-  }, [isReady, navigate, user]);
+  }, [isReady, navigate, user, isDemo]);
 
   const loadData = async (sid: string) => {
     const [nomRes, adminRes] = await Promise.all([
