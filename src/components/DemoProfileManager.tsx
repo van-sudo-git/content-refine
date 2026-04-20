@@ -3,6 +3,7 @@ import { Eye, QrCode, Image as ImageIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import comingSoonPortrait from "@/assets/demo-coming-soon.png";
 
 interface DemoProfile {
   id: string;
@@ -52,6 +53,18 @@ const DEMO_PROFILES: DemoProfile[] = [
     status: "draft",
     images: [
       { type: "portrait", url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop" },
+    ],
+  },
+  {
+    id: "demo-p4",
+    name: "Coming Soon",
+    slug: "coming-soon",
+    role: "Profile in Progress",
+    department: "—",
+    bio: "This profile is being prepared. A student-drawn portrait has been submitted, and the full story, photos, and QR code will be added soon. Check back shortly to meet the next person we're celebrating.",
+    status: "draft",
+    images: [
+      { type: "portrait", url: comingSoonPortrait },
     ],
   },
 ];
