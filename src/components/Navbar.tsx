@@ -1,19 +1,23 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Shield } from "lucide-react";
+import { Menu, X, Shield, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthReady } from "@/hooks/use-auth-ready";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/gallery", label: "Gallery" },
-  { to: "/about", label: "Who Am I" },
+  { to: "/gallery", label: "Galleries" },
+  { to: "/about", label: "Our Story" },
   { to: "/nominate", label: "Nominate" },
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
 
-const desktopNavLinks = navLinks.filter((link) => link.to !== "/about");
+const desktopNavLinks = navLinks.filter((link) => link.to !== "/about" && link.to !== "/gallery");
+
+const galleryChapters = [
+  { to: "/gallery", label: "LWHS — Inaugural Chapter" },
+];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
