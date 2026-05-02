@@ -188,9 +188,20 @@ const ProfilePage = () => {
                 {/* Remaining bio */}
                 {bioParagraphs.length > 3 && (
                   <div className="space-y-4 text-muted-foreground leading-relaxed">
-                    {bioParagraphs.slice(3).map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))}
+                    {bioParagraphs.slice(3).map((p, i) => {
+                      const trimmed = p.trim();
+                      const isQuote = /^["“].+["”]$/.test(trimmed);
+                      return isQuote ? (
+                        <blockquote
+                          key={i}
+                          className="border-l-4 border-secondary pl-5 py-2 my-2 font-display text-2xl italic text-foreground leading-snug"
+                        >
+                          {trimmed.replace(/^["“]|["”]$/g, "")}
+                        </blockquote>
+                      ) : (
+                        <p key={i}>{p}</p>
+                      );
+                    })}
                   </div>
                 )}
 
