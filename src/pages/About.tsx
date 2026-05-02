@@ -141,45 +141,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Founder Authority / Recognition */}
-      <section className="py-16 bg-card border-y border-border">
-        <div className="container mx-auto px-6">
-          <div className="max-w-5xl mx-auto">
-            <AnimatedSection>
-              <div className="text-center mb-10">
-                <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-xs">
-                  Recognition & Press
-                </p>
-                <h2 className="font-display text-3xl md:text-4xl text-foreground">
-                  Building a Foundation
-                </h2>
-                <p className="text-muted-foreground text-sm max-w-xl mx-auto mt-3">
-                  As the initiative grows, this is where awards, press features, and partnerships
-                  will be celebrated.
-                </p>
-              </div>
-            </AnimatedSection>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {[
-                { title: "Congressional App Challenge", note: "Submission in progress" },
-                { title: "School District Recognition", note: "Coming soon" },
-                { title: "Press & Features", note: "Coming soon" },
-              ].map((item, i) => (
-                <AnimatedSection key={item.title} delay={i * 0.1}>
-                  <div className="bg-background rounded-2xl p-6 border border-border text-center h-full">
-                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mx-auto mb-3">
-                      <Award size={22} className="text-secondary" />
-                    </div>
-                    <h3 className="font-display text-lg text-foreground mb-1">{item.title}</h3>
-                    <p className="text-muted-foreground text-xs italic">{item.note}</p>
-                  </div>
-                </AnimatedSection>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Recognition section removed for now */}
 
       {/* CTA */}
       <section className="py-20">
