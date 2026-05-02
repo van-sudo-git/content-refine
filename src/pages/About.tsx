@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
-import { Award, MapPin, Sparkles, ArrowRight } from "lucide-react";
+import { MapPin, Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 import qrCode from "@/assets/about-qr.jpeg";
