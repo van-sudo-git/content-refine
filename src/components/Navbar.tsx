@@ -61,6 +61,33 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
+          {/* Galleries dropdown */}
+          <div className="relative group">
+            <Link
+              to="/gallery"
+              className={`inline-flex items-center gap-1 text-sm font-medium transition-colors hover:text-secondary ${
+                location.pathname.startsWith("/gallery") ? "text-secondary" : "text-muted-foreground"
+              }`}
+            >
+              Galleries <ChevronDown size={14} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+            </Link>
+            <div className="absolute left-0 top-full pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+              <div className="min-w-[220px] bg-background border border-border rounded-xl shadow-lg py-2">
+                {galleryChapters.map((c) => (
+                  <Link
+                    key={c.to}
+                    to={c.to}
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-secondary hover:bg-muted/50 transition-colors"
+                  >
+                    {c.label}
+                  </Link>
+                ))}
+                <div className="px-4 py-2 text-[11px] text-muted-foreground/60 italic border-t border-border mt-1 pt-2">
+                  More chapters coming soon
+                </div>
+              </div>
+            </div>
+          </div>
           {desktopNavLinks.map((link) => (
             <Link
               key={link.to}
