@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import comingSoonPortrait from "@/assets/demo-coming-soon.png";
+import shirleyPortrait from "@/assets/demo-shirley.png";
 
 interface DemoProfile {
   id: string;
