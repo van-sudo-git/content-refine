@@ -102,6 +102,9 @@ const Gallery = () => {
                       {profile.role}
                       {profile.department && `, ${profile.department}`}
                     </p>
+                    <p className="text-[11px] text-muted-foreground/70 italic mt-1">
+                      Portrait by Evaan Ahlawat
+                    </p>
                   </Link>
                 </AnimatedSection>
               ))}
