@@ -50,7 +50,7 @@ const Footer = () => {
 
         <div className="border-t border-border mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Now We See You. All rights reserved.
+            © {new Date().getFullYear()} Now We See You | Founded by Evaan Ahlawat. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link to="/admin/login" className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors">
