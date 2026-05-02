@@ -18,8 +18,8 @@ const Footer = () => {
             <div className="flex flex-col gap-1.5">
               {[
                 { to: "/", label: "Home" },
-                { to: "/gallery", label: "Gallery" },
-                { to: "/about", label: "Who Am I" },
+                { to: "/gallery", label: "Galleries" },
+                { to: "/about", label: "Our Story" },
                 { to: "/nominate", label: "Nominate" },
                 { to: "/privacy", label: "Privacy & Ethics" },
               ].map((link) => (
