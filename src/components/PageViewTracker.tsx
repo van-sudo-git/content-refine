@@ -14,9 +14,10 @@ const PageViewTracker = () => {
   useEffect(() => {
     if (pathname.startsWith("/admin")) return;
 
-    // Normalize: "/" → "home", strip leading slash, replace remaining "/" with ":"
-    const slug =
-      pathname === "/"
+    const profileMatch = pathname.match(/^\/gallery\/([^/]+)$/);
+    const slug = profileMatch
+      ? decodeURIComponent(profileMatch[1])
+      : pathname === "/"
         ? "home"
         : pathname.replace(/^\//, "").replace(/\//g, ":");
 
