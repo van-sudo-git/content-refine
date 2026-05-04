@@ -188,7 +188,7 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard icon={Eye} label="Website Views" value={totals.views} color="text-blue-600" />
+        <StatCard icon={Eye} label="Page Views (all time)" value={totals.views} color="text-blue-600" />
         <StatCard icon={QrCode} label="QR Scans" value={totals.scans} color="text-secondary" />
         <StatCard icon={MessageCircle} label="Approved Messages" value={totals.approved} color="text-emerald-600" />
         <StatCard icon={TrendingUp} label="Pending Messages" value={totals.pending} color="text-amber-600" />
