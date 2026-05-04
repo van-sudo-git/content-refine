@@ -182,10 +182,7 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
       </div>
     );
   }
-    const pv = chartData.reduce((s, d) => s + d.prevViews, 0);
-    const delta = pv > 0 ? ((v - pv) / pv) * 100 : v > 0 ? 100 : 0;
-    return { views: v, scans: s, prevViews: pv, delta };
-  }, [chartData]);
+
 
   return (
     <div className="space-y-6">
