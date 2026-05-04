@@ -161,10 +161,27 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     );
   }
 
-  const maxDailyValue = Math.max(
-    ...dailyStats.map((d) => Math.max(d.views, d.scans)),
-    1
-  );
+  const [rangeDays, setRangeDays] = useState<7 | 14 | 30>(7);
+
+  const chartData = useMemo(() => {
+    const slice = dailyStats.slice(-rangeDays);
+    const prev = dailyStats.slice(-rangeDays * 2, -rangeDays);
+    return slice.map((d, i) => ({
+      day: d.day,
+      label: new Date(d.day).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      views: d.views,
+      scans: d.scans,
+      prevViews: prev[i]?.views ?? 0,
+    }));
+  }, [dailyStats, rangeDays]);
+
+  const rangeTotals = useMemo(() => {
+    const v = chartData.reduce((s, d) => s + d.views, 0);
+    const s = chartData.reduce((s, d) => s + d.scans, 0);
+    const pv = chartData.reduce((s, d) => s + d.prevViews, 0);
+    const delta = pv > 0 ? ((v - pv) / pv) * 100 : v > 0 ? 100 : 0;
+    return { views: v, scans: s, prevViews: pv, delta };
+  }, [chartData]);
 
   return (
     <div className="space-y-6">
@@ -179,40 +196,101 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
 
       {/* Daily Trend Chart */}
       <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="font-display text-xl text-foreground mb-4 flex items-center gap-2">
-          <BarChart3 size={20} /> 30-Day Trend
-        </h3>
-        <div className="flex items-end gap-[3px]" style={{ height: '160px' }}>
-          {dailyStats.map((d) => {
-            const maxH = 160;
-            const viewH = maxDailyValue > 0 ? Math.max((d.views / maxDailyValue) * maxH, d.views > 0 ? 4 : 0) : 0;
-            const scanH = maxDailyValue > 0 ? Math.max((d.scans / maxDailyValue) * maxH, d.scans > 0 ? 4 : 0) : 0;
-            return (
-              <div
-                key={d.day}
-                className="flex-1 flex items-end justify-center gap-[1px] group relative"
-                style={{ height: `${maxH}px` }}
-                title={`${d.day}\nWebsite Views: ${d.views}\nQR Scans: ${d.scans}`}
-              >
-                <div
-                  className="flex-1 bg-blue-400/60 rounded-t-sm transition-all hover:bg-blue-500/80"
-                  style={{ height: `${viewH}px` }}
-                />
-                <div
-                  className="flex-1 bg-secondary/60 rounded-t-sm transition-all hover:bg-secondary/80"
-                  style={{ height: `${scanH}px` }}
-                />
+        <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
+          <div>
+            <h3 className="font-display text-xl text-foreground flex items-center gap-2">
+              <BarChart3 size={20} /> Traffic Trend
+            </h3>
+            <div className="flex items-baseline gap-4 mt-2">
+              <div>
+                <p className="text-3xl font-display text-foreground">{rangeTotals.views}</p>
+                <p className="text-xs text-muted-foreground">Views in last {rangeDays} days</p>
               </div>
-            );
-          })}
+              <div className="text-sm">
+                <span className={rangeTotals.delta >= 0 ? "text-emerald-600" : "text-red-600"}>
+                  {rangeTotals.delta >= 0 ? "↑" : "↓"} {Math.abs(rangeTotals.delta).toFixed(1)}%
+                </span>
+                <span className="text-muted-foreground ml-1">vs previous period</span>
+              </div>
+              <div>
+                <p className="text-3xl font-display text-foreground">{rangeTotals.scans}</p>
+                <p className="text-xs text-muted-foreground">QR scans in last {rangeDays} days</p>
+              </div>
+            </div>
+          </div>
+          <div className="inline-flex rounded-lg border border-border overflow-hidden text-xs">
+            {([7, 14, 30] as const).map((n) => (
+              <button
+                key={n}
+                onClick={() => setRangeDays(n)}
+                className={`px-3 py-1.5 transition-colors ${
+                  rangeDays === n
+                    ? "bg-foreground text-background"
+                    : "bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Last {n} days
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-blue-400/60" /> Website Views
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-secondary/60" /> QR Scans
-          </span>
+
+        <div style={{ width: "100%", height: 300 }}>
+          <ResponsiveContainer>
+            <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tickLine={false}
+                axisLine={{ stroke: "hsl(var(--border))" }}
+              />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tickLine={false}
+                axisLine={false}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                }}
+                labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+              />
+              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} iconType="line" />
+              <Line
+                type="monotone"
+                dataKey="views"
+                name="Website Views"
+                stroke="hsl(217, 91%, 60%)"
+                strokeWidth={2.5}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="prevViews"
+                name="Previous period (views)"
+                stroke="hsl(217, 91%, 60%)"
+                strokeWidth={1.5}
+                strokeDasharray="4 4"
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="scans"
+                name="QR Scans"
+                stroke="hsl(var(--secondary))"
+                strokeWidth={2.5}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
