@@ -133,7 +133,7 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     // Build daily trend (last 30 days)
     const today = new Date();
     const days: DailyStat[] = [];
-    for (let i = 29; i >= 0; i--) {
+    for (let i = 59; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const dayStr = d.toISOString().slice(0, 10);
