@@ -69,13 +69,14 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
 
     // All data from THIS project's tables
     const [pageViewsRes, appreciationsRes, redirectsRes, qrDailyRes] = await Promise.all([
-      supabase.from("page_views").select("profile_slug, day, views").in("profile_slug", slugs),
+      supabase.from("page_views").select("profile_slug, day, views"),
       supabase.from("appreciations").select("profile_slug, status").in("profile_slug", slugs),
       supabase.from("redirects").select("id, profile_slug").in("profile_slug", slugs),
       supabase.from("redirect_events_daily").select("id, day, count"),
     ]);
 
     const pageViews = pageViewsRes.data ?? [];
+    const profilePageViews = pageViews.filter((v) => slugs.includes(v.profile_slug));
     const appreciations = appreciationsRes.data ?? [];
     const redirects = (redirectsRes.data ?? []) as { id: string; profile_slug: string }[];
     const qrDaily = (qrDailyRes.data ?? []) as { id: string; day: string; count: number }[];
@@ -93,7 +94,7 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     setAllQrIds(Array.from(profileQrIds).sort());
 
     const stats: ProfileStat[] = profiles.map((p) => {
-      const views = pageViews
+      const views = profilePageViews
         .filter((v) => v.profile_slug === p.slug)
         .reduce((sum, v) => sum + v.views, 0);
 
@@ -123,7 +124,7 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     const allScans = qrDaily.reduce((sum, rd) => sum + rd.count, 0);
 
     setTotals({
-      views: stats.reduce((s, p) => s + p.totalViews, 0),
+      views: pageViews.reduce((s, v) => s + v.views, 0),
       scans: allScans,
       approved: stats.reduce((s, p) => s + p.approvedMessages, 0),
       pending: stats.reduce((s, p) => s + p.pendingMessages, 0),
