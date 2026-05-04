@@ -153,14 +153,6 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     setLoading(false);
   };
 
-  if (loading) {
-    return (
-      <div className="bg-card rounded-xl border border-border p-12 text-center">
-        <p className="text-muted-foreground">Loading analytics...</p>
-      </div>
-    );
-  }
-
   const [rangeDays, setRangeDays] = useState<7 | 14 | 30>(7);
 
   const chartData = useMemo(() => {
@@ -178,6 +170,18 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
   const rangeTotals = useMemo(() => {
     const v = chartData.reduce((s, d) => s + d.views, 0);
     const s = chartData.reduce((s, d) => s + d.scans, 0);
+    const pv = chartData.reduce((s, d) => s + d.prevViews, 0);
+    const delta = pv > 0 ? ((v - pv) / pv) * 100 : v > 0 ? 100 : 0;
+    return { views: v, scans: s, prevViews: pv, delta };
+  }, [chartData]);
+
+  if (loading) {
+    return (
+      <div className="bg-card rounded-xl border border-border p-12 text-center">
+        <p className="text-muted-foreground">Loading analytics...</p>
+      </div>
+    );
+  }
     const pv = chartData.reduce((s, d) => s + d.prevViews, 0);
     const delta = pv > 0 ? ((v - pv) / pv) * 100 : v > 0 ? 100 : 0;
     return { views: v, scans: s, prevViews: pv, delta };
