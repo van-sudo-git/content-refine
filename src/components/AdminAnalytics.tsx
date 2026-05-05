@@ -80,9 +80,11 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
 
     const slugs = profiles.map((p) => p.slug);
 
-    const [pageViewsRes, appreciationsRes, redirectsRes, qrDailyRes] = await Promise.all([
+    const [pageViewsRes, appreciationsRes, localRedirectsRes, localQrDailyRes, externalRedirectsRes, externalQrDailyRes] = await Promise.all([
       supabase.from("page_views").select("profile_slug, day, views"),
       supabase.from("appreciations").select("profile_slug, status").in("profile_slug", slugs),
+      supabase.from("redirects").select("id, profile_slug, active"),
+      supabase.from("redirect_events_daily").select("id, day, count"),
       herosRedirectClient.from("redirects").select("id, destination_url, active"),
       herosRedirectClient.from("redirect_events_daily").select("id, day, count"),
     ]);
@@ -90,10 +92,19 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
     const pageViews = pageViewsRes.data ?? [];
     const profilePageViews = pageViews.filter((v) => slugs.includes(v.profile_slug));
     const appreciations = appreciationsRes.data ?? [];
-    const redirects = ((redirectsRes.data ?? []) as { id: string; destination_url: string; active: boolean }[])
+    const localRedirects = ((localRedirectsRes.data ?? []) as { id: string; profile_slug: string; active: boolean }[])
+      .filter((r) => r.active && slugs.includes(r.profile_slug));
+    const externalRedirects = ((externalRedirectsRes.data ?? []) as { id: string; destination_url: string; active: boolean }[])
       .map((r) => ({ id: r.id, profile_slug: getSlugFromRedirect(r), active: r.active }))
       .filter((r): r is { id: string; profile_slug: string; active: boolean } => r.active && Boolean(r.profile_slug) && slugs.includes(r.profile_slug));
-    const qrDaily = (qrDailyRes.data ?? []) as { id: string; day: string; count: number }[];
+    const redirects = Array.from(
+      [...localRedirects, ...externalRedirects].reduce((map, r) => map.set(r.id, { id: r.id, profile_slug: r.profile_slug }), new Map<string, { id: string; profile_slug: string }>()).values()
+    );
+    const externalQrIds = new Set(externalRedirects.map((r) => r.id));
+    const qrDaily = [
+      ...((externalQrDailyRes.data ?? []) as { id: string; day: string; count: number }[]),
+      ...((localQrDailyRes.data ?? []) as { id: string; day: string; count: number }[]).filter((rd) => !externalQrIds.has(rd.id)),
+    ];
 
     // Build slug → qr IDs mapping dynamically from redirects table
     const slugToQrIds: Record<string, string[]> = {};
