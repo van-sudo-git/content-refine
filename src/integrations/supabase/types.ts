@@ -305,7 +305,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_production_pageview_total: { Args: never; Returns: number }
       increment_page_view: {
         Args: { p_day: string; p_slug: string }
         Returns: undefined
