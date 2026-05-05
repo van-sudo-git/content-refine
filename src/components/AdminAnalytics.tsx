@@ -17,6 +17,7 @@ import {
   DEMO_DAILY_STATS,
   DEMO_TOTALS,
 } from "@/lib/demoData";
+import { herosRedirectClient } from "@/lib/herosRedirectClient";
 
 interface ProfileStat {
   slug: string;
@@ -33,6 +34,18 @@ interface DailyStat {
   views: number;
   scans: number;
 }
+
+const getSlugFromRedirect = (redirect: { destination_url?: string | null; profile_slug?: string | null }) => {
+  if (redirect.profile_slug) return redirect.profile_slug;
+
+  try {
+    const path = new URL(redirect.destination_url ?? "").pathname;
+    const match = path.match(/^\/gallery\/([^/]+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return null;
+  }
+};
 
 const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null; isDemo?: boolean }) => {
   const [profileStats, setProfileStats] = useState<ProfileStat[]>(isDemo ? DEMO_PROFILE_STATS : []);
@@ -67,18 +80,19 @@ const AdminAnalytics = ({ schoolId, isDemo = false }: { schoolId: string | null;
 
     const slugs = profiles.map((p) => p.slug);
 
-    // All data from THIS project's tables
     const [pageViewsRes, appreciationsRes, redirectsRes, qrDailyRes] = await Promise.all([
       supabase.from("page_views").select("profile_slug, day, views"),
       supabase.from("appreciations").select("profile_slug, status").in("profile_slug", slugs),
-      supabase.from("redirects").select("id, profile_slug").in("profile_slug", slugs),
-      supabase.from("redirect_events_daily").select("id, day, count"),
+      herosRedirectClient.from("redirects").select("id, destination_url, active"),
+      herosRedirectClient.from("redirect_events_daily").select("id, day, count"),
     ]);
 
     const pageViews = pageViewsRes.data ?? [];
     const profilePageViews = pageViews.filter((v) => slugs.includes(v.profile_slug));
     const appreciations = appreciationsRes.data ?? [];
-    const redirects = (redirectsRes.data ?? []) as { id: string; profile_slug: string }[];
+    const redirects = ((redirectsRes.data ?? []) as { id: string; destination_url: string; active: boolean }[])
+      .map((r) => ({ id: r.id, profile_slug: getSlugFromRedirect(r), active: r.active }))
+      .filter((r): r is { id: string; profile_slug: string; active: boolean } => r.active && Boolean(r.profile_slug) && slugs.includes(r.profile_slug));
     const qrDaily = (qrDailyRes.data ?? []) as { id: string; day: string; count: number }[];
 
     // Build slug → qr IDs mapping dynamically from redirects table
