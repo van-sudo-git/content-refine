@@ -21,7 +21,7 @@ const About = () => {
               </h1>
               <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
                 <em>Now We See You</em> is a student-led initiative dedicated to celebrating the
-                hidden builders of school communities — staff who keep everything running but are
+                hidden builders of school communities, staff who keep everything running but are
                 often unseen. What began as a single chapter at Lake Washington High School is
                 designed to grow into a national movement.
               </p>
@@ -46,7 +46,7 @@ const About = () => {
                 </div>
                 <div className="md:col-span-2 space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    LWHS is the proven pilot — the first community where this model was built,
+                    LWHS is the proven pilot, the first community where this model was built,
                     tested, and refined. Every portrait, story, QR code, and appreciation message
                     here represents the foundation of what's possible.
                   </p>
@@ -82,7 +82,7 @@ const About = () => {
                 <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden shadow-lg">
                   <img
                     src={evaanPortrait}
-                    alt="Evaan Ahlawat — Founding Artist & Creator"
+                    alt="Evaan Ahlawat, Founding Artist & Creator"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -101,7 +101,7 @@ const About = () => {
                 <div className="space-y-6">
                   <blockquote className="border-l-4 border-secondary pl-6 py-2 font-display text-2xl md:text-3xl italic text-foreground leading-snug">
                     I started <span className="text-secondary">Now We See You</span> because the
-                    people who hold our school together every day deserve to be seen — not just
+                    people who hold our school together every day deserve to be seen, not just
                     thanked in passing, but truly known.
                   </blockquote>
 
@@ -109,16 +109,16 @@ const About = () => {
                     <p>
                       Every portrait in this gallery is hand-drawn by me. Every story is collected
                       through a real conversation. The QR codes, the appreciation wall, the
-                      analytics — they exist to test a single idea: <em>can technology, used
+                      analytics, they exist to test a single idea: <em>can technology, used
                       thoughtfully, make appreciation a habit instead of an afterthought?</em>
                     </p>
                     <p>
                       My vision is for this to outlast its first chapter. As the model expands to
-                      other schools, my role is to protect the soul of the project — the
+                      other schools, my role is to protect the soul of the project, the
                       hand-drawn art, the consent-first ethics, and the focus on the people
                       most often overlooked.
                     </p>
-                    <p className="text-foreground font-medium">— Evaan Ahlawat</p>
+                    <p className="text-foreground font-medium">, Evaan Ahlawat</p>
                   </div>
 
                   {/* QR card */}

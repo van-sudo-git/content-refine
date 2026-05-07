@@ -16,7 +16,7 @@ const navLinks = [
 const desktopNavLinks = navLinks.filter((link) => link.to !== "/about" && link.to !== "/gallery");
 
 const galleryChapters = [
-  { to: "/gallery", label: "LWHS — Inaugural Chapter" },
+  { to: "/gallery", label: "LWHS, Inaugural Chapter" },
 ];
 
 const Navbar = () => {
