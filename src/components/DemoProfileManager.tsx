@@ -28,19 +28,19 @@ const DEMO_PROFILES: DemoProfile[] = [
 
 Shirley has been at Lake Washington High School for almost three years and has spent 18 years working in the school district. Before this, she worked at Redmond Middle School for over a decade, building deep experience in supporting schools from the inside.
 
-Her role touches nearly every part of the school. Shirley handles all purchasing — from classroom supplies to travel approvals — while also managing budgets for both ASB and the general fund. Throughout the day, she balances 10 to 15 different tasks at once, helping students, staff, and community members who walk into her office.
+Her role touches nearly every part of the school. Shirley handles all purchasing, from classroom supplies to travel approvals, while also managing budgets for both ASB and the general fund. Throughout the day, she balances 10 to 15 different tasks at once, helping students, staff, and community members who walk into her office.
 
-"No day is ever the same — you're always doing something different, and that's what makes it fun."
+"No day is ever the same, you're always doing something different, and that's what makes it fun."
 
 One of her most important responsibilities is making sure the school's budget stays on track. It's something she monitors constantly, ensuring that everything the school needs is available and accounted for.
 
-What Shirley enjoys most about her work is the people. Whether it's helping a student, supporting a teacher, or working with the community, those daily interactions are what keep her motivated — even during the busiest times.
+What Shirley enjoys most about her work is the people. Whether it's helping a student, supporting a teacher, or working with the community, those daily interactions are what keep her motivated, even during the busiest times.
 
 For her, the most meaningful part of the job is simple but powerful: watching students grow over time and being part of that journey, even in a small way.
 
-Outside of school, Shirley enjoys writing and spending time with her horse, Panda. She loves horseback riding, especially jumping — a passion that reflects her energy and willingness to take on challenges.
+Outside of school, Shirley enjoys writing and spending time with her horse, Panda. She loves horseback riding, especially jumping, a passion that reflects her energy and willingness to take on challenges.
 
-Through her work, Shirley helps make sure that everything behind the scenes runs smoothly — so the rest of the school can focus on learning, teaching, and growing.`,
+Through her work, Shirley helps make sure that everything behind the scenes runs smoothly, so the rest of the school can focus on learning, teaching, and growing.`,
     status: "published",
     images: [
       { type: "portrait", url: shirleyPortrait },
@@ -90,7 +90,7 @@ Through her work, Shirley helps make sure that everything behind the scenes runs
     name: "Coming Soon",
     slug: "coming-soon",
     role: "Profile in Progress",
-    department: "—",
+    department: ",",
     bio: "This profile is being prepared. A student-drawn portrait has been submitted, and the full story, photos, and QR code will be added soon. Check back shortly to meet the next person we're celebrating.",
     status: "draft",
     images: [

@@ -1,5 +1,5 @@
 // Demo data for the admin dashboard preview mode
-// No real data is exposed — everything here is fictional.
+// No real data is exposed, everything here is fictional.
 
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -36,7 +36,7 @@ export const DEMO_NOMINATIONS: Nomination[] = [
     nominator_email: "sarah.k@school.edu",
     nominee_informed: true,
     status: "approved",
-    admin_notes: "Great candidate — profile being drafted.",
+    admin_notes: "Great candidate, profile being drafted.",
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
@@ -52,7 +52,7 @@ export const DEMO_NOMINATIONS: Nomination[] = [
     nominator_email: "tom.b@school.edu",
     nominee_informed: false,
     status: "featured",
-    admin_notes: "Profile live — featured on homepage.",
+    admin_notes: "Profile live, featured on homepage.",
     created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },

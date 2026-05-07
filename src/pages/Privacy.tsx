@@ -6,7 +6,7 @@ const sections = [
   {
     icon: FileText,
     title: "1. Purpose",
-    content: "This project highlights the people who help make our school run every day—often behind the scenes. The goal is to build appreciation and understanding, and to learn how respectful storytelling and technology can strengthen community.",
+    content: "This project highlights the people who help make our school run every day,often behind the scenes. The goal is to build appreciation and understanding, and to learn how respectful storytelling and technology can strengthen community.",
   },
   {
     icon: UserCheck,
@@ -34,11 +34,11 @@ const sections = [
     title: "4. Consent Options",
     content: "Each participant can choose one of these options:",
     list: [
-      'Option A — First name + role (e.g., "Maria, Librarian")',
-      'Option B — Role only (e.g., "School Librarian")',
-      "Option C — No web page (portrait can still be shown privately/offline)",
-      "Option D — Anonymous (no identifiable details)",
-      "Option E — No photo/portrait online (text-only page)",
+      'Option A, First name + role (e.g., "Maria, Librarian")',
+      'Option B, Role only (e.g., "School Librarian")',
+      "Option C, No web page (portrait can still be shown privately/offline)",
+      "Option D, Anonymous (no identifiable details)",
+      "Option E, No photo/portrait online (text-only page)",
     ],
     extra: [
       "Whether their portrait is shown publicly",

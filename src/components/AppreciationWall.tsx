@@ -114,7 +114,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              placeholder="Your name (optional — leave blank to post anonymously)"
+              placeholder="Your name (optional, leave blank to post anonymously)"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
               maxLength={100}

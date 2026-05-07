@@ -17,7 +17,7 @@ const Index = () => {
         <div className="absolute bottom-20 left-[5%] w-96 h-96 rounded-full bg-accent/8 blur-3xl" />
 
         <div className="container mx-auto px-6 relative z-10">
-          {/* Text — centered */}
+          {/* Text, centered */}
           <div className="max-w-3xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -44,7 +44,7 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-muted-foreground text-base md:text-lg mb-8 leading-relaxed max-w-xl mx-auto"
             >
-              We see the people who keep our school running every day — through hand-drawn portraits, real stories, and the power of human connection.
+              We see the people who keep our school running every day, through hand-drawn portraits, real stories, and the power of human connection.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 15 }}
@@ -67,7 +67,7 @@ const Index = () => {
             </motion.div>
           </div>
 
-          {/* Portraits — side by side, same size, below hero text */}
+          {/* Portraits, side by side, same size, below hero text */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -76,15 +76,15 @@ const Index = () => {
           >
             <Link to="/gallery/brad-fisher" className="group block">
               <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                <img src={bradPortrait} alt="Brad Fisher — hand-drawn portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                <img src={bradPortrait} alt="Brad Fisher, hand-drawn portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
               </div>
               <h3 className="font-display text-lg text-foreground mt-3">Brad Fisher</h3>
-              <p className="text-muted-foreground text-xs">Head Custodian, LWHS — since 2018</p>
+              <p className="text-muted-foreground text-xs">Head Custodian, LWHS, since 2018</p>
               <p className="text-[11px] text-muted-foreground/70 italic mt-0.5">Portrait by Evaan Ahlawat</p>
             </Link>
             <Link to="/about" className="group block">
               <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                <img src={evaanPortrait} alt="Evaan Ahlawat — self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                <img src={evaanPortrait} alt="Evaan Ahlawat, self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
               </div>
               <h3 className="font-display text-lg text-foreground mt-3">Evaan Ahlawat</h3>
               <p className="text-muted-foreground text-xs">Founding Artist & Creator</p>
@@ -110,7 +110,7 @@ const Index = () => {
                 icon: Users,
                 step: "01",
                 title: "Invite",
-                description: "Staff are invited to participate. It's always optional — anyone can say no.",
+                description: "Staff are invited to participate. It's always optional, anyone can say no.",
               },
               {
                 icon: Shield,
