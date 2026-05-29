@@ -96,6 +96,15 @@ const sections = [
 const Privacy = () => {
   return (
     <Layout>
+      <Helmet>
+        <title>Privacy, Consent & Ethics | Now We See You</title>
+        <meta name="description" content="How Now We See You handles participation, consent, portraits, QR codes, appreciation messages, and privacy-safe analytics." />
+        <link rel="canonical" href="https://nowweseeyou.org/privacy" />
+        <meta property="og:title" content="Privacy, Consent & Ethics" />
+        <meta property="og:description" content="Our consent-first approach to portraits, stories, QR codes, and analytics." />
+        <meta property="og:url" content="https://nowweseeyou.org/privacy" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto">
