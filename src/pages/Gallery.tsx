@@ -62,6 +62,15 @@ const Gallery = () => {
 
   return (
     <Layout>
+      <Helmet>
+        <title>Gallery — Meet Our Unsung Heroes | Now We See You</title>
+        <meta name="description" content="Browse portraits and stories of the staff who keep our school running. Each profile is hand-drawn, written with consent, and linked to a QR code." />
+        <link rel="canonical" href="https://nowweseeyou.org/gallery" />
+        <meta property="og:title" content="Gallery — Meet Our Unsung Heroes" />
+        <meta property="og:description" content="Portraits and stories of the staff who keep our school running, shared with consent." />
+        <meta property="og:url" content="https://nowweseeyou.org/gallery" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <AnimatedSection>
