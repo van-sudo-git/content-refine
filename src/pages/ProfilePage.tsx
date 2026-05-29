@@ -128,8 +128,6 @@ const ProfilePage = () => {
         <script type="application/ld+json">{JSON.stringify(personLd)}</script>
       </Helmet>
 
-  return (
-    <Layout>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <Link
