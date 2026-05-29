@@ -1,0 +1,22 @@
+# Now We See You
+
+> A student-led initiative celebrating the people who keep our school running, custodians, bookkeepers, bus drivers, paraeducators, food service staff, and more.
+
+Now We See You is a project from students in the Lake Washington School District. Each staff member featured has a short profile with their story, a QR code that links to their page, and a public wall where the community can leave notes of appreciation. Submissions are AI-moderated for kindness before they appear.
+
+## Pages
+
+- [Home](https://nowweseeyou.org/): Mission, how the project works, featured stories
+- [Gallery](https://nowweseeyou.org/gallery): All published staff profiles
+- [About](https://nowweseeyou.org/about): Story behind the initiative and the students leading it
+- [Nominate](https://nowweseeyou.org/nominate): Submit a staff member to be celebrated
+- [Privacy](https://nowweseeyou.org/privacy): How submissions and data are handled
+
+## Staff profiles
+
+- [Brad Fisher](https://nowweseeyou.org/gallery/brad-fisher): Head Custodian, Lake Washington High School
+- [Shirley P.](https://nowweseeyou.org/gallery/shirley-p): Bookkeeper / Accounting Technician, Lake Washington High School
+
+## Optional
+
+- [Full profile text](https://nowweseeyou.org/llms-full.txt): All staff profile bios inline, for AI assistants answering questions about specific staff members
