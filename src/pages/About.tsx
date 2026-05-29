@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
+import { Helmet } from "react-helmet-async";
 import { MapPin, Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
@@ -8,6 +9,15 @@ import qrCode from "@/assets/about-qr.jpeg";
 const About = () => {
   return (
     <Layout>
+      <Helmet>
+        <title>About — A Student-Led Movement of Visibility | Now We See You</title>
+        <meta name="description" content="The story behind Now We See You: a student-led initiative honoring the staff who quietly keep schools running, starting at Lake Washington High School." />
+        <link rel="canonical" href="https://nowweseeyou.org/about" />
+        <meta property="og:title" content="About — A Student-Led Movement of Visibility" />
+        <meta property="og:description" content="The story behind Now We See You and the founding chapter at Lake Washington High School." />
+        <meta property="og:url" content="https://nowweseeyou.org/about" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       {/* Hero */}
       <section className="pt-24 pb-16">
         <div className="container mx-auto px-6">

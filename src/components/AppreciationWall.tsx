@@ -166,6 +166,7 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
                     onClick={() => handleDelete(a.id)}
                     className="absolute top-3 right-3 text-muted-foreground hover:text-destructive transition-colors"
                     title="Delete appreciation"
+                    aria-label="Delete appreciation"
                   >
                     <Trash2 size={14} />
                   </button>

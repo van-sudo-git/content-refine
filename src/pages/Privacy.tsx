@@ -1,4 +1,5 @@
 import { Shield, Eye, Lock, MessageCircle, BarChart3, Gift, HelpCircle, UserCheck, FileText } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 
@@ -95,6 +96,15 @@ const sections = [
 const Privacy = () => {
   return (
     <Layout>
+      <Helmet>
+        <title>Privacy, Consent & Ethics | Now We See You</title>
+        <meta name="description" content="How Now We See You handles participation, consent, portraits, QR codes, appreciation messages, and privacy-safe analytics." />
+        <link rel="canonical" href="https://nowweseeyou.org/privacy" />
+        <meta property="og:title" content="Privacy, Consent & Ethics" />
+        <meta property="og:description" content="Our consent-first approach to portraits, stories, QR codes, and analytics." />
+        <meta property="og:url" content="https://nowweseeyou.org/privacy" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto">
@@ -115,7 +125,7 @@ const Privacy = () => {
                         <section.icon size={20} className="text-secondary" />
                       </div>
                       <div>
-                        <h3 className="font-display text-xl text-foreground mb-3">{section.title}</h3>
+                        <h2 className="font-display text-xl text-foreground mb-3">{section.title}</h2>
                         {section.content && (
                           <p className="text-muted-foreground leading-relaxed mb-3">{section.content}</p>
                         )}

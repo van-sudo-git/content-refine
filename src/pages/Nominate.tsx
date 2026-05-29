@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send, CheckCircle } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +112,15 @@ const Nominate = () => {
 
   return (
     <Layout>
+      <Helmet>
+        <title>Nominate a Staff Member | Now We See You</title>
+        <meta name="description" content="Know a staff member who deserves to be celebrated? Submit a nomination so we can share their story with care and consent." />
+        <link rel="canonical" href="https://nowweseeyou.org/nominate" />
+        <meta property="og:title" content="Nominate a Staff Member" />
+        <meta property="og:description" content="Submit a staff member to be celebrated through Now We See You." />
+        <meta property="og:url" content="https://nowweseeyou.org/nominate" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <div className="max-w-2xl mx-auto">
@@ -131,7 +141,7 @@ const Nominate = () => {
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-1 mb-8">
-                      <h3 className="font-display text-2xl text-foreground">About the Nominee</h3>
+                      <h2 className="font-display text-2xl text-foreground">About the Nominee</h2>
                       <p className="text-muted-foreground text-sm">Who would you like to nominate?</p>
                     </div>
 
@@ -215,7 +225,7 @@ const Nominate = () => {
                     />
 
                     <div className="border-t border-border pt-6 mt-8 space-y-1 mb-2">
-                      <h3 className="font-display text-2xl text-foreground">About You</h3>
+                      <h2 className="font-display text-2xl text-foreground">About You</h2>
                       <p className="text-muted-foreground text-sm">So we can follow up if needed.</p>
                     </div>
 

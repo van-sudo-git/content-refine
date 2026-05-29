@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ArrowRight } from "lucide-react";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
@@ -61,6 +62,15 @@ const Gallery = () => {
 
   return (
     <Layout>
+      <Helmet>
+        <title>Gallery — Meet Our Unsung Heroes | Now We See You</title>
+        <meta name="description" content="Browse portraits and stories of the staff who keep our school running. Each profile is hand-drawn, written with consent, and linked to a QR code." />
+        <link rel="canonical" href="https://nowweseeyou.org/gallery" />
+        <meta property="og:title" content="Gallery — Meet Our Unsung Heroes" />
+        <meta property="og:description" content="Portraits and stories of the staff who keep our school running, shared with consent." />
+        <meta property="og:url" content="https://nowweseeyou.org/gallery" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <AnimatedSection>
@@ -95,9 +105,9 @@ const Gallery = () => {
                         </div>
                       )}
                     </div>
-                    <h3 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
+                    <h2 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
                       {profile.name}
-                    </h3>
+                    </h2>
                     <p className="text-muted-foreground text-sm">
                       {profile.role}
                       {profile.department && `, ${profile.department}`}
