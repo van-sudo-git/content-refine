@@ -1,4 +1,5 @@
 import { Shield, Eye, Lock, MessageCircle, BarChart3, Gift, HelpCircle, UserCheck, FileText } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 
