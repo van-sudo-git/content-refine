@@ -215,7 +215,7 @@ const Nominate = () => {
                     />
 
                     <div className="border-t border-border pt-6 mt-8 space-y-1 mb-2">
-                      <h3 className="font-display text-2xl text-foreground">About You</h3>
+                      <h2 className="font-display text-2xl text-foreground">About You</h2>
                       <p className="text-muted-foreground text-sm">So we can follow up if needed.</p>
                     </div>
 
