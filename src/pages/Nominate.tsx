@@ -131,7 +131,7 @@ const Nominate = () => {
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-1 mb-8">
-                      <h3 className="font-display text-2xl text-foreground">About the Nominee</h3>
+                      <h2 className="font-display text-2xl text-foreground">About the Nominee</h2>
                       <p className="text-muted-foreground text-sm">Who would you like to nominate?</p>
                     </div>
 
