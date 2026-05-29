@@ -102,7 +102,7 @@ const Index = () => {
               <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
                 <img src={evaanPortrait} alt="Evaan Ahlawat, self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
               </div>
-              <h3 className="font-display text-lg text-foreground mt-3">Evaan Ahlawat</h3>
+              <h2 className="font-display text-lg text-foreground mt-3">Evaan Ahlawat</h2>
               <p className="text-muted-foreground text-xs">Founding Artist & Creator</p>
               <p className="text-[11px] text-muted-foreground/70 italic mt-0.5">Self-portrait</p>
             </Link>
