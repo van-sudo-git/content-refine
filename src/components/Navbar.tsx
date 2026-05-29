@@ -82,7 +82,7 @@ const Navbar = () => {
                     {c.label}
                   </Link>
                 ))}
-                <div className="px-4 py-2 text-[11px] text-muted-foreground/60 italic border-t border-border mt-1 pt-2">
+                <div className="px-4 py-2 text-[11px] text-muted-foreground italic border-t border-border mt-1 pt-2">
                   More chapters coming soon
                 </div>
               </div>
