@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft } from "lucide-react";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
@@ -93,8 +94,40 @@ const ProfilePage = () => {
   const bioParagraphs = profile.bio?.split("\n").filter((p) => p.trim()) || [];
   const firstName = profile.name.split(" ")[0];
 
+  const canonical = `https://nowweseeyou.org/gallery/${profile.slug}`;
+  const description =
+    (bioParagraphs[0] || `${profile.name}, ${profile.role} at Now We See You.`)
+      .replace(/^["“”]|["“”]$/g, "")
+      .slice(0, 155);
+  const personLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: profile.name,
+    jobTitle: profile.role,
+    ...(profile.department ? { worksFor: { "@type": "Organization", name: profile.department } } : {}),
+    ...(portrait ? { image: portrait.image_url } : {}),
+    url: canonical,
+    description,
+  };
+
   return (
     <Layout>
+      <Helmet>
+        <title>{`${profile.name}, ${profile.role} | Now We See You`}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:title" content={`${profile.name}, ${profile.role}`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonical} />
+        {portrait && <meta property="og:image" content={portrait.image_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${profile.name}, ${profile.role}`} />
+        <meta name="twitter:description" content={description} />
+        {portrait && <meta name="twitter:image" content={portrait.image_url} />}
+        <script type="application/ld+json">{JSON.stringify(personLd)}</script>
+      </Helmet>
+
       <section className="py-24">
         <div className="container mx-auto px-6">
           <Link
