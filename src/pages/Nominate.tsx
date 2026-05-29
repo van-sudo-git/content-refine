@@ -112,6 +112,15 @@ const Nominate = () => {
 
   return (
     <Layout>
+      <Helmet>
+        <title>Nominate a Staff Member | Now We See You</title>
+        <meta name="description" content="Know a staff member who deserves to be celebrated? Submit a nomination so we can share their story with care and consent." />
+        <link rel="canonical" href="https://nowweseeyou.org/nominate" />
+        <meta property="og:title" content="Nominate a Staff Member" />
+        <meta property="og:description" content="Submit a staff member to be celebrated through Now We See You." />
+        <meta property="og:url" content="https://nowweseeyou.org/nominate" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
           <div className="max-w-2xl mx-auto">
