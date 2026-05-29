@@ -115,7 +115,7 @@ const Privacy = () => {
                         <section.icon size={20} className="text-secondary" />
                       </div>
                       <div>
-                        <h3 className="font-display text-xl text-foreground mb-3">{section.title}</h3>
+                        <h2 className="font-display text-xl text-foreground mb-3">{section.title}</h2>
                         {section.content && (
                           <p className="text-muted-foreground leading-relaxed mb-3">{section.content}</p>
                         )}
