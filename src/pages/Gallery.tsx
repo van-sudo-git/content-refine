@@ -95,9 +95,9 @@ const Gallery = () => {
                         </div>
                       )}
                     </div>
-                    <h3 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
+                    <h2 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
                       {profile.name}
-                    </h3>
+                    </h2>
                     <p className="text-muted-foreground text-sm">
                       {profile.role}
                       {profile.department && `, ${profile.department}`}
