@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Eye, Heart, BarChart3, Users, QrCode, Shield, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import bradPortrait from "@/assets/brad-portrait.jpeg";
@@ -9,6 +10,21 @@ import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 const Index = () => {
   return (
     <Layout>
+      <Helmet>
+        <title>Now We See You — Visibility in Action</title>
+        <meta name="description" content="A student-led initiative celebrating the people who keep our school running. Read their stories, scan their QR code, leave a note of appreciation." />
+        <link rel="canonical" href="https://nowweseeyou.org/" />
+        <meta property="og:title" content="Now We See You — Visibility in Action" />
+        <meta property="og:description" content="A student-led initiative celebrating the people who keep our school running." />
+        <meta property="og:url" content="https://nowweseeyou.org/" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Now We See You",
+          url: "https://nowweseeyou.org",
+          description: "A student-led initiative celebrating the people who keep our school running.",
+        })}</script>
+      </Helmet>
       {/* Hero */}
       <section className="relative overflow-hidden pt-12 pb-20">
         {/* Soft gradient background */}
