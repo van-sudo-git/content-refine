@@ -332,8 +332,8 @@ export const MainVideo: React.FC = () => {
           src="images/brad-full.png"
           caption="Brad Fisher · Head Custodian · LWHS"
           dur={T.brad.dur}
-          imgWidth={1280}
-          imgHeight={1900}
+          imgWidth={1265}
+          imgHeight={2666}
         />
       </Sequence>
 
