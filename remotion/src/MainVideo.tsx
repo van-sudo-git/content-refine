@@ -334,6 +334,7 @@ export const MainVideo: React.FC = () => {
           dur={T.brad.dur}
           imgWidth={1265}
           imgHeight={2666}
+          endY={-1200}
         />
       </Sequence>
 
@@ -344,6 +345,7 @@ export const MainVideo: React.FC = () => {
           dur={T.shirley.dur}
           imgWidth={1265}
           imgHeight={3114}
+          endY={-1450}
         />
       </Sequence>
 
