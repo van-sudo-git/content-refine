@@ -342,8 +342,8 @@ export const MainVideo: React.FC = () => {
           src="images/shirley-full.png"
           caption="Shirley P. · Bookkeeper · 18 years in the district"
           dur={T.shirley.dur}
-          imgWidth={1280}
-          imgHeight={2500}
+          imgWidth={1265}
+          imgHeight={3114}
         />
       </Sequence>
 
