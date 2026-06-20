@@ -100,8 +100,10 @@ const Gallery = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          <span className="font-display text-4xl opacity-30">{profile.name[0]}</span>
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-gradient-to-br from-muted to-card p-6 text-center">
+                          <span className="font-display text-6xl opacity-30 mb-3">{profile.name[0]}</span>
+                          <p className="text-xs uppercase tracking-widest text-secondary font-semibold">Portrait in progress</p>
+                          <p className="text-[11px] text-muted-foreground italic mt-1">A hand-drawn portrait is being prepared</p>
                         </div>
                       )}
                     </div>
@@ -112,9 +114,11 @@ const Gallery = () => {
                       {profile.role}
                       {profile.department && `, ${profile.department}`}
                     </p>
-                    <p className="text-[11px] text-muted-foreground italic mt-1">
-                      Portrait by Evaan Ahlawat
-                    </p>
+                    {profile.portrait_url && (
+                      <p className="text-[11px] text-muted-foreground italic mt-1">
+                        Portrait by Evaan Ahlawat
+                      </p>
+                    )}
                   </Link>
                 </AnimatedSection>
               ))}

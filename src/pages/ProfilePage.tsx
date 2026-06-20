@@ -139,17 +139,25 @@ const ProfilePage = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl">
             {/* Portrait */}
-            {portrait && (
-              <AnimatedSection>
-                <div className="aspect-[4/5] bg-muted rounded-2xl overflow-hidden sticky top-28 shadow-lg">
+            <AnimatedSection>
+              <div className="aspect-[4/5] bg-muted rounded-2xl overflow-hidden sticky top-28 shadow-lg">
+                {portrait ? (
                   <img
                     src={portrait.image_url}
                     alt={`${profile.name} portrait`}
                     className="w-full h-full object-cover"
                   />
-                </div>
-              </AnimatedSection>
-            )}
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 bg-gradient-to-br from-muted to-card">
+                    <span className="font-display text-8xl opacity-20 mb-4">{profile.name[0]}</span>
+                    <p className="text-xs uppercase tracking-widest text-secondary font-semibold mb-2">Portrait in progress</p>
+                    <p className="text-sm text-muted-foreground italic max-w-xs">
+                      A hand-drawn charcoal portrait of {firstName} is being prepared and will appear here soon.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </AnimatedSection>
 
             <AnimatedSection delay={0.2}>
               <div className="space-y-6">
