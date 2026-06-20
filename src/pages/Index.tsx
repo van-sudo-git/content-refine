@@ -128,39 +128,7 @@ const Index = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="max-w-5xl mx-auto mt-14"
           >
-            {profiles.length > 0 && (
-              <Carousel opts={{ align: "start", loop: profiles.length > 3 }} className="w-full">
-                <CarouselContent className="-ml-4">
-                  {profiles.map((p) => (
-                    <CarouselItem key={p.id} className="pl-4 basis-2/3 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                      <Link to={`/gallery/${p.slug}`} className="group block">
-                        <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                          {p.portrait_url ? (
-                            <img
-                              src={p.portrait_url}
-                              alt={`${p.name}, hand-drawn portrait`}
-                              loading="lazy"
-                              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-card">
-                              <span className="font-display text-5xl opacity-30">{p.name[0]}</span>
-                            </div>
-                          )}
-                        </div>
-                        <h2 className="font-display text-base text-foreground mt-3 truncate">{p.name}</h2>
-                        <p className="text-muted-foreground text-xs truncate">
-                          {p.role}
-                          {p.department && `, ${p.department}`}
-                        </p>
-                      </Link>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden sm:flex -left-4" />
-                <CarouselNext className="hidden sm:flex -right-4" />
-              </Carousel>
-            )}
+            <CoverflowCarousel profiles={profiles} />
             <p className="text-center text-xs text-muted-foreground mt-4">
               Scroll sideways to meet everyone · <Link to="/gallery" className="text-secondary hover:underline">View full gallery</Link>
             </p>
