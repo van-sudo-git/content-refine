@@ -1,11 +1,21 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Eye, Heart, BarChart3, Users, QrCode, Shield, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
-import bradPortrait from "@/assets/brad-portrait.jpeg";
-import evaanPortrait from "@/assets/evaan-portrait.jpeg";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FeaturedProfile {
+  id: string;
+  slug: string;
+  name: string;
+  role: string;
+  department: string | null;
+  portrait_url: string | null;
+}
 
 const Index = () => {
   return (
