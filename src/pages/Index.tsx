@@ -139,7 +139,7 @@ const Index = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="max-w-5xl mx-auto mt-14"
           >
-            <CoverflowCarousel profiles={profiles} />
+            <CoverflowCarousel profiles={[EVAAN_PROFILE, ...profiles]} />
             <p className="text-center text-xs text-muted-foreground mt-4">
               Scroll sideways to meet everyone · <Link to="/gallery" className="text-secondary hover:underline">View full gallery</Link>
             </p>
