@@ -10,6 +10,7 @@ export interface CoverflowProfile {
   role: string;
   department: string | null;
   portrait_url: string | null;
+  href?: string;
 }
 
 const TWEEN_FACTOR_BASE = 0.6;
