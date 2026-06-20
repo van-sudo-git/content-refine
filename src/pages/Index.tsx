@@ -1,13 +1,51 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Eye, Heart, BarChart3, Users, QrCode, Shield, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
-import bradPortrait from "@/assets/brad-portrait.jpeg";
-import evaanPortrait from "@/assets/evaan-portrait.jpeg";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FeaturedProfile {
+  id: string;
+  slug: string;
+  name: string;
+  role: string;
+  department: string | null;
+  portrait_url: string | null;
+}
 
 const Index = () => {
+  const [profiles, setProfiles] = useState<FeaturedProfile[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, slug, name, role, department")
+        .eq("status", "published")
+        .order("created_at", { ascending: true });
+      if (!profilesData) return;
+      const ids = profilesData.map((p) => p.id);
+      const { data: imagesData } = await supabase
+        .from("profile_images")
+        .select("profile_id, image_url")
+        .in("profile_id", ids)
+        .eq("image_type", "portrait");
+      const portraitMap = new Map<string, string>();
+      imagesData?.forEach((img) => portraitMap.set(img.profile_id, img.image_url));
+      setProfiles(
+        (profilesData as Omit<FeaturedProfile, "portrait_url">[]).map((p) => ({
+          ...p,
+          portrait_url: portraitMap.get(p.id) || null,
+        }))
+      );
+    };
+    load();
+  }, []);
+
   return (
     <Layout>
       <Helmet>
@@ -83,29 +121,49 @@ const Index = () => {
             </motion.div>
           </div>
 
-          {/* Portraits, side by side, same size, below hero text */}
+          {/* Featured profiles carousel */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mt-14"
+            className="max-w-5xl mx-auto mt-14"
           >
-            <Link to="/gallery/brad-fisher" className="group block">
-              <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                <img src={bradPortrait} alt="Brad Fisher, hand-drawn portrait" width={600} height={800} fetchPriority="high" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-              </div>
-              <h2 className="font-display text-lg text-foreground mt-3">Brad Fisher</h2>
-              <p className="text-muted-foreground text-xs">Head Custodian, LWHS, since 2018</p>
-              <p className="text-[11px] text-muted-foreground italic mt-0.5">Portrait by Evaan Ahlawat</p>
-            </Link>
-            <Link to="/about" className="group block">
-              <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                <img src={evaanPortrait} alt="Evaan Ahlawat, self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-              </div>
-              <h2 className="font-display text-lg text-foreground mt-3">Evaan Ahlawat</h2>
-              <p className="text-muted-foreground text-xs">Founding Artist & Creator</p>
-              <p className="text-[11px] text-muted-foreground italic mt-0.5">Self-portrait</p>
-            </Link>
+            {profiles.length > 0 && (
+              <Carousel opts={{ align: "start", loop: profiles.length > 3 }} className="w-full">
+                <CarouselContent className="-ml-4">
+                  {profiles.map((p) => (
+                    <CarouselItem key={p.id} className="pl-4 basis-2/3 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                      <Link to={`/gallery/${p.slug}`} className="group block">
+                        <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
+                          {p.portrait_url ? (
+                            <img
+                              src={p.portrait_url}
+                              alt={`${p.name}, hand-drawn portrait`}
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-card">
+                              <span className="font-display text-5xl opacity-30">{p.name[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <h2 className="font-display text-base text-foreground mt-3 truncate">{p.name}</h2>
+                        <p className="text-muted-foreground text-xs truncate">
+                          {p.role}
+                          {p.department && `, ${p.department}`}
+                        </p>
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden sm:flex -left-4" />
+                <CarouselNext className="hidden sm:flex -right-4" />
+              </Carousel>
+            )}
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              Scroll sideways to meet everyone · <Link to="/gallery" className="text-secondary hover:underline">View full gallery</Link>
+            </p>
           </motion.div>
         </div>
       </section>
