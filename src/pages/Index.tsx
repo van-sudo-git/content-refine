@@ -121,29 +121,49 @@ const Index = () => {
             </motion.div>
           </div>
 
-          {/* Portraits, side by side, same size, below hero text */}
+          {/* Featured profiles carousel */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mt-14"
+            className="max-w-5xl mx-auto mt-14"
           >
-            <Link to="/gallery/brad-fisher" className="group block">
-              <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                <img src={bradPortrait} alt="Brad Fisher, hand-drawn portrait" width={600} height={800} fetchPriority="high" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-              </div>
-              <h2 className="font-display text-lg text-foreground mt-3">Brad Fisher</h2>
-              <p className="text-muted-foreground text-xs">Head Custodian, LWHS, since 2018</p>
-              <p className="text-[11px] text-muted-foreground italic mt-0.5">Portrait by Evaan Ahlawat</p>
-            </Link>
-            <Link to="/about" className="group block">
-              <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
-                <img src={evaanPortrait} alt="Evaan Ahlawat, self-portrait" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-              </div>
-              <h2 className="font-display text-lg text-foreground mt-3">Evaan Ahlawat</h2>
-              <p className="text-muted-foreground text-xs">Founding Artist & Creator</p>
-              <p className="text-[11px] text-muted-foreground italic mt-0.5">Self-portrait</p>
-            </Link>
+            {profiles.length > 0 && (
+              <Carousel opts={{ align: "start", loop: profiles.length > 3 }} className="w-full">
+                <CarouselContent className="-ml-4">
+                  {profiles.map((p) => (
+                    <CarouselItem key={p.id} className="pl-4 basis-2/3 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                      <Link to={`/gallery/${p.slug}`} className="group block">
+                        <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
+                          {p.portrait_url ? (
+                            <img
+                              src={p.portrait_url}
+                              alt={`${p.name}, hand-drawn portrait`}
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-card">
+                              <span className="font-display text-5xl opacity-30">{p.name[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <h2 className="font-display text-base text-foreground mt-3 truncate">{p.name}</h2>
+                        <p className="text-muted-foreground text-xs truncate">
+                          {p.role}
+                          {p.department && `, ${p.department}`}
+                        </p>
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden sm:flex -left-4" />
+                <CarouselNext className="hidden sm:flex -right-4" />
+              </Carousel>
+            )}
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              Scroll sideways to meet everyone · <Link to="/gallery" className="text-secondary hover:underline">View full gallery</Link>
+            </p>
           </motion.div>
         </div>
       </section>
