@@ -10,6 +10,7 @@ export interface CoverflowProfile {
   role: string;
   department: string | null;
   portrait_url: string | null;
+  href?: string;
 }
 
 const TWEEN_FACTOR_BASE = 0.6;
@@ -106,7 +107,7 @@ export const CoverflowCarousel = ({ profiles }: { profiles: CoverflowProfile[] }
               key={p.id}
               className="flex-[0_0_60%] sm:flex-[0_0_42%] md:flex-[0_0_32%] lg:flex-[0_0_26%] pl-4 min-w-0"
             >
-              <Link to={`/gallery/${p.slug}`} className="coverflow-card block transition-[transform,opacity] duration-200 ease-out will-change-transform origin-center">
+              <Link to={p.href ?? `/gallery/${p.slug}`} className="coverflow-card block transition-[transform,opacity] duration-200 ease-out will-change-transform origin-center">
                 <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-lg">
                   {p.portrait_url ? (
                     <img

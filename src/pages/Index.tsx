@@ -7,6 +7,17 @@ import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import CoverflowCarousel from "@/components/CoverflowCarousel";
 import { supabase } from "@/integrations/supabase/client";
+import evaanPortrait from "@/assets/evaan-portrait.jpeg";
+
+const EVAAN_PROFILE = {
+  id: "evaan-creator",
+  slug: "evaan-ahlawat",
+  name: "Evaan Ahlawat",
+  role: "Founding Artist & Creator",
+  department: null,
+  portrait_url: evaanPortrait,
+  href: "/about",
+};
 
 interface FeaturedProfile {
   id: string;
@@ -128,7 +139,7 @@ const Index = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="max-w-5xl mx-auto mt-14"
           >
-            <CoverflowCarousel profiles={profiles} />
+            <CoverflowCarousel profiles={[EVAAN_PROFILE, ...profiles]} />
             <p className="text-center text-xs text-muted-foreground mt-4">
               Scroll sideways to meet everyone · <Link to="/gallery" className="text-secondary hover:underline">View full gallery</Link>
             </p>
