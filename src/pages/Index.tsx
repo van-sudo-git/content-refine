@@ -46,6 +46,7 @@ const Index = () => {
     load();
   }, []);
 
+  return (
     <Layout>
       <Helmet>
         <title>Now We See You — Visibility in Action</title>
