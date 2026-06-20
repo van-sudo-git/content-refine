@@ -7,6 +7,17 @@ import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import CoverflowCarousel from "@/components/CoverflowCarousel";
 import { supabase } from "@/integrations/supabase/client";
+import evaanPortrait from "@/assets/evaan-portrait.jpeg";
+
+const EVAAN_PROFILE = {
+  id: "evaan-creator",
+  slug: "evaan-ahlawat",
+  name: "Evaan Ahlawat",
+  role: "Founding Artist & Creator",
+  department: null,
+  portrait_url: evaanPortrait,
+  href: "/about",
+};
 
 interface FeaturedProfile {
   id: string;
