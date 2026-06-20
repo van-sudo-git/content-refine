@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import CoverflowCarousel from "@/components/CoverflowCarousel";
 import { supabase } from "@/integrations/supabase/client";
 
 interface FeaturedProfile {
