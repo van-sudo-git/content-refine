@@ -18,7 +18,34 @@ interface FeaturedProfile {
 }
 
 const Index = () => {
-  return (
+  const [profiles, setProfiles] = useState<FeaturedProfile[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, slug, name, role, department")
+        .eq("status", "published")
+        .order("created_at", { ascending: true });
+      if (!profilesData) return;
+      const ids = profilesData.map((p) => p.id);
+      const { data: imagesData } = await supabase
+        .from("profile_images")
+        .select("profile_id, image_url")
+        .in("profile_id", ids)
+        .eq("image_type", "portrait");
+      const portraitMap = new Map<string, string>();
+      imagesData?.forEach((img) => portraitMap.set(img.profile_id, img.image_url));
+      setProfiles(
+        (profilesData as Omit<FeaturedProfile, "portrait_url">[]).map((p) => ({
+          ...p,
+          portrait_url: portraitMap.get(p.id) || null,
+        }))
+      );
+    };
+    load();
+  }, []);
+
     <Layout>
       <Helmet>
         <title>Now We See You — Visibility in Action</title>
