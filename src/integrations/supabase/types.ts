@@ -305,6 +305,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_is_admin: { Args: never; Returns: boolean }
       increment_page_view: {
         Args: { p_day: string; p_slug: string }
         Returns: undefined
@@ -312,11 +313,6 @@ export type Database = {
       increment_redirect_daily: {
         Args: { p_day: string; p_id: string }
         Returns: undefined
-      }
-      is_any_school_admin: { Args: { _email: string }; Returns: boolean }
-      is_school_admin: {
-        Args: { _email: string; _school_id: string }
-        Returns: boolean
       }
     }
     Enums: {
