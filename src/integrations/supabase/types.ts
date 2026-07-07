@@ -305,7 +305,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_user_is_admin: { Args: never; Returns: boolean }
       increment_page_view: {
         Args: { p_day: string; p_slug: string }
         Returns: undefined
