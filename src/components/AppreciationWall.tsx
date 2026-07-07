@@ -45,9 +45,12 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
     const checkAdmin = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.email) {
-        const { data } = await supabase.rpc("is_any_school_admin", {
-          _email: session.user.email,
-        });
+        const { data } = await supabase
+          .from("school_admins")
+          .select("id")
+          .eq("email", session.user.email.toLowerCase())
+          .limit(1)
+          .maybeSingle();
         setIsAdmin(!!data);
       }
     };

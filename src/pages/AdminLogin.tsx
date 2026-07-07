@@ -26,9 +26,12 @@ const AdminLogin = () => {
 
     const checkSession = async () => {
       try {
-        const { data } = await supabase.rpc("is_any_school_admin", {
-          _email: user.email ?? "",
-        });
+        const { data } = await supabase
+          .from("school_admins")
+          .select("id")
+          .eq("email", (user.email ?? "").toLowerCase())
+          .limit(1)
+          .maybeSingle();
 
         if (cancelled) return;
 
@@ -74,13 +77,16 @@ const AdminLogin = () => {
         if (error) throw error;
 
         const signedInEmail = data.user?.email?.trim().toLowerCase() ?? normalizedEmail;
-        const { data: isAdmin, error: adminError } = await supabase.rpc("is_any_school_admin", {
-          _email: signedInEmail,
-        });
+        const { data: adminRow, error: adminError } = await supabase
+          .from("school_admins")
+          .select("id")
+          .eq("email", signedInEmail)
+          .limit(1)
+          .maybeSingle();
 
         if (adminError) throw adminError;
 
-        if (!isAdmin) {
+        if (!adminRow) {
           await supabase.auth.signOut();
           toast({
             title: "Access denied",
