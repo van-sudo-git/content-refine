@@ -313,11 +313,6 @@ export type Database = {
         Args: { p_day: string; p_id: string }
         Returns: undefined
       }
-      is_any_school_admin: { Args: { _email: string }; Returns: boolean }
-      is_school_admin: {
-        Args: { _email: string; _school_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
       [_ in never]: never

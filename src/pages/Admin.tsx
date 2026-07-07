@@ -54,8 +54,13 @@ const Admin = () => {
       const email = user.email ?? "";
       setUserEmail(email);
 
-      const { data: isAdmin } = await supabase.rpc("is_any_school_admin", { _email: email });
-      if (!isAdmin) {
+      const { data: adminRow } = await supabase
+        .from("school_admins")
+        .select("id")
+        .eq("email", email.toLowerCase())
+        .limit(1)
+        .maybeSingle();
+      if (!adminRow) {
         setLoading(false);
         navigate("/admin/login", { replace: true });
         return;

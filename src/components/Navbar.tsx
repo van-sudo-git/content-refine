@@ -41,7 +41,12 @@ const Navbar = () => {
     }
 
     const checkAdmin = async () => {
-      const { data } = await supabase.rpc("is_any_school_admin", { _email: authEmail });
+      const { data } = await supabase
+        .from("school_admins")
+        .select("id")
+        .eq("email", authEmail.toLowerCase())
+        .limit(1)
+        .maybeSingle();
       if (!cancelled) setIsAdmin(!!data);
     };
 
