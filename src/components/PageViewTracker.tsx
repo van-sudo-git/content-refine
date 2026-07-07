@@ -21,10 +21,7 @@ const PageViewTracker = () => {
         ? "home"
         : pathname.replace(/^\//, "").replace(/\//g, ":");
 
-    void supabase.rpc("increment_page_view", {
-      p_slug: slug,
-      p_day: new Date().toISOString().slice(0, 10),
-    });
+    void supabase.functions.invoke("track-page-view", { body: { slug } });
   }, [pathname]);
 
   return null;
