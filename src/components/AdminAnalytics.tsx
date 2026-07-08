@@ -1,3 +1,32 @@
+/**
+ * AdminAnalytics
+ *
+ * Displays engagement data for school administrators across two data sources:
+ *
+ * 1. Main Supabase project (this app) — profile page views, appreciation
+ *    messages (approved/pending/rejected), and any QR redirects created
+ *    before the heros-redirect migration.
+ *
+ * 2. heros-redirect Supabase project — external QR scan analytics logged
+ *    by the standalone Next.js redirect service at heros-redirect.vercel.app.
+ *
+ * Both projects may contain redirect records for the same QR codes during
+ * the transition period. To avoid double-counting, external QR IDs take
+ * precedence: local redirect_events_daily records are filtered out if the
+ * same ID exists in the external project.
+ *
+ * Slug resolution: external redirects store a destination_url rather than
+ * a profile_slug directly. getSlugFromRedirect() parses the /gallery/:slug
+ * path to recover the slug for display and grouping.
+ *
+ * The daily trend chart covers 60 days of data but displays the last 7, 14,
+ * or 30 days based on the user's selection. Period-over-period delta compares
+ * the selected window against the equivalent preceding window.
+ *
+ * isDemo mode uses hardcoded data from demoData.ts — used for the public
+ * demo profile manager so analytics UI is visible without real data.
+ */
+
 import { useState, useEffect, useMemo } from "react";
 import { BarChart3, Eye, QrCode, MessageCircle, XCircle, TrendingUp } from "lucide-react";
 import {
