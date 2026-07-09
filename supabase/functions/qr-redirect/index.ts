@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
     // Unknown or deactivated redirects fall back to the main site
     if (!redirect || redirect.active !== true) {
-      return Response.redirect("https://nowweseeyou.lovable.app", 302);
+      return Response.redirect("https://nowweseeyou.org", 302);
     }
 
     // Log the scan without awaiting — redirect speed matters more than analytics
@@ -74,6 +74,6 @@ Deno.serve(async (req) => {
     return Response.redirect(destination, 302);
   } catch (error) {
     console.error("QR redirect error:", error);
-    return Response.redirect("https://nowweseeyou.lovable.app", 302);
+    return Response.redirect("https://nowweseeyou.org", 302);
   }
 });
