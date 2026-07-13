@@ -70,6 +70,21 @@ const Gallery = () => {
         <meta property="og:description" content="Portraits and stories of the staff who keep our school running, shared with consent." />
         <meta property="og:url" content="https://nowweseeyou.org/gallery" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Gallery — Meet Our Unsung Heroes",
+          description: "A collection of hand-drawn portraits and consent-based stories of the staff who keep our school community running.",
+          url: "https://nowweseeyou.org/gallery",
+          isPartOf: { "@type": "WebSite", name: "Now We See You", url: "https://nowweseeyou.org" },
+          hasPart: profiles.map((p) => ({
+            "@type": "Person",
+            name: p.name,
+            jobTitle: p.role,
+            url: `https://nowweseeyou.org/gallery/${p.slug}`,
+            ...(p.portrait_url ? { image: p.portrait_url } : {}),
+          })),
+        })}</script>
       </Helmet>
       <section className="py-24">
         <div className="container mx-auto px-6">
