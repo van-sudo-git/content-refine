@@ -47,11 +47,12 @@ type NominationFormValues = z.infer<typeof nominationSchema>;
 
 const Nominate = () => {
   const [submitted, setSubmitted] = useState(false);
-  const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [schoolMap, setSchoolMap] = useState<Record<string, string>>({});
 
   const form = useForm<NominationFormValues>({
     resolver: zodResolver(nominationSchema),
     defaultValues: {
+      school_name: SCHOOL_OPTIONS[0].value,
       nominee_name: "",
       nominee_role: "",
       nominee_department: "",
@@ -63,25 +64,27 @@ const Nominate = () => {
   });
 
   useEffect(() => {
-    const fetchSchool = async () => {
+    const fetchSchools = async () => {
       const { data } = await supabase
         .from("schools")
-        .select("id")
-        .eq("name", "Lake Washington High School")
-        .single();
-      if (data) setSchoolId(data.id);
+        .select("id, name")
+        .in("name", SCHOOL_OPTIONS.map((s) => s.value));
+      if (data) {
+        setSchoolMap(Object.fromEntries(data.map((s) => [s.name, s.id])));
+      }
     };
-    fetchSchool();
+    fetchSchools();
   }, []);
 
   const onSubmit = async (values: NominationFormValues) => {
+    const schoolId = schoolMap[values.school_name];
     if (!schoolId) return;
 
     const { error } = await supabase.from("nominations").insert([{
       school_id: schoolId,
       nominee_name: values.nominee_name,
       nominee_role: values.nominee_role,
-      nominee_department: values.nominee_department,
+      nominee_department: values.nominee_department?.trim() || "",
       reason: values.reason,
       nominator_name: values.nominator_name,
       nominator_email: values.nominator_email,
