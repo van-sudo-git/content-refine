@@ -19,7 +19,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+
+const SCHOOL_OPTIONS = [
+  { value: "Lake Washington High School", label: "Lake Washington High School" },
+];
 
 const nominationSchema = z.object({
   nominee_name: z.string().trim().min(1, "Name is required").max(100),
