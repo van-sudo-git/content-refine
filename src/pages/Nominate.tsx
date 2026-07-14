@@ -33,9 +33,10 @@ const SCHOOL_OPTIONS = [
 ];
 
 const nominationSchema = z.object({
+  school_name: z.string().trim().min(1, "Please select a school"),
   nominee_name: z.string().trim().min(1, "Name is required").max(100),
   nominee_role: z.string().trim().min(1, "Role is required").max(100),
-  nominee_department: z.string().trim().min(1, "Department is required").max(100),
+  nominee_department: z.string().trim().max(100).optional(),
   reason: z.string().trim().min(10, "Please share at least a sentence or two").max(2000),
   nominator_name: z.string().trim().min(1, "Your name is required").max(100),
   nominator_email: z.string().trim().email("Please enter a valid email").max(255),
