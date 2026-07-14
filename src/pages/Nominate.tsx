@@ -162,6 +162,31 @@ const Nominate = () => {
 
                     <FormField
                       control={form.control}
+                      name="school_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>School</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a school" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {SCHOOL_OPTIONS.map((s) => (
+                                <SelectItem key={s.value} value={s.value}>
+                                  {s.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="nominee_name"
                       render={({ field }) => (
                         <FormItem>
@@ -193,7 +218,7 @@ const Nominate = () => {
                         name="nominee_department"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Department</FormLabel>
+                            <FormLabel>Department <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. Facilities" {...field} />
                             </FormControl>
