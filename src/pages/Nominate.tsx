@@ -19,24 +19,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 
-const SCHOOL_OPTIONS = [
-  { value: "Lake Washington High School", label: "Lake Washington High School" },
-];
+const DEFAULT_SCHOOL_NAME = "Lake Washington High School";
 
 const nominationSchema = z.object({
-  school_name: z.string().trim().min(1, "Please select a school"),
   nominee_name: z.string().trim().min(1, "Name is required").max(100),
   nominee_role: z.string().trim().min(1, "Role is required").max(100),
-  nominee_department: z.string().trim().max(100).optional(),
+  nominee_department: z.string().trim().min(1, "Department is required").max(100),
   reason: z.string().trim().min(10, "Please share at least a sentence or two").max(2000),
   nominator_name: z.string().trim().min(1, "Your name is required").max(100),
   nominator_email: z.string().trim().email("Please enter a valid email").max(255),
@@ -47,12 +37,11 @@ type NominationFormValues = z.infer<typeof nominationSchema>;
 
 const Nominate = () => {
   const [submitted, setSubmitted] = useState(false);
-  const [schoolMap, setSchoolMap] = useState<Record<string, string>>({});
+  const [schoolId, setSchoolId] = useState<string | null>(null);
 
   const form = useForm<NominationFormValues>({
     resolver: zodResolver(nominationSchema),
     defaultValues: {
-      school_name: SCHOOL_OPTIONS[0].value,
       nominee_name: "",
       nominee_role: "",
       nominee_department: "",
@@ -64,27 +53,27 @@ const Nominate = () => {
   });
 
   useEffect(() => {
-    const fetchSchools = async () => {
+    const fetchDefaultSchool = async () => {
       const { data } = await supabase
         .from("schools")
-        .select("id, name")
-        .in("name", SCHOOL_OPTIONS.map((s) => s.value));
+        .select("id")
+        .eq("name", DEFAULT_SCHOOL_NAME)
+        .single();
       if (data) {
-        setSchoolMap(Object.fromEntries(data.map((s) => [s.name, s.id])));
+        setSchoolId(data.id);
       }
     };
-    fetchSchools();
+    fetchDefaultSchool();
   }, []);
 
   const onSubmit = async (values: NominationFormValues) => {
-    const schoolId = schoolMap[values.school_name];
     if (!schoolId) return;
 
     const { error } = await supabase.from("nominations").insert([{
       school_id: schoolId,
       nominee_name: values.nominee_name,
       nominee_role: values.nominee_role,
-      nominee_department: values.nominee_department?.trim() || "",
+      nominee_department: values.nominee_department,
       reason: values.reason,
       nominator_name: values.nominator_name,
       nominator_email: values.nominator_email,
@@ -162,31 +151,6 @@ const Nominate = () => {
 
                     <FormField
                       control={form.control}
-                      name="school_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>School</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a school" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {SCHOOL_OPTIONS.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>
-                                  {s.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
                       name="nominee_name"
                       render={({ field }) => (
                         <FormItem>
@@ -218,7 +182,7 @@ const Nominate = () => {
                         name="nominee_department"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Department <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                            <FormLabel>Department</FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. Facilities" {...field} />
                             </FormControl>
