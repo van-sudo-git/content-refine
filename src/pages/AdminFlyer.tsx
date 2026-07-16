@@ -47,6 +47,23 @@ const AdminFlyer = () => {
     if (user) loadProfiles();
   }, [user]);
 
+  // Find next available flyer ID for a given slug
+  const getNextFlyerId = async (slug: string) => {
+    const { data } = await supabase
+      .from("redirects")
+      .select("id")
+      .like("id", `${slug}-flyer-%`);
+
+    if (!data || data.length === 0) return `${slug}-flyer-1`;
+
+    const numbers = data
+      .map((r) => parseInt(r.id.replace(`${slug}-flyer-`, ""), 10))
+      .filter((n) => !isNaN(n));
+
+    const max = numbers.length > 0 ? Math.max(...numbers) : 0;
+    return `${slug}-flyer-${max + 1}`;
+  };
+
   // When a profile is selected, look up its active redirect ID
   useEffect(() => {
     if (!selectedSlug) {
@@ -65,7 +82,9 @@ const AdminFlyer = () => {
 
     const profile = profiles.find((p) => p.slug === selectedSlug) ?? null;
     setSelectedProfile(profile);
-    setNewRedirectId(`${selectedSlug}-flyer-1`);
+
+    // Set next available flyer ID
+    getNextFlyerId(selectedSlug).then(setNewRedirectId);
 
     const lookupRedirect = async () => {
       const { data } = await supabase
@@ -74,7 +93,6 @@ const AdminFlyer = () => {
         .eq("active", true);
 
       if (data) {
-        // Find redirect whose destination_url contains this profile's slug
         const match = data.find((r) =>
           r.destination_url?.includes(`/gallery/${selectedSlug}`)
         );
@@ -206,7 +224,8 @@ const AdminFlyer = () => {
             name={selectedProfile.name}
             role={selectedProfile.role}
             redirectId={redirectId}
-          />
+            slug={selectedSlug}
+        />
         )}
       </div>
     </div>
