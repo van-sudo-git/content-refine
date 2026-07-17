@@ -254,6 +254,13 @@ const Admin = () => {
             >
               Analytics
             </Button>
+            {/* flyer generator — separate page, not a tab */}
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin/flyer")}
+            >
+              Flyer Generator
+            </Button>
           </div>
 
           {/* Nominations Tab */}

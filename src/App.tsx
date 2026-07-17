@@ -13,6 +13,8 @@ import Admin from "./pages/Admin.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PageViewTracker from "./components/PageViewTracker.tsx";
+// Add this import with the other admin imports
+import AdminFlyer from "./pages/AdminFlyer.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +34,7 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/flyer" element={<AdminFlyer />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
