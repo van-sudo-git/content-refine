@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import AppreciationWall from "@/components/AppreciationWall";
 import { supabase } from "@/integrations/supabase/client";
+import ShareButton from "@/components/ShareButton";
 
 interface ProfileData {
   id: string;
@@ -170,7 +171,7 @@ const ProfilePage = () => {
                     {profile.department && ` — ${profile.department}`}
                   </p>
                 </div>
-
+                <ShareButton name={profile.name} slug={profile.slug} /> 
                 {/* Bio with QR */}
                 <div className="flex gap-8 items-start">
                   <div className="flex-1 space-y-4 text-muted-foreground leading-relaxed">
