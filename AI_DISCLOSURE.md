@@ -1,73 +1,98 @@
 # AI Disclosure
 
-Now We See You was developed with AI-assisted tools. This document explains how those tools were used, what Evaan led and contributed directly, and where AI generated or assisted with implementation.
+Now We See You was developed through a combination of independently written code and AI-assisted development. This document explains exactly where AI tools were used, which parts Evaan Ahlawat built directly, and which AI systems are part of the running application.
 
-The goal is to make the project's development process clear and transparent for anyone reviewing the work.
-
----
-
-## Evaan's role and contributions
-
-**The problem, mission, and product concept** — Evaan conceived the idea after building relationships with classified staff at his school and recognizing that many essential people in a school community are rarely known beyond their job titles. No AI tool suggested the project or its purpose.
-
-**The community work** — Evaan created every charcoal and graphite portrait by hand, conducted staff interviews, managed consent conversations, and built the relationships that made public profiles possible.
-
-**Product and experience design** — Evaan defined the profile structure, nomination workflow, appreciation-wall experience, QR-linked visitor journey, and the ways school staff and students would use the platform.
-
-**Data and access-control requirements** — Evaan defined the key information the platform needed to support: staff profiles, nominations, appreciation messages, QR routing, daily engagement tracking, and school-based administrative access. The implementation developed through a mix of AI-assisted generation, direct edits, testing, and iteration.
-
-**QR redirect architecture** — Evaan identified the need to separate printed QR codes from changing profile URLs, so that a physical placard could continue pointing visitors to the correct destination even if the main site changes. He designed the intended scan-to-profile experience, tested the physical QR workflow, and integrated it into the broader product. He built the standalone redirect service himself — see `heros-redirect` below.
-
-**Analytics requirements** — Evaan defined the need to track profile views, QR scans, nominations, and appreciation activity, including avoiding double-counting while QR systems were being transitioned. He reviewed, tested, and iterated on the resulting dashboard behavior.
-
-**Admin authentication behavior** — Evaan identified a timing problem where an administrator could be redirected before Supabase finished resolving session state. He worked through and tested a `useAuthReady` approach that waits for session resolution before protected content renders and cleans up the authentication subscription when the component unmounts.
-
-**Moderation criteria** — Evaan defined and refined the school-specific rules for what kinds of appreciation messages should be approved, rejected, or flagged for review. The runtime system applies those criteria to each submitted message.
+The goal is transparency: using an AI-assisted tool does not replace the need to define the problem, make technical decisions, understand the implementation, test the system, and take responsibility for the finished product.
 
 ---
 
-## Where AI tools were used
+## Development timeline
+
+### 1. Original project and Google Sites prototype
+
+Evaan conceived the problem, mission, consent model, profile format, nomination workflow, and appreciation-wall concept after interviewing classified staff at Lake Washington High School.
+
+He built the [original Google Sites version](https://sites.google.com/view/now-we-see-me) directly, before using Lovable. That version included Brad Fisher's profile, a nomination form, an appreciation wall, and a Privacy and Ethics page. No AI development tool proposed the project or created its original product model.
+
+### 2. Lovable-assisted application foundation
+
+Evaan later used Lovable, an AI-assisted web-development platform, to help create significant portions of the initial React front end, UI scaffolding, and Supabase-connected application foundation.
+
+Evaan supplied the product requirements, user flows, data needs, moderation expectations, consent requirements, and visual direction. He reviewed the generated code, tested it with real project data, identified failures, and iterated on the implementation.
+
+Lovable's assistance applies to the initial application foundation. It did **not** generate or scaffold the independently implemented additions listed below.
+
+### 3. Independently implemented additions
+
+After the initial Lovable-assisted application was established, Evaan wrote the following components directly outside Lovable:
+
+1. **Standalone QR redirect service (`heros-redirect`)** — a Next.js service that keeps printed QR codes valid when profile destinations or hosting change and records daily scan activity.
+2. **Print-ready flyer generator** — an admin workflow that selects a published profile, resolves its redirect identifier, creates a permanent QR code, and renders a printable placard with independent scan tracking.
+3. **Profile share button** — native sharing and fallback link-copy behavior for distributing an individual staff member's story.
+4. **Staff Since badge** — profile logic and display for showing when a featured staff member began serving the community.
+5. **TF-IDF keyphrase extractor** — TypeScript text-analysis logic that identifies meaningful terms in appreciation messages without an external NLP library.
+6. **K-means department clustering** — TypeScript clustering logic for grouping appreciation messages and identifying themes associated with different departments or roles.
+7. **Duplicate nomination detector** — validation logic that checks for an existing profile or nomination before accepting a repeated submission.
+8. **Multi-school administration and onboarding** — school-scoped administration, school onboarding, and per-school access controls so administrators see only the records they are authorized to manage.
+9. **Chapter replication guide** — the independently written process guide at [`docs/start-a-chapter-guide.md`](./docs/start-a-chapter-guide.md) for launching the project in another school or community.
+
+These components may connect to the Lovable-assisted foundation, but their implementation and integration were written directly by Evaan rather than generated by Lovable.
+
+Git and GitHub were used for version control, commits, branches, and pull requests.
+
+---
+
+## Evaan's non-technical and system-level contributions
+
+**Problem, mission, and product concept** — Evaan conceived and led the project. No AI tool suggested the community problem or the purpose of the platform.
+
+**Portraits, interviews, and consent** — Evaan created the portraits by hand, conducted the interviews, managed consent conversations, wrote and reviewed profile content with participants, and built the relationships that made the platform possible.
+
+**Product and experience design** — Evaan defined the profile structure, nomination flow, appreciation-wall experience, QR-linked visitor journey, school-administration workflow, and chapter-replication model.
+
+**Technical architecture and requirements** — Evaan determined that printed QR codes needed an independently controlled redirect layer, defined the analytics and deduplication requirements, designed school-scoped administration, and decided how physical placards should connect to digital profiles over time.
+
+**Testing and debugging** — Evaan tested the application with real profiles and production data, diagnosed failures, verified authentication and redirect behavior, and added browser and read-only production verification scripts.
+
+---
+
+## AI systems used
 
 ### Lovable
 
-Lovable is an AI-assisted web-development platform that generates and revises application code from product requirements and design direction.
+Lovable was used as an AI-assisted development platform for significant portions of the initial React UI and Supabase-connected application foundation.
 
-Evaan used Lovable to develop significant portions of the React front end, UI scaffolding, and Supabase-connected functionality. His process involved defining requirements, user flows, expected behavior, data needs, and visual direction; reviewing generated output; testing it with real users and project data; and iterating when the implementation did not meet the intended experience.
+**Lovable's role:** generating and revising portions of the initial application code from Evaan's requirements and design direction.
 
-**Lovable's role:** generated and revised significant portions of application code based on Evaan's direction.  
-**Evaan's role:** led product definition, community use case, feature requirements, system-level decisions, testing, debugging, and iterative refinement.
+**Evaan's role:** defining the product and architecture, reviewing the generated implementation, testing it, debugging it, and directly implementing the additions listed above.
 
-### Gemini 2.5 Flash Lite (via Lovable AI Gateway)
+### Gemini 2.5 Flash Lite via the Lovable AI Gateway
 
-Gemini is used at runtime for appreciation-wall moderation through the `supabase/functions/moderate-appreciation` edge function.
+Gemini is part of the running application, not a development author. It evaluates appreciation-wall submissions through `supabase/functions/moderate-appreciation` before a message is published.
 
-When someone submits an appreciation message, the system sends the message and school-specific approval criteria to the model. The model returns a moderation result before the message is saved as approved or rejected. Evaan defined and refined the approval criteria and the user experience around moderation.
-
-### Claude Code
-
-Claude Code was used to scaffold a Remotion video-pipeline experiment in the `remotion/` subproject. This experiment is separate from the core Now We See You web application and is not required for the platform's primary functionality.
+Evaan defined and refined the school-specific approval and rejection criteria and designed the moderation experience. Gemini applies those criteria at runtime.
 
 ---
 
 ## Summary table
 
-| Component | Evaan's role | AI/tool role |
+| Component | Evaan's contribution | AI/tool contribution |
 |---|---|---|
-| Product concept and mission | Conceived and led | None |
-| Portrait artwork, interviews, and consent | Created and conducted directly | None |
-| Public profile and nomination experience | Defined product requirements and user flow | Lovable assisted with application implementation |
-| Front-end React application | Directed, reviewed, tested, and iterated | Lovable generated significant portions of code |
-| Data model and school access requirements | Defined core product/data needs and reviewed iterations | Implementation used a mix of Lovable-assisted generation and direct edits |
-| QR redirect service (`heros-redirect`) | Written directly by Evaan in Next.js | No AI tool used |
-| QR-linked visitor journey | Designed, tested, and integrated | Standalone redirect service built directly; main app integration Lovable-assisted |
-| Analytics behavior and dashboard requirements | Defined, reviewed, tested, and iterated | Implementation was AI-assisted and refined through testing |
-| Admin auth readiness behavior | Identified the problem and tested/refined the solution | Implementation was developed in the project workflow |
-| Appreciation moderation criteria | Defined and refined | Gemini 2.5 Flash Lite evaluates messages at runtime |
-| Remotion video experiment | Directed as a separate experiment | Claude Code assisted with scaffolding |
+| Project concept, mission, and consent model | Conceived and led directly | None |
+| Original Google Sites prototype | Built directly | None |
+| Portrait artwork, interviews, and community relationships | Created and conducted directly | None |
+| Initial React UI and Supabase-connected foundation | Defined requirements, directed, reviewed, tested, and debugged | Lovable generated and revised significant portions of the initial implementation |
+| Standalone QR redirect service | Designed and written directly in Next.js | None |
+| Flyer generator | Designed, written, and integrated directly | Not generated or scaffolded by Lovable |
+| Share button and Staff Since badge | Written and integrated directly | Not generated or scaffolded by Lovable |
+| TF-IDF keyphrase extraction and k-means clustering | Designed and written directly in TypeScript | Not generated or scaffolded by Lovable; no external NLP library |
+| Duplicate nomination detector | Designed and written directly | Not generated or scaffolded by Lovable |
+| Multi-school admin and onboarding | Designed, written, and integrated directly | Not generated or scaffolded by Lovable |
+| Chapter replication guide | Authored directly | None |
+| Appreciation-message moderation | Defined rules and experience | Gemini evaluates submissions at runtime |
 
 ---
 
 ## Ongoing approach
 
-Evaan uses AI tools as development collaborators, not as substitutes for product ownership or community work. He aims to understand the workflows he deploys, test them with real users, document material design decisions, and be explicit about where AI generated or assisted with implementation.
-
+Evaan uses AI-assisted development where disclosed, but remains responsible for understanding, testing, and explaining the systems he submits. The repository distinguishes between Lovable-assisted foundation code, independently implemented additions, and AI models that operate only at runtime.
