@@ -26,6 +26,7 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Nomination workflow** — anyone can nominate the next staff member at [nowweseeyou.org/nominate](https://nowweseeyou.org/nominate). Nominations land in the admin dashboard where administrators review, approve, decline, or feature them. The `nominee_informed` field confirms whether the nominee knows they have been nominated. Approved nominations trigger in-person outreach and explicit consent before any profile work begins. Real nominations from LWSD staff are visible in [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-nominations-jul2026.png) and the admin workflow in [`docs/assets/admin-profiles-jul2026.png`](./docs/assets/admin-profiles-jul2026.png)
 - **Admin dashboard** — school administrators can review nominations, manage profiles, track engagement, and generate print-ready QR flyers
 - **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
+- **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png) and [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
 - **Analytics** — per-profile page views, daily QR scan counts from two Supabase projects, appreciation-message tracking, and period-over-period trends. Real engagement data in [`docs/assets/analytics-traffic-jul2026.png`](./docs/assets/analytics-traffic-jul2026.png) and [`docs/assets/analytics-per-profile-breakdown-jul2026.png`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
 
 ---
@@ -172,7 +173,9 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 ## Changelog
 
 ### July 2026
-- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking
+
+- Share button — native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
+- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
 - Nomination form — added school dropdown, made department optional, added database migration
 - QR redirect URLs updated to nowweseeyou.org across all records
 - Automated verification scripts added for live platform testing

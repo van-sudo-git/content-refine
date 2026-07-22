@@ -93,6 +93,10 @@ Playwright headless browser test on mobile viewport (390×844).
 | 12 | Mobile layout | All pages render correctly, no horizontal overflow | ✅ Pass |
 | 13 | Profile page title | Shows staff member name and role | ✅ Pass |
 | 14 | Profile JSON-LD structured data | Person schema with correct name, image, URL | ✅ Pass |
+| 15 | Share button — mobile | Tap share on Brad's profile on phone | Native share sheet opens with correct URL and name | ✅ Pass |
+| 16 | Share button — desktop | Click share on desktop | URL copied, "Copied!" shown for 2 seconds | ✅ Pass |
+| 17 | Share button — desktop -- whatsapp | Click share on desktop | opens Whatsapp and lets me post | ✅ Pass |
+| 18 | Share button — cancel | Open native share on mobile, tap cancel | Nothing happens, no error shown | ✅ Pass |
 
 ---
 
