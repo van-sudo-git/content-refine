@@ -2,9 +2,10 @@
 
 **nowweseeyou.org** — a platform that creates long-term, consent-based digital profiles for the essential workers who keep communities running but are rarely acknowledged by name. Designed to extend to any school, organization, or community where essential contributors go unseen. Current chapter: Lake Washington High School, Kirkland, WA.
 
-Created by Evaan Ahlawat, a student at Lake Washington High School in Kirkland, WA, using AI-assisted development tools. See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md).
+Created by Evaan Ahlawat, a student at Lake Washington High School in Kirkland, WA. The initial proototype was in Google Sites [Now We See Me](https://sites.google.com/view/now-we-see-me), after which the first React and Supabase application foundation was developed with Lovable assistance; major later components were written directly by Evaan outside Lovable. See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md).
 
 **Live site:** [nowweseeyou.org](https://nowweseeyou.org)  
+**Original Google Sites prototype:** [Now We See Me](https://sites.google.com/view/now-we-see-me)  
 **AI disclosure:** [AI_DISCLOSURE.md](./AI_DISCLOSURE.md)  
 **Project documentation:** [`docs/`](./docs/)
 
@@ -26,7 +27,6 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Nomination workflow** — anyone can nominate the next staff member at [nowweseeyou.org/nominate](https://nowweseeyou.org/nominate). Nominations land in the admin dashboard where administrators review, approve, decline, or feature them. The `nominee_informed` field confirms whether the nominee knows they have been nominated. Approved nominations trigger in-person outreach and explicit consent before any profile work begins. Real nominations from LWSD staff are visible in [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-nominations-jul2026.png) and the admin workflow in [`docs/assets/admin-profiles-jul2026.png`](./docs/assets/admin-profiles-jul2026.png)
 - **Admin dashboard** — school administrators can review nominations, manage profiles, track engagement, and generate print-ready QR flyers
 - **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
-- **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png) and [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
 - **Analytics** — per-profile page views, daily QR scan counts from two Supabase projects, appreciation-message tracking, and period-over-period trends. Real engagement data in [`docs/assets/analytics-traffic-jul2026.png`](./docs/assets/analytics-traffic-jul2026.png) and [`docs/assets/analytics-per-profile-breakdown-jul2026.png`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
 
 ---
@@ -124,11 +124,15 @@ npx tsx scripts/verify-live-readonly.ts
 
 ---
 
-## AI disclosure
+## Development and AI disclosure
 
-See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md) for full details.
+See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md) for the complete development record.
 
-Short version: Lovable generated significant portions of the front-end code based on Evaan's product requirements and design direction. The database schema, QR redirect architecture, analytics requirements, moderation behavior, nomination workflow, and flyer generator were designed and iterated through a mix of AI-assisted and manually edited code. All portrait artwork, staff interviews, consent conversations, and community relationships are Evaan's own work.
+- **Original no-AI prototype** — Evaan first built the project on [Google Sites](https://sites.google.com/view/now-we-see-me), including the initial profile, nomination form, appreciation wall, and Privacy and Ethics page.
+- **Lovable-assisted foundation** — Lovable generated and revised significant portions of the initial React UI, interface scaffolding, and Supabase-connected application foundation from Evaan's product requirements and design direction.
+- **Written directly by Evaan outside Lovable** — the standalone `heros-redirect` service, flyer generator, profile share button, Staff Since badge, TF-IDF keyphrase extractor, k-means department clustering, duplicate nomination detector, multi-school administration and onboarding, and the chapter replication guide.
+- **Runtime AI** — Gemini 2.5 Flash Lite evaluates appreciation messages against school-specific moderation criteria. It is part of the running application; it did not develop the application.
+- **Community work** — all portraits, interviews, consent conversations, profile writing, and staff relationships are Evaan's own work.
 
 ---
 
@@ -173,9 +177,7 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 ## Changelog
 
 ### July 2026
-
-- Share button — native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
-- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
+- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking
 - Nomination form — added school dropdown, made department optional, added database migration
 - QR redirect URLs updated to nowweseeyou.org across all records
 - Automated verification scripts added for live platform testing
@@ -233,4 +235,4 @@ The platform follows a no-code replication model for new chapters:
 4. QR placards are generated using the built-in flyer generator and displayed in the building
 5. The appreciation wall and nomination form activate immediately for their community
 
-A detailed onboarding guide for new chapter admins is in progress at [`docs/replication-guide.md`](./docs/replication-guide.md).
+A completed onboarding guide for new chapter admins is available at [`docs/start-a-chapter-guide.md`](./docs/start-a-chapter-guide.md).
