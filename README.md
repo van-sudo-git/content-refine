@@ -27,6 +27,7 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Nomination workflow** — anyone can nominate the next staff member at [nowweseeyou.org/nominate](https://nowweseeyou.org/nominate). Nominations land in the admin dashboard where administrators review, approve, decline, or feature them. The `nominee_informed` field confirms whether the nominee knows they have been nominated. Approved nominations trigger in-person outreach and explicit consent before any profile work begins. Real nominations from LWSD staff are visible in [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-nominations-jul2026.png) and the admin workflow in [`docs/assets/admin-profiles-jul2026.png`](./docs/assets/admin-profiles-jul2026.png)
 - **Admin dashboard** — school administrators can review nominations, manage profiles, track engagement, and generate print-ready QR flyers
 - **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
+- **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png) and [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
 - **Analytics** — per-profile page views, daily QR scan counts from two Supabase projects, appreciation-message tracking, and period-over-period trends. Real engagement data in [`docs/assets/analytics-traffic-jul2026.png`](./docs/assets/analytics-traffic-jul2026.png) and [`docs/assets/analytics-per-profile-breakdown-jul2026.png`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
 
 ---
@@ -35,7 +36,8 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 
 - **Brad Fisher** — Head Custodian, Lake Washington High School
 - **Shirley P.** — Bookkeeper / Accounting Technician, Lake Washington High School
-- **Pauline Gillespie** — Office Professional, Lake Washington High School
+- **Pauline Gillespie** — Office Professional, Lake Washington High School 
+  - Added portrait via admin flow (no-code workflow) [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-update-portrait-jul2026.png)
 - **Jose Guerrero** — Night Lead Custodian, Lake Washington High School
 - **Michele Raymer** — Transition Center Teacher, Lake Washington High School
 - **Beth Da Luz** — Receptionist, Lake Washington High School
@@ -124,15 +126,11 @@ npx tsx scripts/verify-live-readonly.ts
 
 ---
 
-## Development and AI disclosure
+## AI disclosure
 
-See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md) for the complete development record.
+See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md) for full details.
 
-- **Original no-AI prototype** — Evaan first built the project on [Google Sites](https://sites.google.com/view/now-we-see-me), including the initial profile, nomination form, appreciation wall, and Privacy and Ethics page.
-- **Lovable-assisted foundation** — Lovable generated and revised significant portions of the initial React UI, interface scaffolding, and Supabase-connected application foundation from Evaan's product requirements and design direction.
-- **Written directly by Evaan outside Lovable** — the standalone `heros-redirect` service, flyer generator, profile share button, Staff Since badge, TF-IDF keyphrase extractor, k-means department clustering, duplicate nomination detector, multi-school administration and onboarding, and the chapter replication guide.
-- **Runtime AI** — Gemini 2.5 Flash Lite evaluates appreciation messages against school-specific moderation criteria. It is part of the running application; it did not develop the application.
-- **Community work** — all portraits, interviews, consent conversations, profile writing, and staff relationships are Evaan's own work.
+Short version: Lovable generated significant portions of the front-end code based on Evaan's product requirements and design direction. The database schema, QR redirect architecture, analytics requirements, moderation behavior, nomination workflow, and flyer generator were designed and iterated through a mix of AI-assisted and manually edited code. All portrait artwork, staff interviews, consent conversations, and community relationships are Evaan's own work.
 
 ---
 
@@ -177,7 +175,9 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 ## Changelog
 
 ### July 2026
-- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking
+
+- Share button — native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
+- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
 - Nomination form — added school dropdown, made department optional, added database migration
 - QR redirect URLs updated to nowweseeyou.org across all records
 - Automated verification scripts added for live platform testing
