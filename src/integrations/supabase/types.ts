@@ -255,18 +255,21 @@ export type Database = {
           added_at: string
           email: string
           id: string
+          is_global_admin: boolean
           school_id: string
         }
         Insert: {
           added_at?: string
           email: string
           id?: string
+          is_global_admin?: boolean
           school_id: string
         }
         Update: {
           added_at?: string
           email?: string
           id?: string
+          is_global_admin?: boolean
           school_id?: string
         }
         Relationships: [
