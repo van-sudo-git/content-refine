@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.handle-email-suppression]
 verify_jwt = false
+
+[functions.notify-nomination-assigned]
+verify_jwt = false
+
+[functions.notify-nomination-published]
+verify_jwt = false
