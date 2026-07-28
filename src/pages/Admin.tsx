@@ -12,6 +12,7 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import DemoProfileManager from "@/components/DemoProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
+import AdminFlyer from "@/pages/AdminFlyer";
 import SchoolOnboarding from "@/components/SchoolOnboarding";
 import type { Tables } from "@/integrations/supabase/types";
 import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
@@ -34,7 +35,7 @@ const Admin = () => {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(isDemo ? "demo-school" : null);
   const [userEmail, setUserEmail] = useState<string | null>(isDemo ? DEMO_EMAIL : null);
-  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics">("nominations");
+  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics" | "flyer">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [loading, setLoading] = useState(!isDemo);
@@ -299,7 +300,7 @@ const Admin = () => {
             <Button variant={activeTab === "analytics" ? "secondary" : "outline"} onClick={() => setActiveTab("analytics")}>
               Analytics
             </Button>
-            <Button variant="outline" onClick={() => navigate("/admin/flyer")}>
+            <Button variant={activeTab === "flyer" ? "secondary" : "outline"} onClick={() => setActiveTab("flyer")}>
               Flyer Generator
             </Button>
           </div>
@@ -395,6 +396,11 @@ const Admin = () => {
           {/* Analytics Tab */}
           {activeTab === "analytics" && (
             <AdminAnalytics schoolId={schoolId} isDemo={isDemo} />
+          )}
+
+          {/* Flyer Tab */}
+          {activeTab === "flyer" && (
+            <AdminFlyer schoolId={schoolId} />
           )}
 
           {/* Admins Tab */}

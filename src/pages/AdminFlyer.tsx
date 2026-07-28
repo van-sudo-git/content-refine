@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthReady } from "@/hooks/use-auth-ready";
 import FlyerPreview from "@/components/FlyerPreview";
 
 interface Profile {
@@ -10,8 +9,7 @@ interface Profile {
   role: string;
 }
 
-const AdminFlyer = () => {
-  const { isReady, user } = useAuthReady();
+const AdminFlyer = ({ schoolId }: { schoolId: string | null }) => {
   const navigate = useNavigate();
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -24,13 +22,6 @@ const AdminFlyer = () => {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Auth guard — redirect to login if not authenticated
-  useEffect(() => {
-    if (isReady && !user) {
-      navigate("/admin/login");
-    }
-  }, [isReady, user, navigate]);
-
   // Load all published profiles for the dropdown
   useEffect(() => {
     const loadProfiles = async () => {
@@ -38,14 +29,15 @@ const AdminFlyer = () => {
         .from("profiles")
         .select("slug, name, role")
         .eq("status", "published")
+        .eq("school_id", schoolId)
         .order("name");
 
       setProfiles(data ?? []);
       setLoading(false);
     };
 
-    if (user) loadProfiles();
-  }, [user]);
+    if (schoolId) loadProfiles();
+  }, [schoolId]);
 
   // Find next available flyer ID for a given slug
   const getNextFlyerId = async (slug: string) => {
@@ -139,18 +131,13 @@ const AdminFlyer = () => {
     setCreating(false);
   };
 
-  if (!isReady || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+  if (loading) {
+    return <p className="text-muted-foreground">Loading...</p>;
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div>
+      <div className="max-w-2xl mx-auto space-y-8">     
+      <div>
           <h1 className="text-3xl font-display text-foreground">Flyer Generator</h1>
           <p className="text-muted-foreground mt-1">
             Select a staff member to generate a printable flyer with their QR code.
@@ -227,7 +214,6 @@ const AdminFlyer = () => {
             slug={selectedSlug}
         />
         )}
-      </div>
     </div>
   );
 };
