@@ -176,14 +176,15 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 ## Changelog
 
 ### July 2026
-- Multi-school admin system — global admin school selector, per-school access scoping, school onboarding UI [`multi-school-admin.md`](./docs/multi-school-admin.md)
-- Share button — native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
-- Flyer generator — admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
-- Nomination form — added school dropdown, made department optional, added database migration
+- Flyer Generator fixes: moved from a standalone route into the admin dashboard as a tab, now scoped to the currently selected school (previously showed all schools' published profiles)
+- Multi-school admin system: global admin school selector, per-school access scoping, school onboarding UI [`multi-school-admin.md`](./docs/multi-school-admin.md)
+- Share button: native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
+- Flyer generator: admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
+- Nomination form update: added school dropdown, made department optional, added database migration
 - QR redirect URLs updated to nowweseeyou.org across all records
 - Automated verification scripts added for live platform testing
-- Analytics evidence documented — 1,173 page views, 39 QR scans, KAC traffic spike captured
-- 4 new profiles added — Pauline Gillespie, Jose Guerrero, Michele Raymer, Beth Da Luz
+- Analytics evidence documented: 1,173 page views, 39 QR scans, KAC traffic spike captured
+- 4 new profiles added: Pauline Gillespie, Jose Guerrero, Michele Raymer, Beth Da Luz
 
 ### June 2026
 - brad-kac QR code deployed at Kirkland Arts Center exhibition — 16 scans recorded

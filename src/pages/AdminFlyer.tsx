@@ -115,6 +115,7 @@ const AdminFlyer = ({ schoolId }: { schoolId: string | null }) => {
       .from("redirects")
       .insert({
         id: newRedirectId.trim(),
+        profile_slug: selectedSlug,
         destination_url: destinationUrl,
         active: true,
       });
