@@ -1,0 +1,1 @@
+CREATE TRIGGER notify_nomination_status_change AFTER UPDATE ON public.nominations FOR EACH ROW EXECUTE FUNCTION public.notify_nomination_status_change();
