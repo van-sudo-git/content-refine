@@ -1,3 +1,7 @@
+import { template as nominationAssigned } from './nomination-assigned.tsx'
+import { template as nominationPublishedAdmin } from './nomination-published-admin.tsx'
+import { template as nominationPublishedPr } from './nomination-published-pr.tsx'
+
 import type { FC } from 'npm:react@18.3.1'
 
 export interface TemplateEntry {
@@ -8,4 +12,8 @@ export interface TemplateEntry {
   to?: string
 }
 
-export const TEMPLATES: Record<string, TemplateEntry> = {}
+export const TEMPLATES: Record<string, TemplateEntry> = {
+  'nomination-assigned': nominationAssigned,
+  'nomination-published-admin': nominationPublishedAdmin,
+  'nomination-published-pr': nominationPublishedPr,
+}
