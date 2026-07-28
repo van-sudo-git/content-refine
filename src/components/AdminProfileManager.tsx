@@ -48,13 +48,23 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   });
 
   useEffect(() => {
-    loadProfiles();
-  }, []);
+    if (!schoolId) return;
+    
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("school_id", schoolId)  // ADD THE School id
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setProfiles(data);
+      });
+  }, [schoolId]);
 
   const loadProfiles = async () => {
     const { data } = await supabase
       .from("profiles")
       .select("*")
+      .eq("school_id", schoolId)
       .order("created_at", { ascending: false });
     if (data) setProfiles(data as Profile[]);
   };

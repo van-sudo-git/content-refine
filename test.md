@@ -97,6 +97,10 @@ Playwright headless browser test on mobile viewport (390×844).
 | 16 | Share button — desktop | Click share on desktop | URL copied, "Copied!" shown for 2 seconds | ✅ Pass |
 | 17 | Share button — desktop -- whatsapp | Click share on desktop | opens Whatsapp and lets me post | ✅ Pass |
 | 18 | Share button — cancel | Open native share on mobile, tap cancel | Nothing happens, no error shown | ✅ Pass |
+| 19 | Global admin login | Log in as evaanahkawat@gmail.com | School selector shown, "Global Admin" in header | ✅ Pass |
+| 20 | School admin login | Log in as school-scoped email | No selector shown, only their school's data | ✅ Pass |
+| 21 | School switch | Global admin selects different school | Nominations, profiles, analytics reload for selected school | ✅ Pass |
+| 22 | New school creation | Global admin creates new school + admin email | School appears in dropdown, admin can log in | ✅ Pass |
 
 ---
 

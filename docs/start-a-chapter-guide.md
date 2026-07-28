@@ -6,16 +6,18 @@ This guide is for students, teachers, or community members who want to bring *No
 
 ---
 
-## 1. Build your founding team
+![Roles and Workflow](./assets/roles-and-nomination-workflow-jul2026.png)
 
-Start with 2–4 people. You need at least one person who can:
+## 1. Set up your club roles
 
-- **Lead interviews and write stories** — someone patient and comfortable talking to adults across different roles and backgrounds.
-- **Create portraits or art** — hand-drawn portraits are part of the identity of the project, but photography or collaborative art can work while you find an artist.
-- **Manage the website and QR codes** — someone who enjoys basic tech setup and can keep pages updated.
-- **Coordinate with school staff** — a liaison who can navigate schedules, permissions, and admin communication.
+Structure your chapter as a club with defined roles, not a loose group of volunteers. This is what lets the chapter run without any one person being a bottleneck:
 
-You do not need every skill on day one. The founding team at Lake Washington began with one artist and one interviewer and grew from there.
+- **Journalist** — leads interviews, writes the story, and acts as case lead for their assigned nominee (owns scheduling and follow-through).
+- **Photographer** — captures the reference photo and, where wanted, the profile's photography.
+- **Artist** — creates the visual piece. Medium is the artist's choice: charcoal, pen and ink, watercolor, or digital — the platform doesn't require one medium, only that it's genuinely hand-made by a person.
+- **PR team** — organizes sponsorships, invites nominees for a chat once their profile is live, and produces the launch flyer.
+
+You do not need every role filled on day one. Start small — one journalist, one artist — and grow into the full structure.
 
 ---
 
@@ -51,7 +53,7 @@ Start with **one to three people** for your pilot. A small launch lets you test 
 
 Create a simple nomination form (paper or digital). Ask nominators: *Who is this person? What do they do? Why should they be featured?*
 
-Then contact the nominee directly — in person, if possible. Explain the project and ask for consent in three parts:
+Once a nomination comes in, a club admin reviews and approves it. Approval assigns a journalist as case lead, who coordinates with the photographer and artist to set up a time together. Consent is then requested in stages, not all at once:
 
 1. **Consent to be interviewed and photographed or drawn.**
 2. **Consent to publish specific quotes, photos, and a written bio.**
@@ -77,15 +79,9 @@ Record audio only with permission. Take notes. Transcribe the parts that matter 
 
 ## 6. Create the portrait and visual identity
 
-Each profile should include a clear portrait. Hand-drawn or painted portraits are the signature of the original chapter, but the format is less important than the respect behind it. If you use photography, make sure the person is comfortable and the setting reflects their dignity — not just their uniform or their workplace.
+Each profile should include a clear visual piece, chosen by the artist on the case — charcoal, ink, watercolor, or digital painting all work, as long as it's created by a person. Consistency across your chapter comes from a shared style guide (composition, palette, cropping), not from forcing one medium.
 
-At the same time, decide on your chapter’s visual style:
-
-- A name (e.g., "Now We See You — [Your School Name] Chapter")
-- A simple color palette and typography
-- A consistent page layout for every profile
-
-Keep it simple. The story should be the star.
+The signature of the original chapter, but the format is less important than the respect behind it. If you use photography, make sure the person is comfortable and the setting reflects their dignity — not just their uniform or their workplace.
 
 ---
 
@@ -134,6 +130,16 @@ Public appreciation is powerful, but it needs moderation. Decide on clear rules 
 
 ---
 
+## 10.5 Invite PR outreach after publishing
+
+Once a profile is published, hand it to your PR team. Their job starts here, not before:
+
+- Invite the featured person for an informal chat about their experience, if they're comfortable.
+- Create a flyer (using the flyer feature) or showcase using the live profile page.
+- Use published profiles to pursue sponsorships or invite the person to a school event or talk.
+
+PR never gates publishing — it's a follow-on step, so a profile can go live even if PR hasn't caught up yet.
+
 ## 11. Keep the chapter alive
 
 After the first launch, the work is maintenance. Plan to:
@@ -142,6 +148,7 @@ After the first launch, the work is maintenance. Plan to:
 - Keep a shared calendar of interview, review, and publish dates.
 - Store consent forms and final drafts in one organized place.
 - Train new team members each year so the chapter survives graduation.
+- Rotate case leads across journalists so no single student becomes a bottleneck.
 
 Track what works. Count scans, note which displays get attention, and ask featured staff what they thought of the process. Use that feedback to improve the next cycle.
 

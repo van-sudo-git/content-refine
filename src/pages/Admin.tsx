@@ -12,6 +12,7 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import DemoProfileManager from "@/components/DemoProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
+import SchoolOnboarding from "@/components/SchoolOnboarding";
 import type { Tables } from "@/integrations/supabase/types";
 import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 
@@ -40,6 +41,11 @@ const Admin = () => {
   const navigate = useNavigate();
   const { user, isReady } = useAuthReady();
 
+  // global admin state
+  const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+  const [allSchools, setAllSchools] = useState<{ id: string; name: string }[]>([]);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+
   useEffect(() => {
     if (isDemo) return; // skip auth check in demo mode
     if (!isReady) return;
@@ -56,7 +62,7 @@ const Admin = () => {
 
       const { data: adminRow } = await supabase
         .from("school_admins")
-        .select("id")
+        .select("id, school_id, is_global_admin")
         .eq("email", email.toLowerCase())
         .limit(1)
         .maybeSingle();
@@ -66,22 +72,50 @@ const Admin = () => {
         return;
       }
 
-      const { data: adminData } = await supabase
-        .from("school_admins")
-        .select("school_id")
-        .eq("email", email.toLowerCase())
-        .limit(1)
+      // check if global admin
+      if (adminRow.is_global_admin) {
+        setIsGlobalAdmin(true);
+
+        // load all schools for the selector
+        const { data: schools } = await supabase
+          .from("schools")
+          .select("id, name")
+          .order("name");
+
+        if (schools && schools.length > 0) {
+          setAllSchools(schools);
+          // default to first school
+          setSelectedSchoolId(schools[0].id);
+          setSchoolId(schools[0].id);
+          await loadData(schools[0].id);
+        }
+      } else {
+        // regular school admin — load their school only
+        setSchoolId(adminRow.school_id);
+        setSelectedSchoolId(adminRow.school_id);
+        // fetch school name for display
+        const { data: school } = await supabase
+        .from("schools")
+        .select("id, name")
+        .eq("id", adminRow.school_id)
         .single();
 
-      if (adminData) {
-        setSchoolId(adminData.school_id);
-        await loadData(adminData.school_id);
+        if (school) setAllSchools([school]);
+
+        await loadData(adminRow.school_id);
       }
       setLoading(false);
     };
 
     init();
   }, [isReady, navigate, user, isDemo]);
+
+  // when global admin switches school
+  const handleSchoolSwitch = async (newSchoolId: string) => {
+    setSelectedSchoolId(newSchoolId);
+    setSchoolId(newSchoolId);
+    await loadData(newSchoolId);
+  };
 
   const loadData = async (sid: string) => {
     const [nomRes, adminRes] = await Promise.all([
@@ -180,6 +214,8 @@ const Admin = () => {
     total: nominations.length,
   };
 
+  const selectedSchoolName = allSchools.find((s) => s.id === selectedSchoolId)?.name ?? "Your School";
+
   return (
     <Layout>
       <section className="py-24">
@@ -206,12 +242,33 @@ const Admin = () => {
               <h1 className="font-display text-4xl text-foreground">Admin Dashboard</h1>
               <p className="text-muted-foreground text-sm mt-1">
                 {isDemo ? "Demo account" : `Signed in as ${userEmail}`}
+                {isGlobalAdmin && " · Global Admin"}
+                {!isGlobalAdmin && selectedSchoolName !== "Your School" && ` · ${selectedSchoolName}`}
               </p>
             </div>
             <Button variant="outline" onClick={handleSignOut}>
               <LogOut size={16} /> {isDemo ? "Exit Demo" : "Sign Out"}
             </Button>
           </div>
+
+          {/* Global admin school selector */}
+          {isGlobalAdmin && allSchools.length > 0 && (
+            <div className="mb-6 flex items-center gap-3">
+              <label className="text-sm font-medium text-foreground shrink-0">Viewing school:</label>
+              <select
+                className="border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground"
+                value={selectedSchoolId ?? ""}
+                onChange={(e) => handleSchoolSwitch(e.target.value)}
+              >
+                {allSchools.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              <span className="text-xs text-muted-foreground">
+                Switch schools to view their nominations, profiles, and analytics independently.
+              </span>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -229,36 +286,20 @@ const Admin = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
-            <Button
-              variant={activeTab === "nominations" ? "secondary" : "outline"}
-              onClick={() => setActiveTab("nominations")}
-            >
+          <div className="flex gap-2 mb-6 flex-wrap">
+            <Button variant={activeTab === "nominations" ? "secondary" : "outline"} onClick={() => setActiveTab("nominations")}>
               Nominations
             </Button>
-            <Button
-              variant={activeTab === "profiles" ? "secondary" : "outline"}
-              onClick={() => setActiveTab("profiles")}
-            >
+            <Button variant={activeTab === "profiles" ? "secondary" : "outline"} onClick={() => setActiveTab("profiles")}>
               Profiles
             </Button>
-            <Button
-              variant={activeTab === "admins" ? "secondary" : "outline"}
-              onClick={() => setActiveTab("admins")}
-            >
+            <Button variant={activeTab === "admins" ? "secondary" : "outline"} onClick={() => setActiveTab("admins")}>
               Manage Admins
             </Button>
-            <Button
-              variant={activeTab === "analytics" ? "secondary" : "outline"}
-              onClick={() => setActiveTab("analytics")}
-            >
+            <Button variant={activeTab === "analytics" ? "secondary" : "outline"} onClick={() => setActiveTab("analytics")}>
               Analytics
             </Button>
-            {/* flyer generator — separate page, not a tab */}
-            <Button
-              variant="outline"
-              onClick={() => navigate("/admin/flyer")}
-            >
+            <Button variant="outline" onClick={() => navigate("/admin/flyer")}>
               Flyer Generator
             </Button>
           </div>
@@ -268,7 +309,7 @@ const Admin = () => {
             <div className="space-y-4">
               {nominations.length === 0 ? (
                 <div className="bg-card rounded-xl border border-border p-12 text-center">
-                  <p className="text-muted-foreground">No nominations yet.</p>
+                  <p className="text-muted-foreground">No nominations yet{isGlobalAdmin ? ` for ${selectedSchoolName}` : ""}.</p>
                 </div>
               ) : (
                 nominations.map((nom) => {
@@ -358,42 +399,54 @@ const Admin = () => {
 
           {/* Admins Tab */}
           {activeTab === "admins" && (
-            <div className="bg-card rounded-xl border border-border p-6">
-              <h3 className="font-display text-xl text-foreground mb-4">School Admins</h3>
-              <p className="text-muted-foreground text-sm mb-6">
-                Add email addresses to grant admin access. They'll need to create an account using that email.
-              </p>
+            <div className="space-y-6">
+              <div className="bg-card rounded-xl border border-border p-6">
+                <h3 className="font-display text-xl text-foreground mb-4">
+                  School Admins {isGlobalAdmin && `— ${selectedSchoolName}`}
+                </h3>
+                <p className="text-muted-foreground text-sm mb-6">
+                  Add email addresses to grant admin access. They'll need to create an account using that email.
+                </p>
 
-              <div className="flex gap-2 mb-6">
-                <Input
-                  type="email"
-                  placeholder="newadmin@school.edu"
-                  value={newAdminEmail}
-                  onChange={(e) => setNewAdminEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addAdmin()}
-                />
-                <Button onClick={addAdmin} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0">
-                  <UserPlus size={16} /> Add
-                </Button>
+                <div className="flex gap-2 mb-6">
+                  <Input
+                    type="email"
+                    placeholder="newadmin@school.edu"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addAdmin()}
+                  />
+                  <Button onClick={addAdmin} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0">
+                    <UserPlus size={16} /> Add
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  {admins.map((admin) => (
+                    <div key={admin.id} className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border">
+                      <span className="text-sm text-foreground">{admin.email}</span>
+                      {admin.email !== userEmail && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeAdmin(admin.id, admin.email)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                {admins.map((admin) => (
-                  <div key={admin.id} className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border">
-                    <span className="text-sm text-foreground">{admin.email}</span>
-                    {admin.email !== userEmail && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeAdmin(admin.id, admin.email)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {/* School onboarding — global admin only */}
+              {isGlobalAdmin && (
+                <SchoolOnboarding onSchoolCreated={async () => {
+                  const { data: schools } = await supabase.from("schools").select("id, name").order("name");
+                  if (schools) setAllSchools(schools);
+                }} />
+              )}
             </div>
           )}
         </div>
