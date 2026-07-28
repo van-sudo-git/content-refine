@@ -117,6 +117,8 @@ Deno.serve(async (req) => {
     const assignmentType = roleIdToType.get(clubRole.id) || 'assignment'
     const idempotencyKey = `nomination-assigned-${nominationId}-${clubRole.id}`
 
+    const profileSlug = await resolveProfileSlug(supabase, nomination.nominee_name)
+
     const { error: invokeError } = await supabase.functions.invoke('send-transactional-email', {
       body: {
         templateName: 'nomination-assigned',
@@ -127,7 +129,7 @@ Deno.serve(async (req) => {
           role: nomination.nominee_role,
           schoolName,
           assignmentType,
-          profileUrl: `https://nowweseeyou.org/gallery/${nomination.profile_slug || ''}`,
+          profileUrl: `https://nowweseeyou.org/gallery/${profileSlug}`,
           adminDashboardUrl: 'https://nowweseeyou.org/admin',
         },
       },
