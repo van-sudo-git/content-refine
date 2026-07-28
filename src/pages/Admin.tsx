@@ -13,17 +13,21 @@ import AdminProfileManager from "@/components/AdminProfileManager";
 import DemoProfileManager from "@/components/DemoProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import SchoolOnboarding from "@/components/SchoolOnboarding";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database, Tables } from "@/integrations/supabase/types";
 import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 
 type Nomination = Tables<"nominations">;
+type NominationStatus = Database["public"]["Enums"]["nomination_status"];
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Pending", color: "bg-amber-100 text-amber-800", icon: Clock },
   approved: { label: "Approved", color: "bg-emerald-100 text-emerald-800", icon: CheckCircle },
-  declined: { label: "Declined", color: "bg-red-100 text-red-800", icon: XCircle },
-  featured: { label: "Featured", color: "bg-purple-100 text-purple-800", icon: Star },
+  assigned: { label: "Assigned", color: "bg-blue-100 text-blue-800", icon: UserPlus },
+  in_progress: { label: "In Progress", color: "bg-indigo-100 text-indigo-800", icon: Clock },
+  submitted: { label: "Submitted", color: "bg-cyan-100 text-cyan-800", icon: CheckCircle },
+  published: { label: "Published", color: "bg-purple-100 text-purple-800", icon: Star },
 };
+
 
 const Admin = () => {
   const [searchParams] = useSearchParams();
@@ -130,12 +134,13 @@ const Admin = () => {
     toast({ title: "Demo Mode", description: "This action is disabled in demo mode.", variant: "destructive" });
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: NominationStatus) => {
     if (isDemo) { demoGuard(); return; }
     const { error } = await supabase
       .from("nominations")
       .update({ status, admin_notes: adminNotes || null })
       .eq("id", id);
+
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -210,9 +215,10 @@ const Admin = () => {
   const counts = {
     pending: nominations.filter((n) => n.status === "pending").length,
     approved: nominations.filter((n) => n.status === "approved").length,
-    featured: nominations.filter((n) => n.status === "featured").length,
+    published: nominations.filter((n) => n.status === "published").length,
     total: nominations.length,
   };
+
 
   const selectedSchoolName = allSchools.find((s) => s.id === selectedSchoolId)?.name ?? "Your School";
 
@@ -276,7 +282,7 @@ const Admin = () => {
               { label: "Total", value: counts.total, color: "text-foreground" },
               { label: "Pending", value: counts.pending, color: "text-amber-600" },
               { label: "Approved", value: counts.approved, color: "text-emerald-600" },
-              { label: "Featured", value: counts.featured, color: "text-purple-600" },
+              { label: "Published", value: counts.published, color: "text-purple-600" },
             ].map((stat) => (
               <div key={stat.label} className="bg-card rounded-xl border border-border p-5 text-center">
                 <p className={`font-display text-3xl ${stat.color}`}>{stat.value}</p>
@@ -364,12 +370,10 @@ const Admin = () => {
                             <Button size="sm" onClick={() => updateStatus(nom.id, "approved")} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                               <CheckCircle size={14} /> Approve
                             </Button>
-                            <Button size="sm" onClick={() => updateStatus(nom.id, "featured")} className="bg-purple-600 hover:bg-purple-700 text-white">
-                              <Star size={14} /> Feature
+                            <Button size="sm" onClick={() => updateStatus(nom.id, "published")} className="bg-purple-600 hover:bg-purple-700 text-white">
+                              <Star size={14} /> Publish
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => updateStatus(nom.id, "declined")}>
-                              <XCircle size={14} /> Decline
-                            </Button>
+
                             <Button size="sm" variant="outline" onClick={() => updateStatus(nom.id, "pending")}>
                               <Clock size={14} /> Reset to Pending
                             </Button>
