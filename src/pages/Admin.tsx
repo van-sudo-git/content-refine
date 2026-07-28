@@ -130,12 +130,13 @@ const Admin = () => {
     toast({ title: "Demo Mode", description: "This action is disabled in demo mode.", variant: "destructive" });
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: Database["public"]["Enums"]["nomination_status"]) => {
     if (isDemo) { demoGuard(); return; }
     const { error } = await supabase
       .from("nominations")
       .update({ status, admin_notes: adminNotes || null })
       .eq("id", id);
+
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -210,9 +211,10 @@ const Admin = () => {
   const counts = {
     pending: nominations.filter((n) => n.status === "pending").length,
     approved: nominations.filter((n) => n.status === "approved").length,
-    featured: nominations.filter((n) => n.status === "featured").length,
+    published: nominations.filter((n) => n.status === "published").length,
     total: nominations.length,
   };
+
 
   const selectedSchoolName = allSchools.find((s) => s.id === selectedSchoolId)?.name ?? "Your School";
 
