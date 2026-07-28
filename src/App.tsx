@@ -13,8 +13,8 @@ import Admin from "./pages/Admin.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PageViewTracker from "./components/PageViewTracker.tsx";
-// Add this import with the other admin imports
 import AdminFlyer from "./pages/AdminFlyer.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 
 const queryClient = new QueryClient();
 
