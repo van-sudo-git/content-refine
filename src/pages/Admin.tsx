@@ -47,7 +47,7 @@ const Admin = () => {
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isDemo) return;
+    if (isDemo) return; // skip auth check in demo mode
     if (!isReady) return;
 
     const init = async () => {
@@ -66,7 +66,6 @@ const Admin = () => {
         .eq("email", email.toLowerCase())
         .limit(1)
         .maybeSingle();
-
       if (!adminRow) {
         setLoading(false);
         navigate("/admin/login", { replace: true });
@@ -94,9 +93,17 @@ const Admin = () => {
         // regular school admin — load their school only
         setSchoolId(adminRow.school_id);
         setSelectedSchoolId(adminRow.school_id);
+        // fetch school name for display
+        const { data: school } = await supabase
+        .from("schools")
+        .select("id, name")
+        .eq("id", adminRow.school_id)
+        .single();
+
+        if (school) setAllSchools([school]);
+
         await loadData(adminRow.school_id);
       }
-
       setLoading(false);
     };
 
@@ -236,6 +243,7 @@ const Admin = () => {
               <p className="text-muted-foreground text-sm mt-1">
                 {isDemo ? "Demo account" : `Signed in as ${userEmail}`}
                 {isGlobalAdmin && " · Global Admin"}
+                {!isGlobalAdmin && selectedSchoolName !== "Your School" && ` · ${selectedSchoolName}`}
               </p>
             </div>
             <Button variant="outline" onClick={handleSignOut}>
