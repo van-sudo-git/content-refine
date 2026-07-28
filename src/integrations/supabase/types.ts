@@ -41,53 +41,173 @@ export type Database = {
         }
         Relationships: []
       }
+      club_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["club_role"]
+          school_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["club_role"]
+          school_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["club_role"]
+          school_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_roles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flyers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_url: string | null
+          id: string
+          profile_id: string
+          redirect_id: string | null
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          profile_id: string
+          redirect_id?: string | null
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          profile_id?: string
+          redirect_id?: string | null
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flyers_redirect_id_fkey"
+            columns: ["redirect_id"]
+            isOneToOne: false
+            referencedRelation: "redirects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flyers_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nominations: {
         Row: {
           admin_notes: string | null
+          artist_id: string | null
           created_at: string
           id: string
+          journalist_id: string | null
           nominator_email: string
           nominator_name: string
           nominee_department: string
           nominee_informed: boolean
           nominee_name: string
           nominee_role: string
+          photographer_id: string | null
           reason: string
           school_id: string
-          status: string
+          status: Database["public"]["Enums"]["nomination_status"]
           updated_at: string
         }
         Insert: {
           admin_notes?: string | null
+          artist_id?: string | null
           created_at?: string
           id?: string
+          journalist_id?: string | null
           nominator_email: string
           nominator_name: string
           nominee_department: string
           nominee_informed?: boolean
           nominee_name: string
           nominee_role: string
+          photographer_id?: string | null
           reason: string
           school_id: string
-          status?: string
+          status?: Database["public"]["Enums"]["nomination_status"]
           updated_at?: string
         }
         Update: {
           admin_notes?: string | null
+          artist_id?: string | null
           created_at?: string
           id?: string
+          journalist_id?: string | null
           nominator_email?: string
           nominator_name?: string
           nominee_department?: string
           nominee_informed?: boolean
           nominee_name?: string
           nominee_role?: string
+          photographer_id?: string | null
           reason?: string
           school_id?: string
-          status?: string
+          status?: Database["public"]["Enums"]["nomination_status"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "nominations_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "club_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nominations_journalist_id_fkey"
+            columns: ["journalist_id"]
+            isOneToOne: false
+            referencedRelation: "club_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nominations_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "club_roles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "nominations_school_id_fkey"
             columns: ["school_id"]
@@ -318,7 +438,14 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      club_role: "journalist" | "photographer" | "artist" | "pr"
+      nomination_status:
+        | "pending"
+        | "approved"
+        | "assigned"
+        | "in_progress"
+        | "submitted"
+        | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -445,6 +572,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      club_role: ["journalist", "photographer", "artist", "pr"],
+      nomination_status: [
+        "pending",
+        "approved",
+        "assigned",
+        "in_progress",
+        "submitted",
+        "published",
+      ],
+    },
   },
 } as const
