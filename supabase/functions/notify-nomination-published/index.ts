@@ -168,3 +168,26 @@ Deno.serve(async (req) => {
   console.log('Nomination published emails sent', { nominationId, sent })
   return jsonResponse({ success: true, sent })
 })
+
+async function resolveProfileSlug(supabase: any, nomineeName: string): Promise<string> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('slug')
+    .ilike('name', nomineeName)
+    .maybeSingle()
+
+  if (profile?.slug) {
+    return profile.slug
+  }
+
+  return slugify(nomineeName)
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
