@@ -60,7 +60,9 @@ Deno.serve(async (req) => {
 
   const schoolId = nomination.school_id
   const schoolName = nomination.school?.name || 'your school'
-  const profileUrl = `https://nowweseeyou.org/gallery/${nomination.profile_slug || ''}`
+  const profileSlug = await resolveProfileSlug(supabase, nomination.nominee_name)
+  const profileUrl = `https://nowweseeyou.org/gallery/${profileSlug}`
+
 
   // Fetch all PR roles for this school
   const { data: prRoles, error: prError } = await supabase
