@@ -1,144 +1,60 @@
-# Club roles: email invites, auto-claim on signup, and the UX to drive it
+# Review of the two documents, plus doc updates
 
-## Current state (verified)
+## Short answer on multiple artists/journalists
 
-- `club_roles` already has `email text`, nullable `user_id`, `school_id`, `role`, timestamps.
-- The `club_role` enum is `journalist | photographer | artist | pr`.
-- There are no triggers in the database, so nothing links an invited email to a user when they sign up.
-- `AdminLogin.tsx` signs the user out unless their email is in `school_admins`, so a club member cannot get past login today.
-- `nominations` has `journalist_id`, `photographer_id`, `artist_id` and a `can_read_nomination` policy for assigned members. Profiles already allow PR read access per school.
+Yes. The schema as it actually exists today supports many students per role per school.
+Uniqueness on `club_roles` is `(user_id, school_id, role)` plus a partial unique index on
+`(school_id, role, lower(email))` for un-claimed invites. That only prevents adding the *same
+person* twice to the *same role*; it does not cap how many journalists, photographers, artists,
+or PR members a school can have.
 
-## Part 1 — Remaining database work
+The one thing that is single-valued is *per nomination*: `journalist_id`, `photographer_id`, and
+`artist_id` are one uuid each. So a school can have five artists, but a given story has one
+assigned artist. That is a reasonable default and matches the "case lead is the journalist"
+decision, so no change proposed unless you want co-assignments.
 
-Only one migration is still needed: auto-claim pending invites at signup.
+## Where the spec no longer matches what is built
 
-```sql
-CREATE OR REPLACE FUNCTION public.claim_club_role_invites()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  UPDATE public.club_roles
-     SET user_id = NEW.id, updated_at = now()
-   WHERE user_id IS NULL AND lower(email) = lower(NEW.email);
-  RETURN NEW;
-END;
-$$;
+Both documents describe the schema work as upcoming. Most of it already shipped, and a few
+details drifted:
 
-CREATE TRIGGER on_auth_user_created_claim_club_roles
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.claim_club_role_invites();
-```
+- Enum name is `club_role`, not `club_role_type`.
+- `club_roles.user_id` is nullable (invite-by-email before the student has an account), there is
+  an `email` column, and a check constraint requiring one of the two. The spec's SQL shows
+  `user_id uuid NOT NULL` with no email column.
+- `club_roles` also has `updated_at`.
+- Nomination assignment FKs are `ON DELETE SET NULL`.
+- RLS on `club_roles`, `nominations`, `flyers`, and `profiles` is written and live, including
+  global-admin policies, using `private.is_school_admin` / `private.is_global_admin` /
+  `private.has_club_role` helpers.
+- A `flyers` table exists and backs the flyer generator, gated on the `pr` club role or admin.
+- Email automation is built: the `notify_nomination_status_change` trigger fires
+  `notify-nomination-assigned` on `approved` and `notify-nomination-published` on `published`,
+  running on the app-email queue for `notify.nowweseeyou.org`.
+- Still open: the auto-claim of an invite when a student signs up, the admin role-assignment UI,
+  photographer/artist pickers in the Nominations tab, and the `/club` dashboard.
 
-Plus a uniqueness guard so the same person is not invited twice for one role:
+## Proposed edits
 
-```sql
-CREATE UNIQUE INDEX IF NOT EXISTS club_roles_school_role_email_uniq
-  ON public.club_roles (school_id, role, lower(email))
-  WHERE email IS NOT NULL;
-```
+### `Club Roles: Permissions Spec`
+1. Reframe the header from "spec for work not yet built" to "spec, with database and email
+   layers shipped; UI pending."
+2. Correct the SQL block to the shipped schema: `club_role` enum, nullable `user_id`, `email`
+   column, check constraint, `updated_at`, unique indexes, `ON DELETE SET NULL` FKs.
+3. Add a short "Multiplicity" note: unlimited members per role per school; exactly one
+   journalist, photographer, and artist assigned per nomination.
+4. Replace the "Work needed" list with a done vs. remaining split reflecting the state above.
+5. Add the `flyers` table to the design section, since PR output has a real home now.
 
-No RLS or grant changes: the existing school-scoped policies already cover admin management and self-read.
+### `Retrospective: Founder to Platform`
+1. Keep the voice and the honesty; only update "Where this stands right now" so it reflects that
+   the schema, RLS, and the two notification emails are in place and the remaining gap is the
+   student-facing UI and a real club using it.
+2. No other changes; the narrative sections still read true.
 
-## Part 2 — UX code changes
+## Technical notes
 
-### 2a. New "Club Roles" tab in the admin dashboard
-
-`src/pages/Admin.tsx`
-
-- Add `"club_roles"` to the `activeTab` union and a tab button next to Manage Admins.
-- Render `<AdminClubRoles schoolId={schoolId} isDemo={isDemo} />`.
-
-### 2b. New component `src/components/AdminClubRoles.tsx`
-
-- Lists rows for the current school grouped by role.
-- Each row shows the email plus a badge: "Active" when `user_id` is set, "Pending signup" when null.
-- Invite form: email input + role select.
-- Remove and change-role actions.
-- Demo mode blocks writes through the existing `demoGuard`.
-
-```tsx
-const { data } = await supabase
-  .from("club_roles")
-  .select("id, role, email, user_id, created_at")
-  .eq("school_id", schoolId)
-  .order("role");
-
-await supabase.from("club_roles").insert({
-  school_id: schoolId,
-  role,
-  email: email.trim().toLowerCase(),
-  user_id: null,
-});
-```
-
-Unique-violation (`code === "23505"`) maps to the toast "This email is already invited for that role."
-
-### 2c. Shared sign-in that routes by role
-
-`src/pages/AdminLogin.tsx`
-
-- Reword the heading from "Admin Access" to "Sign in" so both admins and club members use it.
-- Replace the admin-only redirect with a role check after sign-in:
-  1. `school_admins` match by email, go to `/admin`.
-  2. Otherwise `club_roles` match on `user_id = auth.uid()`, go to `/club`.
-  3. Otherwise sign out with "Access denied".
-- Sign-up flow is unchanged. By the time the confirmed user signs in, the trigger has already set `user_id`, so step 2 finds them.
-
-### 2d. New route `/club`
-
-`src/pages/ClubDashboard.tsx` (new), gated behind `useAuthReady`.
-
-```tsx
-const { data: myRoles } = await supabase
-  .from("club_roles")
-  .select("role, school_id")
-  .eq("user_id", user.id);
-```
-
-Sections render from the roles returned:
-
-- `pr`: reuse the existing profile manager scoped to their school, plus flyers.
-- `journalist` / `photographer` / `artist`: nominations assigned to them.
-
-```tsx
-supabase.from("nominations")
-  .select("*")
-  .eq(`${role}_id`, user.id)
-  .order("created_at", { ascending: false });
-```
-
-- No roles: empty state pointing them at their school admin.
-
-### 2e. Route registration
-
-`src/App.tsx`
-
-```tsx
-import ClubDashboard from "./pages/ClubDashboard.tsx";
-<Route path="/club" element={<ClubDashboard />} />
-```
-
-### 2f. Navigation
-
-`src/components/Navbar.tsx`: optional "My Chapter" link shown only when the signed-in user has at least one club role. No change to public nav.
-
-### 2g. Demo data
-
-`src/lib/demoData.ts`: add a `DEMO_CLUB_ROLES` array mixing active and pending rows so the new tab is populated in demo mode.
-
-## Files touched
-
-- Migration: `claim_club_role_invites` function, trigger, unique index.
-- New: `src/components/AdminClubRoles.tsx`, `src/pages/ClubDashboard.tsx`.
-- Edited: `src/pages/Admin.tsx`, `src/pages/AdminLogin.tsx`, `src/App.tsx`, `src/lib/demoData.ts`, optionally `src/components/Navbar.tsx`.
-- Untouched: existing RLS policies, edge functions, email templates.
-
-## Business rules
-
-- One email may hold several roles at one school; the index only blocks duplicate email plus role pairs.
-- Signing up with a different email than the invite means no auto-claim; the admin deletes the pending row and re-invites.
-- Deleting a club role revokes dashboard access immediately but does not clear existing nomination assignments.
-
-## Open questions
-
-1. Send a branded invite email through the existing notify pipeline on insert, or handle invites out of band?
-2. Should deleting a club role also clear that person's in-flight nomination assignments?
+No database or code changes in this plan. It is documentation only: rewrite the two markdown
+files under `docs/` (or wherever you keep them, they are not currently in the repo, so I would
+add `docs/club-roles-permissions-spec.md` and `docs/retrospective-founder-to-platform.md`).
+If you would rather I only answer the multiplicity question and leave the docs alone, say so.
