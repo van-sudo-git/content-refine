@@ -28,7 +28,8 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Admin dashboard** — school administrators can review nominations, manage profiles, track engagement, and generate print-ready QR flyers
 - **Multi-school admin** — global admin view for the founder with a school selector to switch between campuses; school admins see only their school's nominations, profiles, and analytics; new schools can be onboarded directly from the dashboard without touching the database 
 - **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
-- **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png) and [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
+- **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
+- **Club and handoff model** — the platform is designed to transition from a solo founder to a student club or chapter lead at each school, removing the single-person dependency for ongoing operations. See [`docs/retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md)
 - **Analytics** — per-profile page views, daily QR scan counts from two Supabase projects, appreciation-message tracking, and period-over-period trends. Real engagement data in [`docs/assets/analytics-traffic-jul2026.png`](./docs/assets/analytics-traffic-jul2026.png) and [`docs/assets/analytics-per-profile-breakdown-jul2026.png`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
 
 ---
@@ -38,7 +39,7 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Brad Fisher** — Head Custodian, Lake Washington High School
 - **Shirley P.** — Bookkeeper / Accounting Technician, Lake Washington High School
 - **Pauline Gillespie** — Office Professional, Lake Washington High School 
-  - Added portrait via admin flow (no-code workflow) [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-update-portrait-jul2026.png)
+  - Added portrait via admin flow (no-code workflow) [`docs/assets/admin-update-portrait-jul2026.png`](./docs/assets/admin-update-portrait-jul2026.png)
 - **Jose Guerrero** — Night Lead Custodian, Lake Washington High School
 - **Michele Raymer** — Transition Center Teacher, Lake Washington High School
 - **Beth Da Luz** — Receptionist, Lake Washington High School
@@ -96,7 +97,7 @@ The dashboard combines analytics from both systems and avoids double-counting ov
 | Table | Purpose |
 |---|---|
 | `schools` | District schools; designed to support future multi-school expansion |
-| `school_admins` | Email-based administrator access control per school |
+| `school_admins` | Email-based administrator access control per school; `is_global_admin` flag distinguishes global from school-scoped admins |
 | `profiles` | Staff profiles with slug, bio, role, and publication status |
 | `profile_images` | Portrait, QR, and additional profile images |
 | `appreciations` | Wall messages with moderation status |
@@ -141,7 +142,11 @@ Short version: Lovable generated significant portions of the front-end code base
 nowweseeyou/
 ├── docs/
 │   ├── assets/                  # Analytics screenshots and platform evidence
-│   └── flyer-generator.md       # Architecture notes for the flyer generator
+│   ├── flyer-generator.md             # Architecture notes for the flyer generator
+│   ├── share-button.md                # Architecture notes for the share button
+│   ├── multi-school-admin.md          # Architecture notes for multi-school admin
+│   ├── retrospective-qr-redirect.md   # QR redirect architecture retrospective
+│   └── retrospective-one-person-to-club.md  # Founder to club structure retrospective
 ├── scripts/
 │   ├── verify-live-browser.ts   # Playwright live site verification
 │   └── verify-live-readonly.ts  # Supabase data verification
@@ -177,7 +182,9 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 
 ### July 2026
 - Flyer Generator fixes: moved from a standalone route into the admin dashboard as a tab, now scoped to the currently selected school (previously showed all schools' published profiles)
-- Multi-school admin system: global admin school selector, per-school access scoping, school onboarding UI [`multi-school-admin.md`](./docs/multi-school-admin.md)
+- Multi-school admin: `is_global_admin` column added to `school_admins`; global admin sees all schools with selector; school admins see only their school's data enforced at RLS level [`multi-school-admin.md`](./docs/multi-school-admin.md)
+- Retrospectives added: QR redirect architecture and founder-to-club transition
+- Shirley P. school assignment fixed in database
 - Share button: native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
 - Flyer generator: admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
 - Nomination form update: added school dropdown, made department optional, added database migration
