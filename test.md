@@ -101,6 +101,10 @@ Playwright headless browser test on mobile viewport (390×844).
 | 20 | School admin login | Log in as school-scoped email | No selector shown, only their school's data | ✅ Pass |
 | 21 | School switch | Global admin selects different school | Nominations, profiles, analytics reload for selected school | ✅ Pass |
 | 22 | New school creation | Global admin creates new school + admin email | School appears in dropdown, admin can log in | ✅ Pass |
+| 23 | Manage Roles — add role | Add email + role (journalist/photographer/artist/pr) | Appears in list with correct badge | ✅ Pass |
+| 24 | Manage Roles — duplicate detection | Add same email + same role twice | Shows "Already assigned" error, no duplicate row | ✅ Pass |
+| 25 | Manage Roles — different role, same email | Add same email with a different role | Succeeds — constraint is per-role, not per-email | ✅ Pass |
+| 26 | Manage Roles — remove role | Click trash icon on a role row | Row disappears, "Removed" toast shown | ✅ Pass |
 
 ---
 
