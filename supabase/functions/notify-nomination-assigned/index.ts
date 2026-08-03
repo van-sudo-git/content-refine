@@ -72,11 +72,11 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: true, sent: 0, reason: 'no_assignments' })
   }
 
-  // Fetch club roles with user emails
+  // Fetch club roles with user ids and invite emails
   const clubRoleIds = assignments.map((a) => a.clubRoleId)
   const { data: clubRoles, error: rolesError } = await supabase
     .from('club_roles')
-    .select('id, user_id')
+    .select('id, user_id, email')
     .in('id', clubRoleIds)
 
   if (rolesError || !clubRoles) {
@@ -84,18 +84,19 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to fetch club roles' }, 500)
   }
 
-  const userIds = clubRoles.map((r) => r.user_id)
-  const { data: users, error: usersError } = await supabase.auth.admin.listUsers()
-
-  if (usersError) {
-    console.error('Failed to fetch users', { error: usersError, nominationId })
-    return jsonResponse({ error: 'Failed to fetch users' }, 500)
-  }
-
+  // Only look up auth users if at least one club role is actually claimed.
   const userEmailMap = new Map<string, string>()
-  for (const user of users.users) {
-    if (user.email) {
-      userEmailMap.set(user.id, user.email)
+  if (clubRoles.some((r) => r.user_id)) {
+    const { data: users, error: usersError } = await supabase.auth.admin.listUsers()
+
+    if (usersError) {
+      console.error('Failed to fetch users', { error: usersError, nominationId })
+    } else {
+      for (const user of users.users) {
+        if (user.email) {
+          userEmailMap.set(user.id, user.email)
+        }
+      }
     }
   }
 
@@ -108,11 +109,19 @@ Deno.serve(async (req) => {
 
   let sent = 0
   for (const clubRole of clubRoles) {
-    const email = userEmailMap.get(clubRole.user_id)
+    // Claimed invites resolve through auth.users; unclaimed invites fall back
+    // to the email the admin entered in Manage Roles.
+    const email =
+      (clubRole.user_id ? userEmailMap.get(clubRole.user_id) : null) || clubRole.email || null
     if (!email) {
-      console.warn('No email for user', { userId: clubRole.user_id, nominationId })
+      console.warn('No email for club role', {
+        clubRoleId: clubRole.id,
+        userId: clubRole.user_id,
+        nominationId,
+      })
       continue
     }
+
 
     const assignmentType = roleIdToType.get(clubRole.id) || 'assignment'
     const idempotencyKey = `nomination-assigned-${nominationId}-${clubRole.id}`
