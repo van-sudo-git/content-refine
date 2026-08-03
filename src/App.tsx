@@ -34,7 +34,7 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/flyer" element={<AdminFlyer />} />
+          <Route path="/admin/flyer" element={<AdminFlyer schoolId={null} />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
