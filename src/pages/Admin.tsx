@@ -14,7 +14,7 @@ import DemoProfileManager from "@/components/DemoProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import AdminFlyer from "@/pages/AdminFlyer";
 import SchoolOnboarding from "@/components/SchoolOnboarding";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, Database } from "@/integrations/supabase/types";
 import ManageRoles from "@/components/ManageRoles";
 import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 
@@ -52,6 +52,19 @@ const Admin = () => {
   const [allSchools, setAllSchools] = useState<{ id: string; name: string }[]>([]);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
 
+  // pr-only access - no admin row, just a club_roles row with role='pr'
+  const [isPrOnly, setIsPrOnly] = useState(false);
+
+  // club roles rosters, loaded per school so the assignment dropdowns have someone to pick from
+  const [journalists, setJournalists] = useState<{ id: string; email: string | null }[]>([]);
+  const [photographers, setPhotographers] = useState<{ id: string; email: string | null }[]>([]);
+  const [artists, setArtists] = useState<{ id: string; email: string | null }[]>([]);
+
+  // whoever's currently picked in the assignment dropdowns for the open nomination
+  const [assignJournalist, setAssignJournalist] = useState<string>("");
+  const [assignPhotographer, setAssignPhotographer] = useState<string>("");
+  const [assignArtist, setAssignArtist] = useState<string>("");
+
   useEffect(() => {
     if (isDemo) return; // skip auth check in demo mode
     if (!isReady) return;
@@ -67,16 +80,45 @@ const Admin = () => {
       setUserEmail(email);
 
       const { data: adminRow } = await supabase
-        .from("school_admins")
-        .select("id, school_id, is_global_admin")
+      .from("school_admins")
+      .select("id, school_id, is_global_admin")
+      .eq("email", email.toLowerCase())
+      .limit(1)
+      .maybeSingle();
+
+    if (!adminRow) {
+      // not a school admin - check if they're pr instead, they still get in
+      // but only see the flyer generator, nothing else
+      const { data: prRole } = await supabase
+        .from("club_roles")
+        .select("id, school_id")
         .eq("email", email.toLowerCase())
+        .eq("role", "pr")
         .limit(1)
         .maybeSingle();
-      if (!adminRow) {
+
+      if (!prRole) {
         setLoading(false);
         navigate("/admin/login", { replace: true });
         return;
       }
+
+      setIsPrOnly(true);
+      setSchoolId(prRole.school_id);
+      setSelectedSchoolId(prRole.school_id);
+      setActiveTab("flyer");
+
+      const { data: school } = await supabase
+        .from("schools")
+        .select("id, name")
+        .eq("id", prRole.school_id)
+        .single();
+
+      if (school) setAllSchools([school]);
+
+      setLoading(false);
+      return;
+    }
 
       // check if global admin
       if (adminRow.is_global_admin) {
@@ -124,14 +166,80 @@ const Admin = () => {
   };
 
   const loadData = async (sid: string) => {
-    const [nomRes, adminRes] = await Promise.all([
+    const [nomRes, adminRes, rolesRes] = await Promise.all([
       supabase.from("nominations").select("*").eq("school_id", sid).order("created_at", { ascending: false }),
       supabase.from("school_admins").select("id, email").eq("school_id", sid),
+      supabase.from("club_roles").select("id, email, role").eq("school_id", sid),
     ]);
     if (nomRes.data) setNominations(nomRes.data);
     if (adminRes.data) setAdmins(adminRes.data);
+
+    // split the roster by role so each dropdown only shows the right people
+    if (rolesRes.data) {
+      setJournalists(rolesRes.data.filter((r) => r.role === "journalist"));
+      setPhotographers(rolesRes.data.filter((r) => r.role === "photographer"));
+      setArtists(rolesRes.data.filter((r) => r.role === "artist"));
+    }
   };
 
+  // when a nomination card opens, show who's already assigned to it -
+  // fall back to auto-picking if there's only one option for that role
+  useEffect(() => {
+    if (!selectedNomination) return;
+
+    setAssignJournalist(
+      selectedNomination.journalist_id ?? (journalists.length === 1 ? journalists[0].id : "")
+    );
+    setAssignPhotographer(
+      selectedNomination.photographer_id ?? (photographers.length === 1 ? photographers[0].id : "")
+    );
+    setAssignArtist(
+      selectedNomination.artist_id ?? (artists.length === 1 ? artists[0].id : "")
+    );
+  }, [selectedNomination, journalists, photographers, artists]);
+
+  // approving is what fires the assigned-team email, so assignment has to
+  // happen in the same action - no one picked just means that role stays null
+  const approveWithAssignment = async (id: string) => {
+    if (isDemo) { demoGuard(); return; }
+
+    const { error } = await supabase
+      .from("nominations")
+      .update({
+        status: "approved",
+        admin_notes: adminNotes || null,
+        journalist_id: assignJournalist || null,
+        photographer_id: assignPhotographer || null,
+        artist_id: assignArtist || null,
+      })
+      .eq("id", id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Approved", description: "Assigned team members will get an email." });
+    setSelectedNomination(null);
+    setAdminNotes("");
+    if (schoolId) loadData(schoolId);
+  };
+
+  const deleteNomination = async (id: string) => {
+    if (isDemo) { demoGuard(); return; }
+    if (!confirm("Delete this nomination? This cannot be undone.")) return;
+  
+    const { error } = await supabase.from("nominations").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+  
+    toast({ title: "Nomination deleted" });
+    setSelectedNomination(null);
+    if (schoolId) loadData(schoolId);
+  };
+  
   const demoGuard = () => {
     toast({ title: "Demo Mode", description: "This action is disabled in demo mode.", variant: "destructive" });
   };
@@ -293,27 +401,36 @@ const Admin = () => {
             ))}
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            <Button variant={activeTab === "nominations" ? "secondary" : "outline"} onClick={() => setActiveTab("nominations")}>
-              Nominations
-            </Button>
-            <Button variant={activeTab === "profiles" ? "secondary" : "outline"} onClick={() => setActiveTab("profiles")}>
-              Profiles
-            </Button>
-            <Button variant={activeTab === "admins" ? "secondary" : "outline"} onClick={() => setActiveTab("admins")}>
-              Manage Admins
-            </Button>
-            <Button variant={activeTab === "roles" ? "secondary" : "outline"} onClick={() => setActiveTab("roles")}>
-              Manage Roles
-            </Button>
-            <Button variant={activeTab === "analytics" ? "secondary" : "outline"} onClick={() => setActiveTab("analytics")}>
-              Analytics
-            </Button>
-            <Button variant={activeTab === "flyer" ? "secondary" : "outline"} onClick={() => setActiveTab("flyer")}>
-              Flyer Generator
-            </Button>
-          </div>
+          {/* Tabs - pr-only users skip this entirely, they land straight on flyer */}
+          {!isPrOnly && (
+            <div className="flex gap-2 mb-6 flex-wrap">
+              <Button variant={activeTab === "nominations" ? "secondary" : "outline"} onClick={() => setActiveTab("nominations")}>
+                Nominations
+              </Button>
+              <Button variant={activeTab === "profiles" ? "secondary" : "outline"} onClick={() => setActiveTab("profiles")}>
+                Profiles
+              </Button>
+              <Button variant={activeTab === "admins" ? "secondary" : "outline"} onClick={() => setActiveTab("admins")}>
+                Manage Admins
+              </Button>
+              <Button variant={activeTab === "roles" ? "secondary" : "outline"} onClick={() => setActiveTab("roles")}>
+                Manage Roles
+              </Button>
+              <Button variant={activeTab === "analytics" ? "secondary" : "outline"} onClick={() => setActiveTab("analytics")}>
+                Analytics
+              </Button>
+              <Button variant={activeTab === "flyer" ? "secondary" : "outline"} onClick={() => setActiveTab("flyer")}>
+                Flyer Generator
+              </Button>
+            </div>
+          )}
+
+          {isPrOnly && (
+            <p className="text-sm text-muted-foreground mb-4">
+              You have PR access for {allSchools[0]?.name ?? "your school"}. You can generate
+              flyers for any published profile here.
+            </p>
+          )}
 
           {/* Nominations Tab */}
           {activeTab === "nominations" && (
@@ -357,6 +474,16 @@ const Admin = () => {
                             {new Date(nom.created_at).toLocaleDateString()}
                             {nom.nominee_informed && " · Nominee has been told"}
                           </p>
+                          {(nom.journalist_id || nom.photographer_id || nom.artist_id) && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {nom.journalist_id &&
+                                `Journalist: ${journalists.find((j) => j.id === nom.journalist_id)?.email ?? "—"}`}
+                              {nom.photographer_id &&
+                                ` · Photographer: ${photographers.find((p) => p.id === nom.photographer_id)?.email ?? "—"}`}
+                              {nom.artist_id &&
+                                ` · Artist: ${artists.find((a) => a.id === nom.artist_id)?.email ?? "—"}`}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -371,16 +498,65 @@ const Admin = () => {
                               className="min-h-[80px]"
                             />
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button size="sm" onClick={() => updateStatus(nom.id, "approved")} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                              <CheckCircle size={14} /> Approve
-                            </Button>
-                            <Button size="sm" onClick={() => updateStatus(nom.id, "published")} className="bg-purple-600 hover:bg-purple-700 text-white">
-                              <Star size={14} /> Publish
-                            </Button>
 
+                          {/* assign the team before approving - approving is what sends the emails */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">Journalist</label>
+                              <select
+                                className="w-full border border-border rounded-lg px-2 py-1.5 text-sm bg-background text-foreground"
+                                value={assignJournalist}
+                                onChange={(e) => setAssignJournalist(e.target.value)}
+                              >
+                                <option value="">
+                                  {journalists.length === 0 ? "No journalists yet" : "Not assigned"}
+                                </option>
+                                {journalists.map((j) => (
+                                  <option key={j.id} value={j.id}>{j.email}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">Photographer</label>
+                              <select
+                                className="w-full border border-border rounded-lg px-2 py-1.5 text-sm bg-background text-foreground"
+                                value={assignPhotographer}
+                                onChange={(e) => setAssignPhotographer(e.target.value)}
+                              >
+                                <option value="">
+                                  {photographers.length === 0 ? "No photographers yet" : "Not assigned"}
+                                </option>
+                                {photographers.map((p) => (
+                                  <option key={p.id} value={p.id}>{p.email}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground block mb-1">Artist</label>
+                              <select
+                                className="w-full border border-border rounded-lg px-2 py-1.5 text-sm bg-background text-foreground"
+                                value={assignArtist}
+                                onChange={(e) => setAssignArtist(e.target.value)}
+                              >
+                                <option value="">
+                                  {artists.length === 0 ? "No artists yet" : "Not assigned"}
+                                </option>
+                                {artists.map((a) => (
+                                  <option key={a.id} value={a.id}>{a.email}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button size="sm" onClick={() => approveWithAssignment(nom.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                              <CheckCircle size={14} /> Approve & Assign
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => updateStatus(nom.id, "pending")}>
                               <Clock size={14} /> Reset to Pending
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => deleteNomination(nom.id)} className="text-muted-foreground hover:text-destructive">
+                              <Trash2 size={14} /> Delete
                             </Button>
                           </div>
                         </div>
