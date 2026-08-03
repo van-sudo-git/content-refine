@@ -25,3 +25,6 @@ dist-ssr
 
 # Environment variables
 .env
+
+# Lovable internal plans
+.lovable/plan.md
