@@ -25,6 +25,7 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Appreciation wall** — students and staff can leave public messages that are AI-moderated before going live
 - **QR code system** — each featured profile can be reached through a QR code displayed in the school building; QR codes are permanent and resolve correctly even if the platform's hosting changes
 - **Nomination workflow** — anyone can nominate the next staff member at [nowweseeyou.org/nominate](https://nowweseeyou.org/nominate). Nominations land in the admin dashboard where administrators review, approve, decline, or feature them. The `nominee_informed` field confirms whether the nominee knows they have been nominated. Approved nominations trigger in-person outreach and explicit consent before any profile work begins. Real nominations from LWSD staff are visible in [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-nominations-jul2026.png) and the admin workflow in [`docs/assets/admin-profiles-jul2026.png`](./docs/assets/admin-profiles-jul2026.png)
+- **Club roles** — journalist, photographer, artist, and PR roles can be assigned per school through the Manage Roles tab, replacing the single all-or-nothing admin account with role-scoped access matched to what each person actually needs to do. See [`docs/club-roles-spec.md`](./docs/club-roles-spec.md)
 - **Admin dashboard** — school administrators can review nominations, manage profiles, track engagement, and generate print-ready QR flyers
 - **Multi-school admin** — global admin view for the founder with a school selector to switch between campuses; school admins see only their school's nominations, profiles, and analytics; new schools can be onboarded directly from the dashboard without touching the database 
 - **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
@@ -99,9 +100,10 @@ The dashboard combines analytics from both systems and avoids double-counting ov
 | `schools` | District schools; designed to support future multi-school expansion |
 | `school_admins` | Email-based administrator access control per school; `is_global_admin` flag distinguishes global from school-scoped admins |
 | `profiles` | Staff profiles with slug, bio, role, and publication status |
+| `club_roles` | Journalist, photographer, artist, and PR role assignments, scoped per school |
+| `nominations` | Community nominations with status workflow, school dropdown, and journalist/photographer/artist assignment |
 | `profile_images` | Portrait, QR, and additional profile images |
 | `appreciations` | Wall messages with moderation status |
-| `nominations` | Community nominations with status workflow and school dropdown |
 | `redirects` | QR-code-to-destination URL mapping |
 | `redirect_events_daily` | Daily scan counts per QR code |
 | `page_views` | Daily page-view counts per profile slug |
@@ -179,6 +181,9 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 ---
 
 ## Changelog
+
+### August 2026
+- Club roles system: journalist, photographer, artist, and PR roles assignable per school via a new Manage Roles tab; database layer (roles table, nomination status enum, assignment columns, RLS policies) already shipped, UI still in progress [`club-roles-spec.md`](./docs/club-roles-spec.md)
 
 ### July 2026
 - Flyer Generator fixes: moved from a standalone route into the admin dashboard as a tab, now scoped to the currently selected school (previously showed all schools' published profiles)
