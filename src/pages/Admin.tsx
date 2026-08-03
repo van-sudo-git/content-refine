@@ -14,7 +14,8 @@ import DemoProfileManager from "@/components/DemoProfileManager";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import AdminFlyer from "@/pages/AdminFlyer";
 import SchoolOnboarding from "@/components/SchoolOnboarding";
-import type { Database, Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
+import ManageRoles from "@/components/ManageRoles";
 import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 
 type Nomination = Tables<"nominations">;
@@ -39,7 +40,7 @@ const Admin = () => {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(isDemo ? "demo-school" : null);
   const [userEmail, setUserEmail] = useState<string | null>(isDemo ? DEMO_EMAIL : null);
-  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics" | "flyer">("nominations");
+  const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics" | "roles" | "flyer">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [loading, setLoading] = useState(!isDemo);
@@ -303,6 +304,9 @@ const Admin = () => {
             <Button variant={activeTab === "admins" ? "secondary" : "outline"} onClick={() => setActiveTab("admins")}>
               Manage Admins
             </Button>
+            <Button variant={activeTab === "roles" ? "secondary" : "outline"} onClick={() => setActiveTab("roles")}>
+              Manage Roles
+            </Button>
             <Button variant={activeTab === "analytics" ? "secondary" : "outline"} onClick={() => setActiveTab("analytics")}>
               Analytics
             </Button>
@@ -406,6 +410,8 @@ const Admin = () => {
           {activeTab === "flyer" && (
             <AdminFlyer schoolId={schoolId} />
           )}
+          
+          {activeTab === "roles" && <ManageRoles schoolId={schoolId} />}
 
           {/* Admins Tab */}
           {activeTab === "admins" && (
