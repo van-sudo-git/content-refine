@@ -7,7 +7,7 @@
 - Chapter onboarding guide: `[docs/start-a-chapter-guide.md](./start-a-chapter-guide.md)` — step-by-step guide for launching Now We See You at a new school or community
 - Roles and nomination workflow diagram: `[docs/assets/roles-and-nomination-workflow-jul2026.png](./assets/roles-and-nomination-workflow-jul2026.png)`
 
-
+![Roles and Workflow](./assets/roles-and-nomination-workflow-jul2026.png)
 
 ## Admin dashboard today
 
