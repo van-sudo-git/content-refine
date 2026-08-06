@@ -96,3 +96,58 @@ Evaan defined and refined the school-specific approval and rejection criteria an
 ## Ongoing approach
 
 Evaan uses AI-assisted development where disclosed, but remains responsible for understanding, testing, and explaining the systems he submits. The repository distinguishes between Lovable-assisted foundation code, independently implemented additions, and AI models that operate only at runtime.
+
+## What actually happened when I built it
+
+The schema groundwork from July turned into three separate pieces, not one.
+First the roles themselves — a table mapping a student to journalist,
+photographer, artist, or PR, scoped to a school. Then a way for an admin to
+actually assign those roles to a specific nomination and have the right
+people get emailed about it. Then a place for the assigned student to
+actually do the work.
+
+That third piece was the hard one, and it's the one this retro was really
+about. Roles on paper don't mean anything if the journalist has no page to
+write on.
+
+## Problems I didn't see coming
+
+I designed the four roles as if they'd always be four different people. They
+won't be. I'm the admin and I'm also going to be the journalist and the
+artist on some early profiles, before the club has enough members to fill
+every seat. Someone doing PR outreach might also want to help write a
+profile some weeks. The roles overlap in practice even though they're
+separate in the schema, and the login flow had to account for that — someone
+who is both an admin and a journalist needs a way to reach their own
+assignments, not just the admin view. That wasn't obvious until I actually
+tried to picture myself using the system I'd built.
+
+## The decision that mattered most
+
+A journalist can write a profile. A journalist cannot publish it.
+
+I almost didn't build it that way. The simpler version lets whoever finishes
+the work also be the one who takes it live. But that's the same single-point
+ownership problem this whole retrospective is about, just moved one step
+later. If a student can draft and publish with no one else in the loop, the
+platform has no more oversight than it did when it was just me. Publication
+staying with an administrator is the one place the old, founder-controlled
+model still exists on purpose. I didn't hide the publish button in the
+interface and hope no one finds a way around it. I made the database itself
+refuse to set a profile to published unless the account doing it is an
+admin. That way the rule holds even if I write buggy frontend code later
+and forget to check it.
+
+## Where this actually stands
+
+Not fully tested yet. The database changes are in front of me, not run
+against the live project. The honest state, as of this writing: the roles
+exist, the assignment and email workflow exist, the dashboard exists as
+code — but I haven't yet watched a real account, logged in as a journalist,
+successfully write a profile and get correctly blocked from publishing it.
+That test is next.
+
+I'm writing this section before that test, not after, on purpose. The July
+version of this retro said the club wasn't running yet and that I'd rather
+say so than pretend otherwise. Same rule applies here. Built is not the same
+as working. I'll know which one this is once I actually try it.

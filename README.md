@@ -31,6 +31,7 @@ Now We See You is designed as a durable, consent-based archive rather than a one
 - **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
 - **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
 - **Club and handoff model** — the platform is designed to transition from a solo founder to a student club or chapter lead at each school, removing the single-person dependency for ongoing operations. See [`docs/retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md)
+- **Club dashboard** — journalists, photographers, and artists sign in at the same login page as admins and are automatically routed to their own dashboard, separate from the admin view, showing only the nominations assigned to them. A journalist can draft and edit their assigned profile there; a photographer or artist can upload once the journalist has started it. None of them can publish it — publishing stays an administrator-only action, enforced at the database level so the restriction holds even if the interface has a bug. A new account is automatically linked to its invited role the first time it signs in.
 - **Analytics** — per-profile page views, daily QR scan counts from two Supabase projects, appreciation-message tracking, and period-over-period trends. Real engagement data in [`docs/assets/analytics-traffic-jul2026.png`](./docs/assets/analytics-traffic-jul2026.png) and [`docs/assets/analytics-per-profile-breakdown-jul2026.png`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
 
 ---
@@ -147,6 +148,7 @@ nowweseeyou/
 │   ├── flyer-generator.md             # Architecture notes for the flyer generator
 │   ├── share-button.md                # Architecture notes for the share button
 │   ├── multi-school-admin.md          # Architecture notes for multi-school admin
+│   ├── club-roles-spec.md             # Club roles permissions spec
 │   ├── retrospective-qr-redirect.md   # QR redirect architecture retrospective
 │   └── retrospective-one-person-to-club.md  # Founder to club structure retrospective
 ├── scripts/
@@ -154,7 +156,7 @@ nowweseeyou/
 │   └── verify-live-readonly.ts  # Supabase data verification
 ├── src/
 │   ├── components/              # React components including AdminAnalytics, AppreciationWall, FlyerPreview
-│   ├── pages/                   # Route pages: Index, Gallery, ProfilePage, Admin, AdminFlyer, Nominate
+│   ├── pages/                   # Route pages: Index, Gallery, ProfilePage, Admin, AdminFlyer, ClubDashboard, Nominate
 │   ├── hooks/                   # useAuthReady (auth-loading state handling)
 │   ├── lib/                     # herosRedirectClient, demoData, utilities
 │   └── integrations/
@@ -184,6 +186,7 @@ Create a local `.env` file using `.env.example` as a template. Never commit real
 
 ### August 2026
 - Club roles system: journalist, photographer, artist, and PR roles assignable per school via a new Manage Roles tab; database layer (roles table, nomination status enum, assignment columns, RLS policies) already shipped, UI still in progress [`club-roles-spec.md`](./docs/club-roles-spec.md)
+- Club dashboard shipped and tested: journalist, photographer, and artist accounts sign in at the existing admin login page and are automatically routed to a separate dashboard showing only their own assigned nominations. A new account is automatically linked to its invited role the first time it signs in. A journalist can draft and edit their assigned profile; a photographer or artist can upload once the journalist has started the write-up. Publishing stays an administrator-only action, enforced at the database level so the restriction holds even if the interface has a bug. [`retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md)
 
 ### July 2026
 - Flyer Generator fixes: moved from a standalone route into the admin dashboard as a tab, now scoped to the currently selected school (previously showed all schools' published profiles)

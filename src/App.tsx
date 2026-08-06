@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound.tsx";
 import PageViewTracker from "./components/PageViewTracker.tsx";
 import AdminFlyer from "./pages/AdminFlyer.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
+import ClubDashboard from "./pages/ClubDashboard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +35,8 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/flyer" element={<AdminFlyer schoolId={null} />} />
+          <Route path="/club" element={<ClubDashboard />} />
+          <Route path="/admin/flyer" element={<AdminFlyer />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
