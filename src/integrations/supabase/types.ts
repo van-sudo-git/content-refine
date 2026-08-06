@@ -542,6 +542,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_club_role_invites: {
+        Args: never
+        Returns: {
+          id: string
+          role: Database["public"]["Enums"]["club_role"]
+          school_id: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
