@@ -1,60 +1,37 @@
-# Review of the two documents, plus doc updates
+# Fix: invited club members can't sign in
 
-## Short answer on multiple artists/journalists
+## What's actually happening
 
-Yes. The schema as it actually exists today supports many students per role per school.
-Uniqueness on `club_roles` is `(user_id, school_id, role)` plus a partial unique index on
-`(school_id, role, lower(email))` for un-claimed invites. That only prevents adding the *same
-person* twice to the *same role*; it does not cap how many journalists, photographers, artists,
-or PR members a school can have.
+Two separate issues, both now identified.
 
-The one thing that is single-valued is *per nomination*: `journalist_id`, `photographer_id`, and
-`artist_id` are one uuid each. So a school can have five artists, but a given story has one
-assigned artist. That is a reasonable default and matches the "case lead is the journalist"
-decision, so no change proposed unless you want co-assignments.
+1. The missing verification email was the address typo (`microsft.com`). Fixed by you — the email arrived.
+2. The "not registered as an admin" message is a different, real gap: the login page only recognizes **school admins**. It looks the signed-in email up in the school admins list, and if it's not there it signs the user out with that message.
 
-## Where the spec no longer matches what is built
+`preetigoel@microsoft.com` was invited as a **journalist** (stored in the club roles table, with no linked account yet). Journalists, photographers, and artists are therefore locked out even after confirming their email — the invite email tells them to open the admin dashboard, but nothing lets them in.
 
-Both documents describe the schema work as upcoming. Most of it already shipped, and a few
-details drifted:
+## Plan
 
-- Enum name is `club_role`, not `club_role_type`.
-- `club_roles.user_id` is nullable (invite-by-email before the student has an account), there is
-  an `email` column, and a check constraint requiring one of the two. The spec's SQL shows
-  `user_id uuid NOT NULL` with no email column.
-- `club_roles` also has `updated_at`.
-- Nomination assignment FKs are `ON DELETE SET NULL`.
-- RLS on `club_roles`, `nominations`, `flyers`, and `profiles` is written and live, including
-  global-admin policies, using `private.is_school_admin` / `private.is_global_admin` /
-  `private.has_club_role` helpers.
-- A `flyers` table exists and backs the flyer generator, gated on the `pr` club role or admin.
-- Email automation is built: the `notify_nomination_status_change` trigger fires
-  `notify-nomination-assigned` on `approved` and `notify-nomination-published` on `published`,
-  running on the app-email queue for `notify.nowweseeyou.org`.
-- Still open: the auto-claim of an invite when a student signs up, the admin role-assignment UI,
-  photographer/artist pickers in the Nominations tab, and the `/club` dashboard.
+### 1. Claim the invite on first sign-in
+When a user signs in, match their email against pending club-role invites and attach their account id to those rows, so the invite becomes a real, linked membership. Do this with a database trigger on account creation plus a matching check at sign-in (covers accounts created before the trigger existed).
 
-## Proposed edits
+### 2. Let club members through the login gate
+Change the login check from "is this a school admin?" to "is this a school admin **or** a club member?". If neither, keep the current access-denied behavior. Also make the denied message accurate: tell them their email isn't on their school's admin or club list and to contact their school admin.
 
-### `Club Roles: Permissions Spec`
-1. Reframe the header from "spec for work not yet built" to "spec, with database and email
-   layers shipped; UI pending."
-2. Correct the SQL block to the shipped schema: `club_role` enum, nullable `user_id`, `email`
-   column, check constraint, `updated_at`, unique indexes, `ON DELETE SET NULL` FKs.
-3. Add a short "Multiplicity" note: unlimited members per role per school; exactly one
-   journalist, photographer, and artist assigned per nomination.
-4. Replace the "Work needed" list with a done vs. remaining split reflecting the state above.
-5. Add the `flyers` table to the design section, since PR output has a real home now.
+### 3. Route by role after sign-in
+- School admins and global admins: `/admin` as today.
+- Club members (journalist, photographer, artist, PR): a role-scoped club view at `/club`, showing only the nominations they are assigned to, plus the upload/edit actions their role needs (photographer: photos, artist: artwork, journalist: story text, PR: flyers).
 
-### `Retrospective: Founder to Platform`
-1. Keep the voice and the honesty; only update "Where this stands right now" so it reflects that
-   the schema, RLS, and the two notification emails are in place and the remaining gap is the
-   student-facing UI and a real club using it.
-2. No other changes; the narrative sections still read true.
+### 4. Align the invite email
+Update the role-invite email so the button points at the club view for students, and the admin dashboard only for actual admins.
+
+## Scope choice
+
+If you want the smallest possible change first, steps 1 and 2 alone unblock sign-in (members land on a read-only dashboard). Steps 3 and 4 make the experience correct. I'd recommend doing all four together, but say the word if you'd rather ship the unblock now and build the club view separately.
 
 ## Technical notes
 
-No database or code changes in this plan. It is documentation only: rewrite the two markdown
-files under `docs/` (or wherever you keep them, they are not currently in the repo, so I would
-add `docs/club-roles-permissions-spec.md` and `docs/retrospective-founder-to-platform.md`).
-If you would rather I only answer the multiplicity question and leave the docs alone, say so.
+- Migration: `claim_club_role_invites()` security-definer function + trigger on new accounts; backfill existing confirmed users whose email matches a pending invite.
+- `src/pages/AdminLogin.tsx`: replace the single school-admins lookup with a combined admin/club-role lookup, then navigate based on the result.
+- New `src/pages/ClubDashboard.tsx` + route in `src/App.tsx`, reading nominations already permitted by the existing "Assigned members view nomination" policy.
+- Existing RLS on club roles and nominations already supports this; upload permissions for assigned members will be verified and extended only where missing.
+- `supabase/functions/_shared/transactional-email-templates/roles-assigned.tsx` and `notify-role-assigned` for the email link change; both redeploy after edit.
