@@ -23,8 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables
-.env
 
 # Lovable internal plans
 .lovable/plan.md
