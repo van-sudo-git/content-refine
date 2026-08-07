@@ -107,7 +107,10 @@ const ClubDashboard = () => {
     const nomIds = noms.map((n) => n.id);
     if (nomIds.length === 0) return;
 
-    const { data: linkedProfiles } = await supabase
+    // TODO: no FK between nominations and profiles yet.
+    // Add nominations.profile_id via a Lovable migration, then read it from the
+    // existing nominations query and delete this second fetch.
+    /* const { data: linkedProfiles } = await supabase
       .from("profiles")
       .select("id, slug, name, role, department, bio, status, nomination_id")
       .in("nomination_id", nomIds);
@@ -118,7 +121,7 @@ const ClubDashboard = () => {
         byNomId[p.nomination_id] = p;
       });
       setProfiles(byNomId);
-    }
+    } */
   };
 
   const myRoleFor = (nom: AssignedNomination): ClubRoleType | null => {
@@ -158,7 +161,10 @@ const ClubDashboard = () => {
       bio: form.bio.trim() || null,
       school_id: myRoles[0].school_id,
       status: "draft",
-      nomination_id: nomId,
+      // TODO: no FK between nominations and profiles yet.
+      // Add nominations.profile_id via a Lovable migration, then set it here
+      // (or update the nomination row after insert) instead of this column.
+      // nomination_id: nomId,
     });
 
     if (error) {
