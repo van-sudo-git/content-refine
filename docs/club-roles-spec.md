@@ -31,26 +31,26 @@ flyer without also being able to approve nominations or manage other admins.
 ## What's changing
 
 Now We See You needs role-scoped access so nominations can move through a
-club of students — journalist, photographer, artist, PR — instead of
+club of students — journalist, photographer, artist, community outreach — instead of
 everything routing through one admin account.
 
 ### Role permission matrix
 
 
-| Role         | Can see                      | Can do                            |
-| ------------ | ---------------------------- | --------------------------------- |
-| Journalist   | Assigned nomination          | Submit profile, publish profile   |
-| Photographer | Assigned nomination          | Upload photos                     |
-| Artist       | Assigned nomination          | Upload art                        |
-| PR           | Published profiles           | Generate flyer, log outreach/chat |
-| Admin        | All nominations (own school) | Approve nomination, assign roles  |
+| Role                         | Can see                      | Can do                            |
+| ---------------------------  | ---------------------------- | --------------------------------- |
+| Journalist                   | Assigned nomination          | Submit profile, publish profile   |
+| Photographer                 | Assigned nomination          | Upload photos                     |
+| Artist                       | Assigned nomination          | Upload art                        |
+| Community Outreach           | Published profiles           | Generate flyer, log outreach/chat |
+| Admin                        | All nominations (own school) | Approve nomination, assign roles  |
 
 
 
 
 ### Multiplicity
 
-A school can have any number of journalists, photographers, artists, and PR members.
+A school can have any number of journalists, photographers, artists, and Community Outreach members.
 The only `UNIQUE` constraints are per-person: the same user cannot hold the same role
 twice at the same school, and the same email cannot be invited twice for the same role
 at the same school. Per nomination, there is exactly one journalist, one photographer,
@@ -68,12 +68,12 @@ Roles and Workflow
 4. **Journalist submits and publishes the profile** — no admin-approval gate
   for publishing itself. The nominee's staged consent is the safeguard at
    this point, not a second admin check.
-5. **Publish triggers two emails**: one to the PR role, and one lightweight
+5. **Publish triggers two emails**: one to the Community Outreach role, and one lightweight
   notification to admin, letting them know a profile went live — informational
    only, not something admin needs to act on.
-6. **PR role gets access to Flyer Generator for any published profile at
+6. **Community Outreach role gets access to Flyer Generator for any published profile at
   their school** — not scoped to only the profiles they were notified
-   about. PR does not get access to Nominations, Profiles, or Manage Admins.
+   about. Community Outreach does not get access to Nominations, Profiles, or Manage Admins.
 
 
 
@@ -83,7 +83,7 @@ Roles and Workflow
 profile goes live. Admin instead gets a lightweight notification when a
 profile is published — informational, not a checkpoint the journalist has
 to wait on.
-- **PR's flyer access is school-wide, not per-profile.** PR can generate a
+- **Community Outreach's flyer access is school-wide, not per-profile.** Community Outreach can generate a
 flyer for any published profile at their school, not just the ones they
 were emailed about. Simplifies the permission to a single school-scoped
 grant rather than a per-notification allowlist.
@@ -122,7 +122,7 @@ in sync, since journalist assignment already implies who's leading it.
 | `artist_id`       | uuid | references `club_roles`, nullable until assigned                           |
 
 
-No changes needed to `profiles` beyond what publishing already touches — PR
+No changes needed to `profiles` beyond what publishing already touches — Community Outreach
 access is granted through RLS on `school_id`, not a new column.
 
 -- 1. Enums
@@ -223,7 +223,7 @@ admin-only, before granting access.
 6. Update Nominations tab to assign photographer/artist at approval.
 7. Update Flyer Generator's access check to include the `pr` role.
 8. End-to-end test: create a nomination, approve it, assign roles, submit
-  and publish as journalist, confirm PR gets flyer access and admin gets
+  and publish as journalist, confirm Community Outreach gets flyer access and admin gets
    the notification.
 
 
@@ -235,7 +235,7 @@ admin-only, before granting access.
 `artist_id` columns on `nominations`.
 - RLS policies for `club_roles`, `nominations`, `flyers`, and `profiles`,
 including school-scoped admin and global admin access.
-- `flyers` table for PR-generated print assets.
+- `flyers` table for Community Outreach-generated print assets.
 - Edge Function triggers for `approved` and `published` nomination status
 changes, wired to the app-email queue for `notify.nowweseeyou.org`.
 
@@ -249,7 +249,7 @@ changes, wired to the app-email queue for `notify.nowweseeyou.org`.
 - Update Flyer Generator access check to allow the `pr` role as well as admins.
 - Build a student `/club` dashboard scoped to the user's roles.
 - End-to-end test: create a nomination, approve it, assign roles, submit and publish
-as journalist, confirm PR gets flyer access and admin gets the notification.
+as journalist, confirm Community Outreach gets flyer access and admin gets the notification.
 
 ---
 
@@ -263,5 +263,5 @@ including how to set up admin accounts, onboard the first staff member, and hand
 to a student club.
 - **Roles and nomination workflow diagram** — `[docs/assets/roles-and-nomination-workflow-jul2026.png](./assets/roles-and-nomination-workflow-jul2026.png)`
 Visual overview of how a nomination moves from submission through journalist,
-photographer, and artist assignment to publication and PR outreach.
+photographer, and artist assignment to publication and Community Outreach outreach.
 
