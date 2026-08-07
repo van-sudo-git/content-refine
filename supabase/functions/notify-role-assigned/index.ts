@@ -18,6 +18,12 @@ function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   })
 }
 
+// pr uses the admin dashboard, everyone else uses the club dashboard
+function destinationUrlForRole(role: string): string {
+  if (role === 'pr') return 'https://nowweseeyou.org/admin'
+  return 'https://nowweseeyou.org/club'
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -49,7 +55,6 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // look up the school name so the email doesn't just say "your school"
   const { data: school, error: schoolError } = await supabase
     .from('schools')
     .select('name')
@@ -71,7 +76,7 @@ Deno.serve(async (req) => {
       templateData: {
         role,
         schoolName,
-        adminDashboardUrl: 'https://nowweseeyou.org/admin',
+        dashboardUrl: destinationUrlForRole(role),
       },
     },
   })

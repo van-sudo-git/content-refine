@@ -15,7 +15,7 @@ import type { TemplateEntry } from './registry.ts'
 interface RoleAssignedProps {
   role?: string
   schoolName?: string
-  adminDashboardUrl?: string
+  dashboardUrl?: string
 }
 
 const main = {
@@ -76,6 +76,15 @@ const footer = {
   paddingTop: '20px',
 }
 
+// display label shown to the person - keeps the internal role value
+// (journalist/photographer/artist/pr) separate from what they actually see
+const roleLabels: Record<string, string> = {
+  journalist: 'Journalist',
+  photographer: 'Photographer',
+  artist: 'Artist',
+  pr: 'Outreach',
+}
+
 // role descriptions shown in the email so a brand new club member
 // knows what they're actually signed up to do
 const roleBlurbs: Record<string, string> = {
@@ -85,18 +94,38 @@ const roleBlurbs: Record<string, string> = {
   pr: 'generate flyers and share published profiles with the school community',
 }
 
+// what to say happens next - pr doesn't wait on a nomination assignment
+// the way the other three roles do, so it needs its own line
+const nextSteps: Record<string, string> = {
+  journalist: "When a nomination gets assigned to you, you'll get another email with the details.",
+  photographer: "When a nomination gets assigned to you, you'll get another email with the details.",
+  artist: "When a nomination gets assigned to you, you'll get another email with the details.",
+  pr: "You can start generating flyers for any published profile at your school right away - no assignment needed.",
+}
+
+// pr uses the admin dashboard, everyone else uses the club dashboard
+const destinationLabel: Record<string, string> = {
+  journalist: 'Open club dashboard',
+  photographer: 'Open club dashboard',
+  artist: 'Open club dashboard',
+  pr: 'Open admin dashboard',
+}
+
 const Email = ({
-  role = 'club member',
+  role = 'journalist',
   schoolName = 'your school',
-  adminDashboardUrl = '#',
+  dashboardUrl = '#',
 }: RoleAssignedProps) => {
+  const label = roleLabels[role] ?? role
   const blurb = roleBlurbs[role] ?? 'help recognize staff members at your school'
+  const nextStep = nextSteps[role] ?? "For now, this just means you're on the team."
+  const buttonLabel = destinationLabel[role] ?? 'Open dashboard'
 
   return (
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
-        You've been added as a {role} for Now We See You at {schoolName}
+        You've been added as {label} for Now We See You at {schoolName}
       </Preview>
       <Body style={main}>
         <Container style={container}>
@@ -107,20 +136,19 @@ const Email = ({
             Hi there,
           </Text>
           <Text style={text}>
-            You've been added as a <strong>{role}</strong> for Now We See You
+            You've been added as <strong>{label}</strong> for Now We See You
             at {schoolName}.
           </Text>
           <Section style={highlight}>
             <Text style={{ ...text, margin: 0, fontWeight: 500 }}>
-              As a {role}, you'll {blurb}.
+              As {label}, you'll {blurb}.
             </Text>
           </Section>
           <Text style={text}>
-            When a nomination gets assigned to you, you'll get another email
-            with the details. For now, this just means you're on the team.
+            {nextStep}
           </Text>
-          <Button href={adminDashboardUrl} style={button}>
-            Open admin dashboard
+          <Button href={dashboardUrl} style={button}>
+            {buttonLabel}
           </Button>
           <Text style={footer}>
             This email was sent by NowWeSeeYou. If you weren't expecting this,
@@ -135,11 +163,11 @@ const Email = ({
 export const template = {
   component: Email,
   subject: ({ role, schoolName }: RoleAssignedProps) =>
-    `You've been added as a ${role} for Now We See You at ${schoolName}`,
+    `You've been added as ${roleLabels[role ?? ''] ?? role} for Now We See You at ${schoolName}`,
   displayName: 'Role Assigned',
   previewData: {
     role: 'journalist',
     schoolName: 'Lake Washington High School',
-    adminDashboardUrl: 'https://nowweseeyou.org/admin',
+    dashboardUrl: 'https://nowweseeyou.org/club',
   },
 } satisfies TemplateEntry
