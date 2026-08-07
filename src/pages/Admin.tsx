@@ -427,7 +427,7 @@ const Admin = () => {
 
           {isPrOnly && (
             <p className="text-sm text-muted-foreground mb-4">
-              You have PR access for {allSchools[0]?.name ?? "your school"}. You can generate
+              You have Community Outreach access for {allSchools[0]?.name ?? "your school"}. You can generate
               flyers for any published profile here.
             </p>
           )}
