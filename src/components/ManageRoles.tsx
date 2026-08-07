@@ -25,7 +25,7 @@ const roleLabels: Record<ClubRole, string> = {
   journalist: "Journalist",
   photographer: "Photographer",
   artist: "Artist",
-  pr: "PR",
+  pr: "Community Outreach",
 };
 
 const roleDescriptions: Record<ClubRole, string> = {
@@ -150,9 +150,9 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
       <div>
         <h3 className="font-display text-xl text-foreground">Club Roles</h3>
         <p className="text-muted-foreground text-sm mt-1">
-          Journalist, photographer, artist, and PR are all separate roles now instead
+          Journalist, photographer, artist, and Community Outreach are all separate roles now instead
           of everyone needing full admin. A journalist only sees the nomination they're
-          assigned to. PR can make flyers for anything already published at this school
+          assigned to. Community Outreach can make flyers for anything already published at this school
           but can't touch nominations or other admins.
         </p>
       </div>
@@ -177,7 +177,7 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
           <option value="journalist">Journalist</option>
           <option value="photographer">Photographer</option>
           <option value="artist">Artist</option>
-          <option value="pr">PR</option>
+          <option value="pr">Community Outreach</option>
         </select>
         <Button onClick={addRole} disabled={adding || !newEmail.trim()} className="shrink-0">
           <UserPlus size={16} />
@@ -200,7 +200,7 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
           <p className="text-muted-foreground">{roleDescriptions.artist}</p>
         </div>
         <div className="bg-background border border-border rounded-lg p-3">
-          <Badge className={`${roleColors.pr} border-0 mb-1.5`}>PR</Badge>
+          <Badge className={`${roleColors.pr} border-0 mb-1.5`}>Community Outreach</Badge>
           <p className="text-muted-foreground">{roleDescriptions.pr}</p>
         </div>
       </div>
