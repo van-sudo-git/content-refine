@@ -12,6 +12,7 @@ type ClubRole = Database["public"]["Enums"]["club_role"];
 interface RoleRow {
   id: string;
   email: string | null;
+  name: string | null;
   role: ClubRole;
   created_at: string;
 }
@@ -45,9 +46,14 @@ const roleColors: Record<ClubRole, string> = {
 const ManageRoles = ({ schoolId }: ManageRolesProps) => {
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newRole, setNewRole] = useState<ClubRole>("journalist");
   const [adding, setAdding] = useState(false);
+
+  // inline name editing for existing roster entries
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
 
   useEffect(() => {
     if (!schoolId) return;
@@ -60,7 +66,7 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
 
     const { data, error } = await supabase
       .from("club_roles")
-      .select("id, email, role, created_at")
+      .select("id, email, name, role, created_at")
       .eq("school_id", sid)
       .order("role")
       .order("created_at");
@@ -91,6 +97,7 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
     const { error } = await supabase.from("club_roles").insert({
       school_id: schoolId,
       email: newEmail.trim().toLowerCase(),
+      name: newName.trim() || null,
       role: newRole,
     });
 
@@ -120,7 +127,8 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
     console.log("Email function responded", emailResult);
     }
 
-    toast({ title: "Added", description: `${newEmail} is now a ${roleLabels[newRole]}` });
+    toast({ title: "Added", description: `${newName.trim() || newEmail} is now a ${roleLabels[newRole]}` });
+    setNewName("");
     setNewEmail("");
     loadRoles(schoolId);
   };
@@ -134,6 +142,27 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
     }
 
     toast({ title: "Removed" });
+    if (schoolId) loadRoles(schoolId);
+  };
+
+  const startEdit = (role: RoleRow) => {
+    setEditingId(role.id);
+    setEditName(role.name || "");
+  };
+
+  const saveEdit = async (id: string) => {
+    const { error } = await supabase
+      .from("club_roles")
+      .update({ name: editName.trim() || null })
+      .eq("id", id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Name updated" });
+    setEditingId(null);
     if (schoolId) loadRoles(schoolId);
   };
 
@@ -157,8 +186,15 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
         </p>
       </div>
 
-      {/* add a role - just email + dropdown, nothing fancy */}
+      {/* add a role - name + email + dropdown. name matters here because
+      school emails are number-based and unreadable on their own */}
       <div className="flex flex-col sm:flex-row gap-2">
+        <Input
+          placeholder="student name"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          className="flex-1"
+        />
         <Input
           type="email"
           placeholder="student email"
@@ -218,13 +254,38 @@ const ManageRoles = ({ schoolId }: ManageRolesProps) => {
         {!loading &&
           roles.map((r) => (
             <div key={r.id} className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
                 <Badge className={`${roleColors[r.role]} border-0`}>{roleLabels[r.role]}</Badge>
-                <span className="text-sm text-foreground">{r.email}</span>
+                {editingId === r.id ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-xs text-muted-foreground shrink-0">{r.email}</span>
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Name"
+                      className="h-8 text-sm"
+                      autoFocus
+                      onKeyDown={(e) => e.key === "Enter" && saveEdit(r.id)}
+                    />
+                    <Button size="sm" onClick={() => saveEdit(r.id)}>Save</Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => startEdit(r)}
+                    className="text-sm text-foreground hover:underline text-left flex items-center gap-2"
+                    title="Click to edit name"
+                  >
+                    <span>{r.name || <span className="text-muted-foreground italic">no name</span>}</span>
+                    <span className="text-xs text-muted-foreground">{r.email}</span>
+                  </button>
+                )}
               </div>
-              <Button size="sm" variant="ghost" onClick={() => removeRole(r.id)} className="text-muted-foreground hover:text-destructive">
-                <Trash2 size={14} />
-              </Button>
+              {editingId !== r.id && (
+                <Button size="sm" variant="ghost" onClick={() => removeRole(r.id)} className="text-muted-foreground hover:text-destructive">
+                  <Trash2 size={14} />
+                </Button>
+              )}
             </div>
           ))}
       </div>
