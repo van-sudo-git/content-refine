@@ -107,7 +107,7 @@ const ClubDashboard = () => {
     const nomIds = noms.map((n) => n.id);
     if (nomIds.length === 0) return;
 
-     // @ts-expect-error - Supabase's generated types hit a depth limit on this query, not an actual type error
+     // Supabase's generated types hit a depth limit on this query, so the result is cast below
     const { data: linkedProfiles } = await supabase
       .from("profiles")
       .select("id, slug, name, role, department, bio, status, nomination_id")

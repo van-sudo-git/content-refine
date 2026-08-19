@@ -88,8 +88,8 @@ export const DEMO_NOMINATIONS: Nomination[] = [
 
 
 export const DEMO_ADMINS = [
-  { id: "demo-admin-1", email: DEMO_EMAIL },
-  { id: "demo-admin-2", email: "principal@school.edu" },
+  { id: "demo-admin-1", email: DEMO_EMAIL, name: "Demo Admin" },
+  { id: "demo-admin-2", email: "principal@school.edu", name: "Principal Reyes" },
 ];
 
 // Analytics demo data
