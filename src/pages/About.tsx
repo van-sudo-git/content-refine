@@ -11,13 +11,20 @@ const About = () => {
     <Layout>
       <Helmet>
         <title>About — A Student-Led Movement of Visibility | Now We See You</title>
-        <meta name="description" content="The story behind Now We See You: a student-led initiative honoring the staff who quietly keep schools running, starting at Lake Washington High School." />
+        <meta
+          name="description"
+          content="The story behind Now We See You: a student-led initiative honoring the staff who quietly keep schools running, starting at Lake Washington High School."
+        />
         <link rel="canonical" href="https://nowweseeyou.org/about" />
         <meta property="og:title" content="About — A Student-Led Movement of Visibility" />
-        <meta property="og:description" content="The story behind Now We See You and the founding chapter at Lake Washington High School." />
+        <meta
+          property="og:description"
+          content="The story behind Now We See You and the founding chapter at Lake Washington High School."
+        />
         <meta property="og:url" content="https://nowweseeyou.org/about" />
         <meta property="og:type" content="website" />
       </Helmet>
+
       {/* Hero */}
       <section className="pt-24 pb-16">
         <div className="container mx-auto px-6">
@@ -31,9 +38,9 @@ const About = () => {
               </h1>
               <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
                 <em>Now We See You</em> is a student-led initiative dedicated to celebrating the
-                hidden builders of school communities, staff who keep everything running but are
-                often unseen. What began as a single chapter at Lake Washington High School is
-                designed to grow into a national movement.
+                hidden builders of school communities: staff who keep everything running but are
+                often unseen. It began at Lake Washington High School and is being built as a
+                repeatable model that other school communities can adapt.
               </p>
             </AnimatedSection>
           </div>
@@ -56,14 +63,14 @@ const About = () => {
                 </div>
                 <div className="md:col-span-2 space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    LWHS is the proven pilot, the first community where this model was built,
-                    tested, and refined. Every portrait, story, QR code, and appreciation message
-                    here represents the foundation of what's possible.
+                    LWHS is the first chapter and pilot community where the model has been built,
+                    tested, and refined. Each portrait, story, QR code, and appreciation message
+                    helps shape what the project can become.
                   </p>
                   <p>
-                    The model is intentionally designed to be repeatable. This site is built as a
-                    central hub: each future school becomes its own chapter, with its own gallery,
-                    while sharing the same mission and infrastructure.
+                    The model is intentionally designed to be repeatable. This site serves as a
+                    central hub: future schools can have their own chapter and gallery while
+                    sharing the same mission, consent-first approach, and infrastructure.
                   </p>
                 </div>
               </div>
@@ -102,7 +109,7 @@ const About = () => {
                     Founding Artist & Creator
                   </p>
                   <p className="text-muted-foreground text-xs mt-1">
-                    10th Grade · Lake Washington High School
+                    Student · Lake Washington High School
                   </p>
                 </div>
               </AnimatedSection>
@@ -124,7 +131,7 @@ const About = () => {
                     </p>
                     <p>
                       My vision is for this to outlast its first chapter. As the model expands to
-                      other schools, my role is to protect the soul of the project, the
+                      other schools, my role is to protect the soul of the project: the
                       hand-drawn art, the consent-first ethics, and the focus on the people
                       most often overlooked.
                     </p>
@@ -151,7 +158,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Media teaser */}
+      {/* Community teaser */}
       <section className="py-16 bg-lavender/30">
         <div className="container mx-auto px-6">
           <AnimatedSection>
@@ -161,24 +168,23 @@ const About = () => {
               </div>
               <div className="flex-1">
                 <p className="text-foreground font-medium mb-1">
-                  Now We See You has been featured on <em>In the Groove with Todd and Jackie</em>.
+                  The project is moving beyond the website.
                 </p>
-                <p className="text-muted-foreground text-sm">
-                  Hear the story behind the project, straight from the founder.
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  See the portrait series in public exhibition at Kirkland Arts Center and hear
+                  the story behind the project in a long-form podcast conversation.
                 </p>
               </div>
               <Link
                 to="/media"
                 className="inline-flex items-center gap-2 text-secondary font-semibold text-sm hover:underline flex-shrink-0"
               >
-                Listen now <ArrowRight size={14} />
+                Explore the community <ArrowRight size={14} />
               </Link>
             </div>
           </AnimatedSection>
         </div>
       </section>
-
-      {/* Recognition section removed for now */}
 
       {/* CTA */}
       <section className="py-20">
