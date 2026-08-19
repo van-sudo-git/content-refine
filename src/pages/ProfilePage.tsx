@@ -98,7 +98,7 @@ const ProfilePage = () => {
   const canonical = `https://nowweseeyou.org/gallery/${profile.slug}`;
   const description =
     (bioParagraphs[0] || `${profile.name}, ${profile.role} at Now We See You.`)
-      .replace(/^["“”]|["“”]$/g, "")
+      .replace(/^[\"“”]|[\"“”]$/g, "")
       .slice(0, 155);
   const personLd = {
     "@context": "https://schema.org",
@@ -171,19 +171,21 @@ const ProfilePage = () => {
                     {profile.department && ` — ${profile.department}`}
                   </p>
                 </div>
-                <ShareButton name={profile.name} slug={profile.slug} /> 
+
+                <ShareButton name={profile.name} slug={profile.slug} />
+
                 {/* Bio with QR */}
                 <div className="flex gap-8 items-start">
                   <div className="flex-1 space-y-4 text-muted-foreground leading-relaxed">
                     {bioParagraphs.slice(0, 3).map((p, i) => {
                       const trimmed = p.trim();
-                      const isQuote = /^["“].+["”]$/.test(trimmed);
+                      const isQuote = /^[\"“].+[\"”]$/.test(trimmed);
                       return isQuote ? (
                         <blockquote
                           key={i}
                           className="border-l-4 border-secondary pl-5 py-2 my-2 font-display text-2xl italic text-foreground leading-snug"
                         >
-                          {trimmed.replace(/^["“]|["”]$/g, "")}
+                          {trimmed.replace(/^[\"“]|[\"”]$/g, "")}
                         </blockquote>
                       ) : (
                         <p key={i}>{p}</p>
@@ -226,18 +228,48 @@ const ProfilePage = () => {
                   <div className="space-y-4 text-muted-foreground leading-relaxed">
                     {bioParagraphs.slice(3).map((p, i) => {
                       const trimmed = p.trim();
-                      const isQuote = /^["“].+["”]$/.test(trimmed);
+                      const isQuote = /^[\"“].+[\"”]$/.test(trimmed);
                       return isQuote ? (
                         <blockquote
                           key={i}
                           className="border-l-4 border-secondary pl-5 py-2 my-2 font-display text-2xl italic text-foreground leading-snug"
                         >
-                          {trimmed.replace(/^["“]|["”]$/g, "")}
+                          {trimmed.replace(/^[\"“]|[\"”]$/g, "")}
                         </blockquote>
                       ) : (
                         <p key={i}>{p}</p>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Kirkland Arts Center exhibition — Brad Fisher only */}
+                {profile.name === "Brad Fisher" && (
+                  <div className="border-t border-border pt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-5 items-center">
+                      <img
+                        src="/media/kac/evaan-exhibit.jpg"
+                        alt="Brad Fisher's portrait exhibited at Kirkland Arts Center"
+                        className="w-full rounded-xl border border-border shadow-sm"
+                      />
+
+                      <div>
+                        <p className="text-secondary font-semibold text-xs uppercase tracking-wide mb-2">
+                          In the Community
+                        </p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Brad's portrait was exhibited at the Kirkland Arts Center Youth Art
+                          Showcase in 2026, with a QR placard linking visitors directly to this
+                          profile.
+                        </p>
+                        <Link
+                          to="/media#exhibitions"
+                          className="inline-block mt-3 text-sm text-secondary font-medium hover:underline"
+                        >
+                          See the exhibition →
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 )}
 
