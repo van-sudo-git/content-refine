@@ -7,15 +7,14 @@ import Index from "./pages/Index.tsx";
 import Gallery from "./pages/Gallery.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import About from "./pages/About.tsx";
+import Media from "./pages/Media.tsx";
 import Nominate from "./pages/Nominate.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
+import ClubDashboard from "./pages/ClubDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PageViewTracker from "./components/PageViewTracker.tsx";
-import AdminFlyer from "./pages/AdminFlyer.tsx";
-import Unsubscribe from "./pages/Unsubscribe.tsx";
-import ClubDashboard from "./pages/ClubDashboard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -31,13 +30,12 @@ const App = () => (
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/gallery/:slug" element={<ProfilePage />} />
           <Route path="/about" element={<About />} />
+          <Route path="/media" element={<Media />} />
           <Route path="/nominate" element={<Nominate />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/club" element={<ClubDashboard />} />
-          <Route path="/admin/flyer" element={<AdminFlyer />} />
-          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
