@@ -9,7 +9,7 @@ interface Profile {
   role: string;
 }
 
-const AdminFlyer = ({ schoolId }: { schoolId: string | null }) => {
+const AdminFlyer = ({ schoolId = null }: { schoolId?: string | null }) => {
   const navigate = useNavigate();
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
