@@ -56,9 +56,9 @@ const Admin = () => {
   const [isPrOnly, setIsPrOnly] = useState(false);
 
   // club roles rosters, loaded per school so the assignment dropdowns have someone to pick from
-  const [journalists, setJournalists] = useState<{ id: string; email: string | null }[]>([]);
-  const [photographers, setPhotographers] = useState<{ id: string; email: string | null }[]>([]);
-  const [artists, setArtists] = useState<{ id: string; email: string | null }[]>([]);
+  const [journalists, setJournalists] = useState<{ id: string; email: string | null; name: string | null }[]>([]);
+  const [photographers, setPhotographers] = useState<{ id: string; email: string | null; name: string | null }[]>([]);
+  const [artists, setArtists] = useState<{ id: string; email: string | null; name: string | null }[]>([]);
 
   // whoever's currently picked in the assignment dropdowns for the open nomination
   const [assignJournalist, setAssignJournalist] = useState<string>("");
@@ -169,7 +169,7 @@ const Admin = () => {
     const [nomRes, adminRes, rolesRes] = await Promise.all([
       supabase.from("nominations").select("*").eq("school_id", sid).order("created_at", { ascending: false }),
       supabase.from("school_admins").select("id, email").eq("school_id", sid),
-      supabase.from("club_roles").select("id, email, role").eq("school_id", sid),
+      supabase.from("club_roles").select("id, email, name, role").eq("school_id", sid),
     ]);
     if (nomRes.data) setNominations(nomRes.data);
     if (adminRes.data) setAdmins(adminRes.data);
@@ -477,11 +477,11 @@ const Admin = () => {
                           {(nom.journalist_id || nom.photographer_id || nom.artist_id) && (
                             <p className="text-xs text-muted-foreground mt-1">
                               {nom.journalist_id &&
-                                `Journalist: ${journalists.find((j) => j.id === nom.journalist_id)?.email ?? "—"}`}
+                                `Journalist: ${(() => { const j = journalists.find((j) => j.id === nom.journalist_id); return j ? (j.name || j.email) : "—"; })()}`}
                               {nom.photographer_id &&
-                                ` · Photographer: ${photographers.find((p) => p.id === nom.photographer_id)?.email ?? "—"}`}
+                                ` · Photographer: ${(() => { const p = photographers.find((p) => p.id === nom.photographer_id); return p ? (p.name || p.email) : "—"; })()}`}
                               {nom.artist_id &&
-                                ` · Artist: ${artists.find((a) => a.id === nom.artist_id)?.email ?? "—"}`}
+                                ` · Artist: ${(() => { const a = artists.find((a) => a.id === nom.artist_id); return a ? (a.name || a.email) : "—"; })()}`}
                             </p>
                           )}
                         </div>
@@ -512,7 +512,7 @@ const Admin = () => {
                                   {journalists.length === 0 ? "No journalists yet" : "Not assigned"}
                                 </option>
                                 {journalists.map((j) => (
-                                  <option key={j.id} value={j.id}>{j.email}</option>
+                                  <option key={j.id} value={j.id}>{j.name || j.email}</option>
                                 ))}
                               </select>
                             </div>
@@ -527,7 +527,7 @@ const Admin = () => {
                                   {photographers.length === 0 ? "No photographers yet" : "Not assigned"}
                                 </option>
                                 {photographers.map((p) => (
-                                  <option key={p.id} value={p.id}>{p.email}</option>
+                                  <option key={p.id} value={p.id}>{p.name || p.email}</option>
                                 ))}
                               </select>
                             </div>
@@ -542,7 +542,7 @@ const Admin = () => {
                                   {artists.length === 0 ? "No artists yet" : "Not assigned"}
                                 </option>
                                 {artists.map((a) => (
-                                  <option key={a.id} value={a.id}>{a.email}</option>
+                                  <option key={a.id} value={a.id}>{a.name || a.email}</option>
                                 ))}
                               </select>
                             </div>
