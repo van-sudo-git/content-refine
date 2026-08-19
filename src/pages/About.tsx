@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import { Helmet } from "react-helmet-async";
-import { MapPin, Sparkles, ArrowRight } from "lucide-react";
+import { MapPin, Sparkles, ArrowRight, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 import qrCode from "@/assets/about-qr.jpeg";
@@ -128,7 +128,7 @@ const About = () => {
                       hand-drawn art, the consent-first ethics, and the focus on the people
                       most often overlooked.
                     </p>
-                    <p className="text-foreground font-medium">, Evaan Ahlawat</p>
+                    <p className="text-foreground font-medium">— Evaan Ahlawat</p>
                   </div>
 
                   {/* QR card */}
@@ -148,6 +148,33 @@ const About = () => {
               </AnimatedSection>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Media teaser */}
+      <section className="py-16 bg-lavender/30">
+        <div className="container mx-auto px-6">
+          <AnimatedSection>
+            <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                <Headphones size={24} className="text-secondary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-foreground font-medium mb-1">
+                  Now We See You has been featured on <em>In the Groove with Todd and Jackie</em>.
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Hear the story behind the project, straight from the founder.
+                </p>
+              </div>
+              <Link
+                to="/media"
+                className="inline-flex items-center gap-2 text-secondary font-semibold text-sm hover:underline flex-shrink-0"
+              >
+                Listen now <ArrowRight size={14} />
+              </Link>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
