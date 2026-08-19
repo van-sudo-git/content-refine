@@ -14,7 +14,24 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 // school_admins first, then club_roles for pr/journalist/photographer/artist
 type LoginDestination = "/admin" | "/club" | null;
 
-const resolveDestination = async (email: string): Promise<LoginDestination> => {
+const resolveDestination = async (): Promise<LoginDestination> => {
+  // claim any pending role invitation for this account first - links
+  // club_roles.user_id to the signed-in user if a matching email invite
+  // exists and hasn't been claimed yet. safe to call even if there's
+  // nothing to claim.
+  const { error: claimError } = await supabase.rpc("claim_club_role_invites");
+  if (claimError) {
+    console.error("Failed to claim role invites", claimError);
+    // don't block login on this failing - fall through and try to
+    // resolve destination anyway, in case the row was already claimed
+  }
+
+  const { data: authUser } = await supabase.auth.getUser();
+  const userId = authUser.user?.id;
+  const email = authUser.user?.email?.toLowerCase();
+
+  if (!userId || !email) return null;
+
   const { data: adminRow } = await supabase
     .from("school_admins")
     .select("id")
@@ -24,11 +41,13 @@ const resolveDestination = async (email: string): Promise<LoginDestination> => {
 
   if (adminRow) return "/admin";
 
-  // pull ALL club_roles rows for this email - someone can hold more than one
+  // now that claim ran, look up by user_id - this is what RLS actually
+  // allows a signed-in user to read (their own claimed rows), unlike an
+  // email lookup on a still-unclaimed row
   const { data: roleRows } = await supabase
     .from("club_roles")
     .select("id, role")
-    .eq("email", email);
+    .eq("user_id", userId);
 
   if (!roleRows || roleRows.length === 0) return null;
 
@@ -36,9 +55,6 @@ const resolveDestination = async (email: string): Promise<LoginDestination> => {
   const isPr = roles.includes("pr");
   const isCreative = roles.some((r) => r === "journalist" || r === "photographer" || r === "artist");
 
-  // if they're pr and a creative role, /club is home base - it surfaces
-  // a link to flyer generator for the pr side, same idea as admin-who's-
-  // also-a-journalist getting a link the other direction
   if (isCreative) return "/club";
   if (isPr) return "/admin";
 
@@ -64,7 +80,7 @@ const AdminLogin = () => {
 
     const checkSession = async () => {
       try {
-        const destination = await resolveDestination((user.email ?? "").toLowerCase());
+        const destination = await resolveDestination();
 
         if (cancelled) return;
 
@@ -117,11 +133,10 @@ const AdminLogin = () => {
           description: "We sent you a confirmation link. Come back after confirming.",
         });
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (error) throw error;
 
-        const signedInEmail = data.user?.email?.trim().toLowerCase() ?? normalizedEmail;
-        const destination = await resolveDestination(signedInEmail);
+        const destination = await resolveDestination();
 
         if (!destination) {
           await supabase.auth.signOut();
