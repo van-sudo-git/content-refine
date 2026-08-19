@@ -8,12 +8,12 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/gallery", label: "Galleries" },
-  { to: "/about", label: "Our Story" },
   { to: "/nominate", label: "Nominate" },
+  { to: "/about", label: "Our Story" },
+  { to: "/media", label: "Media" },
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
-
-const desktopNavLinks = navLinks.filter((link) => link.to !== "/about" && link.to !== "/gallery");
+const desktopNavLinks = navLinks.filter((link) => link.to !== "/gallery");
 
 const galleryChapters = [
   { to: "/gallery", label: "LWHS, Inaugural Chapter" },
