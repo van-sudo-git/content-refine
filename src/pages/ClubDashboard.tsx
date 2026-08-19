@@ -107,7 +107,7 @@ const ClubDashboard = () => {
     const nomIds = noms.map((n) => n.id);
     if (nomIds.length === 0) return;
 
-     // Supabase's generated types hit a depth limit on this query, so the result is cast below
+    // Supabase's generated types hit a depth limit on this query, so the result is cast below
     const { data: linkedProfiles } = await supabase
       .from("profiles")
       .select("id, slug, name, role, department, bio, status, nomination_id")
@@ -122,12 +122,17 @@ const ClubDashboard = () => {
     }
   };
 
-  const myRoleFor = (nom: AssignedNomination): ClubRoleType | null => {
-    const roleIds = myRoles.map((r) => r.id);
-    if (nom.journalist_id && roleIds.includes(nom.journalist_id)) return "journalist";
-    if (nom.photographer_id && roleIds.includes(nom.photographer_id)) return "photographer";
-    if (nom.artist_id && roleIds.includes(nom.artist_id)) return "artist";
-    return null;
+  // A single club member can be assigned to more than one role on the same nomination.
+  // Return every matching role instead of stopping at the first match.
+  const myRolesFor = (nom: AssignedNomination): ClubRoleType[] => {
+    const roleIds = new Set(myRoles.map((r) => r.id));
+    const roles: ClubRoleType[] = [];
+
+    if (nom.journalist_id && roleIds.has(nom.journalist_id)) roles.push("journalist");
+    if (nom.photographer_id && roleIds.has(nom.photographer_id)) roles.push("photographer");
+    if (nom.artist_id && roleIds.has(nom.artist_id)) roles.push("artist");
+
+    return roles;
   };
 
   const generateSlug = (name: string) =>
@@ -205,7 +210,6 @@ const ClubDashboard = () => {
     setSaving(false);
   };
 
-  
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/admin/login", { replace: true });
@@ -251,48 +255,85 @@ const ClubDashboard = () => {
           ) : (
             <div className="space-y-4">
               {nominations.map((nom) => {
-                const myRole = myRoleFor(nom);
+                const rolesForNom = myRolesFor(nom);
+                const isJournalist = rolesForNom.includes("journalist");
+                const isPhotographer = rolesForNom.includes("photographer");
+                const isArtist = rolesForNom.includes("artist");
                 const profile = profiles[nom.id];
                 const isOpen = openNomId === nom.id;
 
                 return (
                   <div key={nom.id} className="bg-card rounded-xl border border-border p-6">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className="font-display text-xl text-foreground">{nom.nominee_name}</h3>
-                      <Badge className="bg-blue-100 text-blue-800 border-0">{myRole}</Badge>
+
+                      {rolesForNom.map((role) => (
+                        <Badge key={role} className="bg-blue-100 text-blue-800 border-0">
+                          {role}
+                        </Badge>
+                      ))}
+
                       <Badge variant="outline">{nom.status}</Badge>
                     </div>
-                    <p className="text-muted-foreground text-sm">{nom.nominee_role} · {nom.nominee_department}</p>
+
+                    <p className="text-muted-foreground text-sm">
+                      {nom.nominee_role} · {nom.nominee_department}
+                    </p>
                     <p className="text-foreground/80 text-sm mt-2">{nom.reason}</p>
+
                     {/* journalist view */}
-                    {myRole === "journalist" && !profile && !isOpen && (
+                    {isJournalist && !profile && !isOpen && (
                       <Button size="sm" className="mt-4" onClick={() => startWriteUp(nom)}>
                         Start write-up
                       </Button>
                     )}
-                    {myRole === "journalist" && profile && !isOpen && profile.status !== "published" && (
+
+                    {isJournalist && profile && !isOpen && profile.status !== "published" && (
                       <Button size="sm" className="mt-4" onClick={() => startWriteUp(nom)}>
                         Edit write-up
                       </Button>
                     )}
 
-                    {myRole === "journalist" && isOpen && (
+                    {isJournalist && isOpen && (
                       <div className="mt-4 pt-4 border-t border-border space-y-3">
-                        <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Name" />
-                        <Input value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} placeholder="URL slug" />
-                        <Input value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))} placeholder="Role" />
-                        <Input value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} placeholder="Department" />
-                        <Textarea value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} placeholder="Their story..." className="min-h-[150px]" />
+                        <Input
+                          value={form.name}
+                          onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                          placeholder="Name"
+                        />
+                        <Input
+                          value={form.slug}
+                          onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
+                          placeholder="URL slug"
+                        />
+                        <Input
+                          value={form.role}
+                          onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
+                          placeholder="Role"
+                        />
+                        <Input
+                          value={form.department}
+                          onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
+                          placeholder="Department"
+                        />
+                        <Textarea
+                          value={form.bio}
+                          onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
+                          placeholder="Their story..."
+                          className="min-h-[150px]"
+                        />
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => saveWriteUp(nom.id)} disabled={saving}>
                             {saving ? "Saving..." : "Save"}
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => setOpenNomId(null)}>Cancel</Button>
+                          <Button size="sm" variant="outline" onClick={() => setOpenNomId(null)}>
+                            Cancel
+                          </Button>
                         </div>
                       </div>
                     )}
 
-                    {myRole === "journalist" && profile && profile.status !== "published" && (
+                    {isJournalist && profile && profile.status !== "published" && (
                       <div className="mt-4 pt-4 border-t border-border">
                         <p className="text-sm text-muted-foreground">
                           Draft saved. An admin will publish this once photos and portrait are ready.
@@ -300,23 +341,38 @@ const ClubDashboard = () => {
                       </div>
                     )}
 
-                    {/* photographer / artist view */}
-                    {(myRole === "photographer" || myRole === "artist") && !profile && (
+                    {/* photographer / artist view
+                        Fix 2 only: multi-role members now see every action assigned to them.
+                        The pre-profile upload gate remains for Fix 3. */}
+                    {(isPhotographer || isArtist) && !profile && (
                       <p className="text-sm text-muted-foreground mt-4 pt-4 border-t border-border">
                         Waiting on the journalist to start the write-up before you can upload.
                       </p>
                     )}
 
-                    {(myRole === "photographer" || myRole === "artist") && profile && (
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <ImageUploader
-                          profileId={profile.id}
-                          slug={profile.slug}
-                          imageType={myRole === "artist" ? "portrait" : "additional"}
-                          label={myRole === "artist" ? "Portrait" : "Photo"}
-                          currentSortOrder={0}
-                          onUploaded={() => loadAssignments(myRoles)}
-                        />
+                    {(isPhotographer || isArtist) && profile && (
+                      <div className="mt-4 pt-4 border-t border-border space-y-3">
+                        {isPhotographer && (
+                          <ImageUploader
+                            profileId={profile.id}
+                            slug={profile.slug}
+                            imageType="additional"
+                            label="Photo"
+                            currentSortOrder={0}
+                            onUploaded={() => loadAssignments(myRoles)}
+                          />
+                        )}
+
+                        {isArtist && (
+                          <ImageUploader
+                            profileId={profile.id}
+                            slug={profile.slug}
+                            imageType="portrait"
+                            label="Portrait"
+                            currentSortOrder={0}
+                            onUploaded={() => loadAssignments(myRoles)}
+                          />
+                        )}
                       </div>
                     )}
 
