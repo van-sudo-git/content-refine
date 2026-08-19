@@ -10,7 +10,7 @@ const navLinks = [
   { to: "/gallery", label: "Galleries" },
   { to: "/nominate", label: "Nominate" },
   { to: "/about", label: "Our Story" },
-  { to: "/media", label: "Media" },
+  { to: "/media", label: "In the Community" },
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
 const desktopNavLinks = navLinks.filter((link) => link.to !== "/gallery");
