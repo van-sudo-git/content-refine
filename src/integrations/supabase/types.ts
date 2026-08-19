@@ -331,6 +331,48 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_contributors: {
+        Row: {
+          club_role_id: string | null
+          contribution_type: Database["public"]["Enums"]["club_role"]
+          contributor_name: string
+          created_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          club_role_id?: string | null
+          contribution_type: Database["public"]["Enums"]["club_role"]
+          contributor_name: string
+          created_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          club_role_id?: string | null
+          contribution_type?: Database["public"]["Enums"]["club_role"]
+          contributor_name?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_contributors_club_role_id_fkey"
+            columns: ["club_role_id"]
+            isOneToOne: false
+            referencedRelation: "club_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_contributors_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_images: {
         Row: {
           created_at: string
