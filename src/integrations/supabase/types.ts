@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          name: string | null
           role: Database["public"]["Enums"]["club_role"]
           school_id: string
           updated_at: string
@@ -55,6 +56,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          name?: string | null
           role: Database["public"]["Enums"]["club_role"]
           school_id: string
           updated_at?: string
@@ -64,6 +66,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          name?: string | null
           role?: Database["public"]["Enums"]["club_role"]
           school_id?: string
           updated_at?: string
@@ -334,7 +337,8 @@ export type Database = {
           id: string
           image_type: string
           image_url: string
-          profile_id: string
+          nomination_id: string | null
+          profile_id: string | null
           sort_order: number
         }
         Insert: {
@@ -342,7 +346,8 @@ export type Database = {
           id?: string
           image_type?: string
           image_url: string
-          profile_id: string
+          nomination_id?: string | null
+          profile_id?: string | null
           sort_order?: number
         }
         Update: {
@@ -350,10 +355,18 @@ export type Database = {
           id?: string
           image_type?: string
           image_url?: string
-          profile_id?: string
+          nomination_id?: string | null
+          profile_id?: string | null
           sort_order?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "profile_images_nomination_id_fkey"
+            columns: ["nomination_id"]
+            isOneToOne: false
+            referencedRelation: "nominations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profile_images_profile_id_fkey"
             columns: ["profile_id"]
@@ -370,6 +383,7 @@ export type Database = {
           department: string | null
           id: string
           name: string
+          nomination_id: string | null
           role: string
           school_id: string | null
           slug: string
@@ -382,6 +396,7 @@ export type Database = {
           department?: string | null
           id?: string
           name: string
+          nomination_id?: string | null
           role: string
           school_id?: string | null
           slug: string
@@ -394,6 +409,7 @@ export type Database = {
           department?: string | null
           id?: string
           name?: string
+          nomination_id?: string | null
           role?: string
           school_id?: string | null
           slug?: string
@@ -401,6 +417,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_nomination_id_fkey"
+            columns: ["nomination_id"]
+            isOneToOne: false
+            referencedRelation: "nominations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_school_id_fkey"
             columns: ["school_id"]
