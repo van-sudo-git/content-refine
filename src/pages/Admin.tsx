@@ -21,6 +21,12 @@ import { DEMO_NOMINATIONS, DEMO_ADMINS, DEMO_EMAIL } from "@/lib/demoData";
 type Nomination = Tables<"nominations">;
 type NominationStatus = Database["public"]["Enums"]["nomination_status"];
 
+interface AdminRow {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: "Pending", color: "bg-amber-100 text-amber-800", icon: Clock },
   approved: { label: "Approved", color: "bg-emerald-100 text-emerald-800", icon: CheckCircle },
@@ -36,8 +42,11 @@ const Admin = () => {
   const isDemo = searchParams.get("demo") === "true";
 
   const [nominations, setNominations] = useState<Nomination[]>(isDemo ? DEMO_NOMINATIONS : []);
-  const [admins, setAdmins] = useState<{ id: string; email: string }[]>(isDemo ? DEMO_ADMINS : []);
+  const [admins, setAdmins] = useState<AdminRow[]>(isDemo ? DEMO_ADMINS : []);
+  const [newAdminName, setNewAdminName] = useState("");
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
+  const [editAdminName, setEditAdminName] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(isDemo ? "demo-school" : null);
   const [userEmail, setUserEmail] = useState<string | null>(isDemo ? DEMO_EMAIL : null);
   const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics" | "roles" | "flyer">("nominations");
@@ -168,11 +177,11 @@ const Admin = () => {
   const loadData = async (sid: string) => {
     const [nomRes, adminRes, rolesRes] = await Promise.all([
       supabase.from("nominations").select("*").eq("school_id", sid).order("created_at", { ascending: false }),
-      supabase.from("school_admins").select("id, email").eq("school_id", sid),
+      supabase.from("school_admins").select("id, email, name").eq("school_id", sid),
       supabase.from("club_roles").select("id, email, name, role").eq("school_id", sid),
     ]);
     if (nomRes.data) setNominations(nomRes.data);
-    if (adminRes.data) setAdmins(adminRes.data);
+    if (adminRes.data) setAdmins(adminRes.data as AdminRow[]);
 
     // split the roster by role so each dropdown only shows the right people
     if (rolesRes.data) {
@@ -228,18 +237,18 @@ const Admin = () => {
   const deleteNomination = async (id: string) => {
     if (isDemo) { demoGuard(); return; }
     if (!confirm("Delete this nomination? This cannot be undone.")) return;
-  
+
     const { error } = await supabase.from("nominations").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-  
+
     toast({ title: "Nomination deleted" });
     setSelectedNomination(null);
     if (schoolId) loadData(schoolId);
   };
-  
+
   const demoGuard = () => {
     toast({ title: "Demo Mode", description: "This action is disabled in demo mode.", variant: "destructive" });
   };
@@ -265,10 +274,17 @@ const Admin = () => {
 
   const addAdmin = async () => {
     if (isDemo) { demoGuard(); return; }
-    if (!schoolId || !newAdminEmail.trim()) return;
+    if (!schoolId || !newAdminName.trim() || !newAdminEmail.trim()) return;
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(newAdminEmail.trim())) {
+      toast({ title: "That doesn't look like a valid email", variant: "destructive" });
+      return;
+    }
 
     const { error } = await supabase.from("school_admins").insert({
       school_id: schoolId,
+      name: newAdminName.trim(),
       email: newAdminEmail.trim().toLowerCase(),
     });
 
@@ -281,14 +297,47 @@ const Admin = () => {
       return;
     }
 
-    toast({ title: "Admin added", description: `${newAdminEmail} can now access this dashboard.` });
+    toast({
+      title: "Admin added",
+      description: `${newAdminName.trim()} can now access this dashboard.`,
+    });
+    setNewAdminName("");
     setNewAdminEmail("");
     loadData(schoolId);
   };
 
+  const startAdminNameEdit = (admin: AdminRow) => {
+    setEditingAdminId(admin.id);
+    setEditAdminName(admin.name || "");
+  };
+
+  const saveAdminName = async (id: string) => {
+    if (isDemo) { demoGuard(); return; }
+
+    if (!editAdminName.trim()) {
+      toast({ title: "Name is required", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("school_admins")
+      .update({ name: editAdminName.trim() })
+      .eq("id", id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Admin name updated" });
+    setEditingAdminId(null);
+    setEditAdminName("");
+    if (schoolId) loadData(schoolId);
+  };
+
   const removeAdmin = async (id: string, email: string) => {
     if (isDemo) { demoGuard(); return; }
-    if (email === userEmail) {
+    if (email.toLowerCase() === userEmail?.toLowerCase()) {
       toast({ title: "Can't remove yourself", variant: "destructive" });
       return;
     }
@@ -586,7 +635,7 @@ const Admin = () => {
           {activeTab === "flyer" && (
             <AdminFlyer schoolId={schoolId} />
           )}
-          
+
           {activeTab === "roles" && <ManageRoles schoolId={schoolId} />}
 
           {/* Admins Tab */}
@@ -597,36 +646,103 @@ const Admin = () => {
                   School Admins {isGlobalAdmin && `— ${selectedSchoolName}`}
                 </h3>
                 <p className="text-muted-foreground text-sm mb-6">
-                  Add email addresses to grant admin access. They'll need to create an account using that email.
+                  Add a name and email address to grant admin access. They'll need to create an account using that email.
                 </p>
 
-                <div className="flex gap-2 mb-6">
+                <div className="flex flex-col sm:flex-row gap-2 mb-6">
+                  <Input
+                    placeholder="Admin name"
+                    value={newAdminName}
+                    onChange={(e) => setNewAdminName(e.target.value)}
+                    className="flex-1"
+                  />
                   <Input
                     type="email"
-                    placeholder="newadmin@school.edu"
+                    placeholder="Admin email"
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && addAdmin()}
+                    className="flex-1"
                   />
-                  <Button onClick={addAdmin} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0">
+                  <Button
+                    onClick={addAdmin}
+                    disabled={!newAdminName.trim() || !newAdminEmail.trim()}
+                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0"
+                  >
                     <UserPlus size={16} /> Add
                   </Button>
                 </div>
 
                 <div className="space-y-2">
                   {admins.map((admin) => (
-                    <div key={admin.id} className="flex items-center justify-between py-3 px-4 rounded-lg bg-background border border-border">
-                      <span className="text-sm text-foreground">{admin.email}</span>
-                      {admin.email !== userEmail && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removeAdmin(admin.id, admin.email)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      )}
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between gap-4 py-3 px-4 rounded-lg bg-background border border-border"
+                    >
+                      <div className="flex-1 min-w-0">
+                        {editingAdminId === admin.id ? (
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <div className="min-w-0 sm:w-64">
+                              <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
+                            </div>
+                            <Input
+                              value={editAdminName}
+                              onChange={(e) => setEditAdminName(e.target.value)}
+                              placeholder="Admin name"
+                              className="h-8 text-sm flex-1"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveAdminName(admin.id);
+                                if (e.key === "Escape") {
+                                  setEditingAdminId(null);
+                                  setEditAdminName("");
+                                }
+                              }}
+                            />
+                            <Button size="sm" onClick={() => saveAdminName(admin.id)}>
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingAdminId(null);
+                                setEditAdminName("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => startAdminNameEdit(admin)}
+                            className="text-left min-w-0 hover:opacity-80 transition-opacity"
+                            title="Click to edit name"
+                          >
+                            <p className="text-sm font-medium text-foreground">
+                              {admin.name || (
+                                <span className="text-muted-foreground italic font-normal">
+                                  no name — click to add
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
+                          </button>
+                        )}
+                      </div>
+
+                      {editingAdminId !== admin.id &&
+                        admin.email.toLowerCase() !== userEmail?.toLowerCase() && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeAdmin(admin.id, admin.email)}
+                            className="text-muted-foreground hover:text-destructive shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        )}
                     </div>
                   ))}
                 </div>
