@@ -489,6 +489,7 @@ export type Database = {
           email: string
           id: string
           is_global_admin: boolean
+          name: string | null
           school_id: string
         }
         Insert: {
@@ -496,6 +497,7 @@ export type Database = {
           email: string
           id?: string
           is_global_admin?: boolean
+          name?: string | null
           school_id: string
         }
         Update: {
@@ -503,6 +505,7 @@ export type Database = {
           email?: string
           id?: string
           is_global_admin?: boolean
+          name?: string | null
           school_id?: string
         }
         Relationships: [

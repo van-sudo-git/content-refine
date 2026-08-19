@@ -1,0 +1,1 @@
+ALTER TABLE public.school_admins ADD COLUMN name text;
