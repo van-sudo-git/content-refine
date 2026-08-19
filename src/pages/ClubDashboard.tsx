@@ -107,13 +107,11 @@ const ClubDashboard = () => {
     const nomIds = noms.map((n) => n.id);
     if (nomIds.length === 0) return;
 
-    // TODO: no FK between nominations and profiles yet.
-    // Add nominations.profile_id via a Lovable migration, then read it from the
-    // existing nominations query and delete this second fetch.
-    /* const { data: linkedProfiles } = await supabase
+     // @ts-expect-error - Supabase's generated types hit a depth limit on this query, not an actual type error
+    const { data: linkedProfiles } = await supabase
       .from("profiles")
       .select("id, slug, name, role, department, bio, status, nomination_id")
-      .in("nomination_id", nomIds);
+      .in("nomination_id", nomIds) as { data: LinkedProfile[] | null };
 
     if (linkedProfiles) {
       const byNomId: Record<string, LinkedProfile> = {};
@@ -121,7 +119,7 @@ const ClubDashboard = () => {
         byNomId[p.nomination_id] = p;
       });
       setProfiles(byNomId);
-    } */
+    }
   };
 
   const myRoleFor = (nom: AssignedNomination): ClubRoleType | null => {
@@ -137,13 +135,27 @@ const ClubDashboard = () => {
 
   const startWriteUp = (nom: AssignedNomination) => {
     setOpenNomId(nom.id);
-    setForm({
-      name: nom.nominee_name,
-      slug: generateSlug(nom.nominee_name),
-      role: nom.nominee_role,
-      department: nom.nominee_department,
-      bio: "",
-    });
+    const existing = profiles[nom.id];
+
+    if (existing) {
+      // editing an already-started draft - load its real content
+      setForm({
+        name: existing.name,
+        slug: existing.slug,
+        role: existing.role,
+        department: existing.department ?? "",
+        bio: existing.bio ?? "",
+      });
+    } else {
+      // brand new - pre-fill from the nomination itself
+      setForm({
+        name: nom.nominee_name,
+        slug: generateSlug(nom.nominee_name),
+        role: nom.nominee_role,
+        department: nom.nominee_department,
+        bio: "",
+      });
+    }
   };
 
   const saveWriteUp = async (nomId: string) => {
@@ -153,19 +165,24 @@ const ClubDashboard = () => {
     }
 
     setSaving(true);
-    const { error } = await supabase.from("profiles").insert({
+    const existing = profiles[nomId];
+
+    const payload = {
       name: form.name.trim(),
       slug: form.slug.trim(),
       role: form.role.trim(),
       department: form.department.trim() || null,
       bio: form.bio.trim() || null,
-      school_id: myRoles[0].school_id,
-      status: "draft",
-      // TODO: no FK between nominations and profiles yet.
-      // Add nominations.profile_id via a Lovable migration, then set it here
-      // (or update the nomination row after insert) instead of this column.
-      // nomination_id: nomId,
-    });
+    };
+
+    const { error } = existing
+      ? await supabase.from("profiles").update(payload).eq("id", existing.id)
+      : await supabase.from("profiles").insert({
+          ...payload,
+          school_id: myRoles[0].school_id,
+          status: "draft",
+          nomination_id: nomId,
+        });
 
     if (error) {
       toast({
@@ -177,10 +194,12 @@ const ClubDashboard = () => {
       return;
     }
 
-    // move the nomination to in_progress now that the write-up exists
-    await supabase.from("nominations").update({ status: "in_progress" }).eq("id", nomId);
+    if (!existing) {
+      // move the nomination to in_progress now that the write-up exists
+      await supabase.from("nominations").update({ status: "in_progress" }).eq("id", nomId);
+    }
 
-    toast({ title: "Profile started", description: "Photographer and artist can now upload for this one." });
+    toast({ title: existing ? "Profile updated" : "Profile started" });
     setOpenNomId(null);
     await loadAssignments(myRoles);
     setSaving(false);
@@ -245,11 +264,15 @@ const ClubDashboard = () => {
                     </div>
                     <p className="text-muted-foreground text-sm">{nom.nominee_role} · {nom.nominee_department}</p>
                     <p className="text-foreground/80 text-sm mt-2">{nom.reason}</p>
-
                     {/* journalist view */}
                     {myRole === "journalist" && !profile && !isOpen && (
                       <Button size="sm" className="mt-4" onClick={() => startWriteUp(nom)}>
                         Start write-up
+                      </Button>
+                    )}
+                    {myRole === "journalist" && profile && !isOpen && profile.status !== "published" && (
+                      <Button size="sm" className="mt-4" onClick={() => startWriteUp(nom)}>
+                        Edit write-up
                       </Button>
                     )}
 
