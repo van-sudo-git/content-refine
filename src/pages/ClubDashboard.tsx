@@ -341,21 +341,20 @@ const ClubDashboard = () => {
                       </div>
                     )}
 
-                    {/* photographer / artist view
-                        Fix 2 only: multi-role members now see every action assigned to them.
-                        The pre-profile upload gate remains for Fix 3. */}
-                    {(isPhotographer || isArtist) && !profile && (
-                      <p className="text-sm text-muted-foreground mt-4 pt-4 border-t border-border">
-                        Waiting on the journalist to start the write-up before you can upload.
+                  {/* photographer / artist view
+                      Creative work is nomination-first, so photographers and artists
+                      do not have to wait for the journalist to start the profile. */}
+                  {(isPhotographer || isArtist) && (
+                    <div className="mt-4 pt-4 border-t border-border space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Upload your assigned work here. It stays linked to this nomination
+                        and will attach to the profile automatically.
                       </p>
-                    )}
 
-                    {(isPhotographer || isArtist) && profile && (
-                      <div className="mt-4 pt-4 border-t border-border space-y-3">
+                      <div className="flex flex-wrap gap-2">
                         {isPhotographer && (
                           <ImageUploader
-                            profileId={profile.id}
-                            slug={profile.slug}
+                            nominationId={nom.id}
                             imageType="additional"
                             label="Photo"
                             currentSortOrder={0}
@@ -365,8 +364,7 @@ const ClubDashboard = () => {
 
                         {isArtist && (
                           <ImageUploader
-                            profileId={profile.id}
-                            slug={profile.slug}
+                            nominationId={nom.id}
                             imageType="portrait"
                             label="Portrait"
                             currentSortOrder={0}
@@ -374,7 +372,8 @@ const ClubDashboard = () => {
                           />
                         )}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                     {profile?.status === "published" && (
                       <p className="text-sm text-emerald-600 mt-4 pt-4 border-t border-border font-medium">
