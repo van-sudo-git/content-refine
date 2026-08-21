@@ -426,6 +426,9 @@ export type Database = {
           id: string
           name: string
           nomination_id: string | null
+          reflection_quote: string | null
+          reflection_recorded_date: string | null
+          reflection_video_url: string | null
           role: string
           school_id: string | null
           slug: string
@@ -439,6 +442,9 @@ export type Database = {
           id?: string
           name: string
           nomination_id?: string | null
+          reflection_quote?: string | null
+          reflection_recorded_date?: string | null
+          reflection_video_url?: string | null
           role: string
           school_id?: string | null
           slug: string
@@ -452,6 +458,9 @@ export type Database = {
           id?: string
           name?: string
           nomination_id?: string | null
+          reflection_quote?: string | null
+          reflection_recorded_date?: string | null
+          reflection_video_url?: string | null
           role?: string
           school_id?: string | null
           slug?: string
