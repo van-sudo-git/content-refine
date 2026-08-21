@@ -15,6 +15,7 @@ interface ProfileData {
   role: string;
   department: string | null;
   bio: string | null;
+  nomination_id: string | null;
 }
 
 interface ProfileImage {
@@ -24,10 +25,16 @@ interface ProfileImage {
   sort_order: number;
 }
 
+interface ProfileContributor {
+  contributor_name: string;
+  contribution_type: "journalist" | "photographer" | "artist" | "pr";
+}
+
 const ProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [images, setImages] = useState<ProfileImage[]>([]);
+  const [contributors, setContributors] = useState<ProfileContributor[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -37,7 +44,7 @@ const ProfilePage = () => {
 
       const { data: profileData, error } = await supabase
         .from("profiles")
-        .select("id, slug, name, role, department, bio")
+        .select("id, slug, name, role, department, bio, nomination_id")
         .eq("slug", slug)
         .eq("status", "published")
         .single();
@@ -48,15 +55,32 @@ const ProfilePage = () => {
         return;
       }
 
-      setProfile(profileData as ProfileData);
+      const typedProfile = profileData as ProfileData;
+      setProfile(typedProfile);
 
-      const { data: imgData } = await supabase
-        .from("profile_images")
-        .select("id, image_url, image_type, sort_order")
-        .eq("profile_id", (profileData as ProfileData).id)
-        .order("sort_order");
+      const [{ data: imgData }, { data: contributorData }] = await Promise.all([
+        supabase
+          .from("profile_images")
+          .select("id, image_url, image_type, sort_order")
+          .eq("profile_id", typedProfile.id)
+          .order("sort_order"),
+        supabase
+          .from("profile_contributors")
+          .select("contributor_name, contribution_type")
+          .eq("profile_id", typedProfile.id),
+      ]);
 
       if (imgData) setImages(imgData as ProfileImage[]);
+
+      if (contributorData && contributorData.length > 0) {
+        setContributors(contributorData as ProfileContributor[]);
+      } else if (!typedProfile.nomination_id) {
+        setContributors([
+          { contributor_name: "Evaan Ahlawat", contribution_type: "journalist" },
+          { contributor_name: "Evaan Ahlawat", contribution_type: "artist" },
+        ]);
+      }
+
       setLoading(false);
     };
 
@@ -94,6 +118,35 @@ const ProfilePage = () => {
   const additionalPhotos = images.filter((i) => i.image_type === "additional");
   const bioParagraphs = profile.bio?.split("\n").filter((p) => p.trim()) || [];
   const firstName = profile.name.split(" ")[0];
+
+  const contributorLabels: Record<string, string> = {
+    journalist: "Journalist",
+    artist: "Artist",
+    photographer: "Photographer",
+  };
+
+  const contributorOrder = ["journalist", "artist", "photographer"];
+
+  const contributorsByPerson = new Map<string, string[]>();
+  for (const contributor of contributors) {
+    if (!contributorOrder.includes(contributor.contribution_type)) continue;
+
+    const roles = contributorsByPerson.get(contributor.contributor_name) || [];
+    if (!roles.includes(contributor.contribution_type)) {
+      roles.push(contributor.contribution_type);
+    }
+    contributorsByPerson.set(contributor.contributor_name, roles);
+  }
+
+  const contributorRows = Array.from(contributorsByPerson.entries()).map(
+    ([name, roles]) => ({
+      name,
+      label: contributorOrder
+        .filter((role) => roles.includes(role))
+        .map((role) => contributorLabels[role])
+        .join(", "),
+    })
+  );
 
   const canonical = `https://nowweseeyou.org/gallery/${profile.slug}`;
   const description =
@@ -139,7 +192,6 @@ const ProfilePage = () => {
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl">
-            {/* Portrait */}
             <AnimatedSection>
               <div className="aspect-[4/5] bg-muted rounded-2xl overflow-hidden sticky top-28 shadow-lg">
                 {portrait ? (
@@ -174,7 +226,21 @@ const ProfilePage = () => {
 
                 <ShareButton name={profile.name} slug={profile.slug} />
 
-                {/* Bio with QR */}
+                {contributorRows.length > 0 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
+                      Created by
+                    </p>
+                    <div className="space-y-0.5 text-sm text-muted-foreground italic">
+                      {contributorRows.map((row) => (
+                        <p key={row.name}>
+                          {row.label} — {row.name}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-8 items-start">
                   <div className="flex-1 space-y-4 text-muted-foreground leading-relaxed">
                     {bioParagraphs.slice(0, 3).map((p, i) => {
@@ -209,7 +275,6 @@ const ProfilePage = () => {
                   )}
                 </div>
 
-                {/* Mobile QR */}
                 {qr && (
                   <div className="sm:hidden pt-4 border-t border-border flex items-center gap-4">
                     <div className="w-24 h-24 bg-card rounded-xl overflow-hidden border border-border shadow-sm flex-shrink-0">
@@ -223,7 +288,6 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Remaining bio */}
                 {bioParagraphs.length > 3 && (
                   <div className="space-y-4 text-muted-foreground leading-relaxed">
                     {bioParagraphs.slice(3).map((p, i) => {
@@ -243,7 +307,6 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Kirkland Arts Center exhibition — Brad Fisher only */}
                 {profile.name === "Brad Fisher" && (
                   <div className="border-t border-border pt-6">
                     <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-5 items-center">
@@ -273,7 +336,6 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Additional photos */}
                 {additionalPhotos.length > 0 && (
                   <div className={`grid gap-6 ${additionalPhotos.length === 1 ? "grid-cols-1 max-w-sm" : "grid-cols-2"}`}>
                     {additionalPhotos.map((img) => (
@@ -299,7 +361,6 @@ const ProfilePage = () => {
             </AnimatedSection>
           </div>
 
-          {/* Appreciation Wall */}
           <div className="max-w-6xl mt-8">
             <AppreciationWall profileSlug={profile.slug} personName={firstName} />
           </div>
