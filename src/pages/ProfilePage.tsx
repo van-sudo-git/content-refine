@@ -16,6 +16,7 @@ interface ProfileData {
   department: string | null;
   bio: string | null;
   nomination_id: string | null;
+  created_at: string;
 }
 
 interface ProfileImage {
@@ -29,6 +30,8 @@ interface ProfileContributor {
   contributor_name: string;
   contribution_type: "journalist" | "photographer" | "artist" | "pr";
 }
+
+const CONTRIBUTOR_TRACKING_STARTED = "2026-08-20T00:00:00Z";
 
 const ProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -44,7 +47,7 @@ const ProfilePage = () => {
 
       const { data: profileData, error } = await supabase
         .from("profiles")
-        .select("id, slug, name, role, department, bio, nomination_id")
+        .select("id, slug, name, role, department, bio, nomination_id, created_at")
         .eq("slug", slug)
         .eq("status", "published")
         .single();
@@ -74,7 +77,7 @@ const ProfilePage = () => {
 
       if (contributorData && contributorData.length > 0) {
         setContributors(contributorData as ProfileContributor[]);
-      } else if (!typedProfile.nomination_id) {
+      } else if (typedProfile.created_at < CONTRIBUTOR_TRACKING_STARTED) {
         setContributors([
           { contributor_name: "Evaan Ahlawat", contribution_type: "journalist" },
           { contributor_name: "Evaan Ahlawat", contribution_type: "artist" },

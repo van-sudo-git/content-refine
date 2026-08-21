@@ -13,9 +13,12 @@ interface GalleryProfile {
   role: string;
   department: string | null;
   nomination_id: string | null;
+  created_at: string;
   portrait_url: string | null;
   artist_name: string | null;
 }
+
+const CONTRIBUTOR_TRACKING_STARTED = "2026-08-20T00:00:00Z";
 
 const Gallery = () => {
   const [profiles, setProfiles] = useState<GalleryProfile[]>([]);
@@ -25,7 +28,7 @@ const Gallery = () => {
     const loadProfiles = async () => {
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, slug, name, role, department, nomination_id")
+        .select("id, slug, name, role, department, nomination_id, created_at")
         .eq("status", "published")
         .order("created_at", { ascending: true });
 
@@ -85,7 +88,7 @@ const Gallery = () => {
             artist_name:
               artistNames && artistNames.length > 0
                 ? artistNames.join(", ")
-                : portraitUrl && !p.nomination_id
+                : portraitUrl && p.created_at < CONTRIBUTOR_TRACKING_STARTED
                   ? "Evaan Ahlawat"
                   : null,
           };
