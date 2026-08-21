@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Shield, ChevronDown } from "lucide-react";
+import { Menu, X, Shield, ChevronDown, LogIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthReady } from "@/hooks/use-auth-ready";
@@ -65,7 +65,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {/* Galleries dropdown */}
           <div className="relative group">
             <Link
@@ -93,6 +93,7 @@ const Navbar = () => {
               </div>
             </div>
           </div>
+
           {desktopNavLinks.map((link) => (
             <Link
               key={link.to}
@@ -106,6 +107,20 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+
+          {!user && (
+            <Link
+              to="/admin/login"
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                location.pathname === "/admin/login"
+                  ? "border-secondary text-secondary"
+                  : "border-border text-muted-foreground hover:border-secondary hover:text-secondary"
+              }`}
+            >
+              <LogIn size={14} /> Club &amp; Admin Login
+            </Link>
+          )}
+
           {isAdmin && (
             <Link
               to="/admin"
@@ -152,6 +167,21 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+
+              {!user && (
+                <Link
+                  to="/admin/login"
+                  onClick={() => setIsOpen(false)}
+                  className={`inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-base font-medium transition-colors ${
+                    location.pathname === "/admin/login"
+                      ? "border-secondary text-secondary"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  <LogIn size={16} /> Student &amp; Admin Login
+                </Link>
+              )}
+
               {isAdmin && (
                 <Link
                   to="/admin"
