@@ -49,6 +49,7 @@ const Admin = () => {
   const [editAdminName, setEditAdminName] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(isDemo ? "demo-school" : null);
   const [userEmail, setUserEmail] = useState<string | null>(isDemo ? DEMO_EMAIL : null);
+  const [userName, setUserName] = useState<string | null>(isDemo ? "Demo Admin" : null);
   const [activeTab, setActiveTab] = useState<"nominations" | "profiles" | "admins" | "analytics" | "roles" | "flyer">("nominations");
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
@@ -90,7 +91,7 @@ const Admin = () => {
 
       const { data: adminRow } = await supabase
       .from("school_admins")
-      .select("id, school_id, is_global_admin")
+      .select("id, school_id, is_global_admin, name")
       .eq("email", email.toLowerCase())
       .limit(1)
       .maybeSingle();
@@ -128,7 +129,7 @@ const Admin = () => {
       setLoading(false);
       return;
     }
-
+    setUserName(adminRow.name || email);
       // check if global admin
       if (adminRow.is_global_admin) {
         setIsGlobalAdmin(true);
@@ -406,7 +407,7 @@ const Admin = () => {
             <div>
               <h1 className="font-display text-4xl text-foreground">Admin Dashboard</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {isDemo ? "Demo account" : `Signed in as ${userEmail}`}
+                {isDemo ? "Demo account" : `Signed in as ${userName || userEmail}`}
                 {isGlobalAdmin && " · Global Admin"}
                 {!isGlobalAdmin && selectedSchoolName !== "Your School" && ` · ${selectedSchoolName}`}
               </p>
