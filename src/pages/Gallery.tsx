@@ -12,7 +12,9 @@ interface GalleryProfile {
   name: string;
   role: string;
   department: string | null;
+  nomination_id: string | null;
   portrait_url: string | null;
+  artist_name: string | null;
 }
 
 const Gallery = () => {
@@ -21,39 +23,75 @@ const Gallery = () => {
 
   useEffect(() => {
     const loadProfiles = async () => {
-      // Fetch published profiles
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, slug, name, role, department")
+        .select("id, slug, name, role, department, nomination_id")
         .eq("status", "published")
         .order("created_at", { ascending: true });
 
-      if (!profilesData) {
+      if (!profilesData || profilesData.length === 0) {
+        setProfiles([]);
         setLoading(false);
         return;
       }
 
-      // Fetch portrait images for these profiles
-      const profileIds = (profilesData as GalleryProfile[]).map((p) => p.id);
-      const { data: imagesData } = await supabase
-        .from("profile_images")
-        .select("profile_id, image_url")
-        .in("profile_id", profileIds)
-        .eq("image_type", "portrait");
+      const typedProfiles = profilesData as Omit<
+        GalleryProfile,
+        "portrait_url" | "artist_name"
+      >[];
+      const profileIds = typedProfiles.map((p) => p.id);
+
+      const [{ data: imagesData }, { data: artistData }] = await Promise.all([
+        supabase
+          .from("profile_images")
+          .select("profile_id, image_url")
+          .in("profile_id", profileIds)
+          .eq("image_type", "portrait"),
+        supabase
+          .from("profile_contributors")
+          .select("profile_id, contributor_name")
+          .in("profile_id", profileIds)
+          .eq("contribution_type", "artist"),
+      ]);
 
       const portraitMap = new Map<string, string>();
       if (imagesData) {
         for (const img of imagesData) {
-          portraitMap.set(img.profile_id, img.image_url);
+          if (img.profile_id) {
+            portraitMap.set(img.profile_id, img.image_url);
+          }
+        }
+      }
+
+      const artistMap = new Map<string, string[]>();
+      if (artistData) {
+        for (const contributor of artistData) {
+          const existing = artistMap.get(contributor.profile_id) || [];
+          if (!existing.includes(contributor.contributor_name)) {
+            existing.push(contributor.contributor_name);
+          }
+          artistMap.set(contributor.profile_id, existing);
         }
       }
 
       setProfiles(
-        (profilesData as GalleryProfile[]).map((p) => ({
-          ...p,
-          portrait_url: portraitMap.get(p.id) || null,
-        }))
+        typedProfiles.map((p) => {
+          const portraitUrl = portraitMap.get(p.id) || null;
+          const artistNames = artistMap.get(p.id);
+
+          return {
+            ...p,
+            portrait_url: portraitUrl,
+            artist_name:
+              artistNames && artistNames.length > 0
+                ? artistNames.join(", ")
+                : portraitUrl && !p.nomination_id
+                  ? "Evaan Ahlawat"
+                  : null,
+          };
+        })
       );
+
       setLoading(false);
     };
 
@@ -129,9 +167,9 @@ const Gallery = () => {
                       {profile.role}
                       {profile.department && `, ${profile.department}`}
                     </p>
-                    {profile.portrait_url && (
+                    {profile.portrait_url && profile.artist_name && (
                       <p className="text-[11px] text-muted-foreground italic mt-1">
-                        Portrait by Evaan Ahlawat
+                        Artist — {profile.artist_name}
                       </p>
                     )}
                   </Link>
