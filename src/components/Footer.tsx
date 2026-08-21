@@ -55,7 +55,7 @@ const Footer = () => {
           </p>
           <div className="flex items-center gap-4">
             <Link to="/admin/login" className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors">
-              Admin
+              Club &amp; Admin Login
             </Link>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               Made with <Heart size={12} className="text-accent" /> at LWHS
