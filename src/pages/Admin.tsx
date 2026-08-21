@@ -192,21 +192,15 @@ const Admin = () => {
     }
   };
 
-  // when a nomination card opens, show who's already assigned to it -
-  // fall back to auto-picking if there's only one option for that role
-  useEffect(() => {
-    if (!selectedNomination) return;
+// when a nomination card opens, show the assignments exactly as saved.
+// an unassigned role stays unassigned instead of auto-selecting someone.
+useEffect(() => {
+  if (!selectedNomination) return;
 
-    setAssignJournalist(
-      selectedNomination.journalist_id ?? (journalists.length === 1 ? journalists[0].id : "")
-    );
-    setAssignPhotographer(
-      selectedNomination.photographer_id ?? (photographers.length === 1 ? photographers[0].id : "")
-    );
-    setAssignArtist(
-      selectedNomination.artist_id ?? (artists.length === 1 ? artists[0].id : "")
-    );
-  }, [selectedNomination, journalists, photographers, artists]);
+  setAssignJournalist(selectedNomination.journalist_id ?? "");
+  setAssignPhotographer(selectedNomination.photographer_id ?? "");
+  setAssignArtist(selectedNomination.artist_id ?? "");
+}, [selectedNomination]);
 
   // approving is what fires the assigned-team email, so assignment has to
   // happen in the same action - no one picked just means that role stays null
