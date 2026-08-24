@@ -16,6 +16,7 @@ const EVAAN_PROFILE = {
   role: "Founding Artist & Creator",
   department: null,
   portrait_url: evaanPortrait,
+  school_name: null,
   href: "/about",
 };
 
@@ -25,7 +26,9 @@ interface FeaturedProfile {
   name: string;
   role: string;
   department: string | null;
+  school_id: string | null;
   portrait_url: string | null;
+  school_name: string | null;
 }
 
 const Index = () => {
@@ -35,25 +38,64 @@ const Index = () => {
     const load = async () => {
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, slug, name, role, department")
+        .select("id, slug, name, role, department, school_id")
         .eq("status", "published")
         .order("created_at", { ascending: true });
-      if (!profilesData) return;
+
+      if (!profilesData || profilesData.length === 0) {
+        setProfiles([]);
+        return;
+      }
+
       const ids = profilesData.map((p) => p.id);
-      const { data: imagesData } = await supabase
+      const schoolIds = Array.from(
+        new Set(
+          profilesData
+            .map((p) => p.school_id)
+            .filter((id): id is string => Boolean(id))
+        )
+      );
+
+      const imagePromise = supabase
         .from("profile_images")
         .select("profile_id, image_url")
         .in("profile_id", ids)
         .eq("image_type", "portrait");
+
+      const schoolPromise =
+        schoolIds.length > 0
+          ? supabase
+              .from("schools")
+              .select("id, name")
+              .in("id", schoolIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] });
+
+      const [{ data: imagesData }, { data: schoolsData }] = await Promise.all([
+        imagePromise,
+        schoolPromise,
+      ]);
+
       const portraitMap = new Map<string, string>();
-      imagesData?.forEach((img) => portraitMap.set(img.profile_id, img.image_url));
+      imagesData?.forEach((img) => {
+        if (img.profile_id && !portraitMap.has(img.profile_id)) {
+          portraitMap.set(img.profile_id, img.image_url);
+        }
+      });
+
+      const schoolMap = new Map<string, string>();
+      schoolsData?.forEach((school) => {
+        schoolMap.set(school.id, school.name);
+      });
+
       setProfiles(
-        (profilesData as Omit<FeaturedProfile, "portrait_url">[]).map((p) => ({
+        profilesData.map((p) => ({
           ...p,
           portrait_url: portraitMap.get(p.id) || null,
-        }))
+          school_name: p.school_id ? schoolMap.get(p.school_id) || null : null,
+        })) as FeaturedProfile[]
       );
     };
+
     load();
   }, []);
 
@@ -61,17 +103,23 @@ const Index = () => {
     <Layout>
       <Helmet>
         <title>Now We See You — Visibility in Action</title>
-        <meta name="description" content="A student-led initiative celebrating the people who keep our school running. Read their stories, scan their QR code, leave a note of appreciation." />
+        <meta
+          name="description"
+          content="A student-led initiative celebrating the people who keep school communities running. Read their stories, scan their QR code, leave a note of appreciation."
+        />
         <link rel="canonical" href="https://nowweseeyou.org/" />
         <meta property="og:title" content="Now We See You — Visibility in Action" />
-        <meta property="og:description" content="A student-led initiative celebrating the people who keep our school running." />
+        <meta
+          property="og:description"
+          content="A student-led initiative celebrating the people who keep school communities running."
+        />
         <meta property="og:url" content="https://nowweseeyou.org/" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "Now We See You",
           url: "https://nowweseeyou.org",
-          description: "A student-led initiative celebrating the people who keep our school running.",
+          description: "A student-led initiative celebrating the people who keep school communities running.",
         })}</script>
       </Helmet>
       {/* Hero */}
@@ -109,7 +157,7 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-muted-foreground text-base md:text-lg mb-8 leading-relaxed max-w-xl mx-auto"
             >
-              We see the people who keep our school running every day, through hand-drawn portraits, real stories, and the power of human connection.
+              We see the people who keep school communities running every day, through hand-drawn portraits, real stories, and the power of human connection.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 15 }}
@@ -118,7 +166,7 @@ const Index = () => {
               className="flex flex-col sm:flex-row gap-3 justify-center"
             >
               <Link
-                to="/gallery"
+                to="/galleries"
                 className="inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
               >
                 Explore Stories <ArrowRight size={16} />
@@ -141,7 +189,10 @@ const Index = () => {
           >
             <CoverflowCarousel profiles={[...profiles, EVAAN_PROFILE]} />
             <p className="text-center text-xs text-muted-foreground mt-4">
-              Scroll sideways to meet everyone · <Link to="/gallery" className="text-secondary hover:underline">View full gallery</Link>
+              Scroll sideways to meet everyone ·{" "}
+              <Link to="/galleries" className="text-secondary hover:underline">
+                View all galleries
+              </Link>
             </p>
           </motion.div>
         </div>
