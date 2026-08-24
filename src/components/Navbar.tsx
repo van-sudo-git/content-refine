@@ -4,26 +4,70 @@ import { Menu, X, Shield, ChevronDown, LogIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthReady } from "@/hooks/use-auth-ready";
+import { schoolGalleryPath } from "@/lib/schoolGallery";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/gallery", label: "Galleries" },
   { to: "/nominate", label: "Nominate" },
   { to: "/about", label: "Our Story" },
   { to: "/media", label: "In the Community" },
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
-const desktopNavLinks = navLinks.filter((link) => link.to !== "/gallery");
 
-const galleryChapters = [
-  { to: "/gallery", label: "LWHS, Inaugural Chapter" },
-];
+interface GalleryChapter {
+  id: string;
+  name: string;
+}
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [galleryChapters, setGalleryChapters] = useState<GalleryChapter[]>([]);
   const location = useLocation();
   const { user, isReady } = useAuthReady();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGalleryChapters = async () => {
+      // New schools appear automatically once they have a published profile.
+      const { data: publishedProfiles } = await supabase
+        .from("profiles")
+        .select("school_id")
+        .eq("status", "published");
+
+      if (cancelled || !publishedProfiles) return;
+
+      const schoolIds = Array.from(
+        new Set(
+          publishedProfiles
+            .map((profile) => profile.school_id)
+            .filter((id): id is string => Boolean(id))
+        )
+      );
+
+      if (schoolIds.length === 0) {
+        setGalleryChapters([]);
+        return;
+      }
+
+      const { data: schools } = await supabase
+        .from("schools")
+        .select("id, name")
+        .in("id", schoolIds)
+        .order("name");
+
+      if (cancelled || !schools) return;
+
+      setGalleryChapters(schools as GalleryChapter[]);
+    };
+
+    loadGalleryChapters();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,9 +88,10 @@ const Navbar = () => {
       const { data } = await supabase
         .from("school_admins")
         .select("id")
-        .eq("email", authEmail.toLowerCase())
+        .eq("email", authEmail)
         .limit(1)
         .maybeSingle();
+
       if (!cancelled) setIsAdmin(!!data);
     };
 
@@ -57,44 +102,65 @@ const Navbar = () => {
     };
   }, [isReady, user]);
 
+  const galleriesActive =
+    location.pathname.startsWith("/galleries") ||
+    location.pathname.startsWith("/gallery");
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="font-display text-xl text-foreground tracking-tight">
+        <Link
+          to="/"
+          className="font-display text-xl text-foreground tracking-tight"
+        >
           Now We See You
         </Link>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
-          {/* Galleries dropdown */}
           <div className="relative group">
             <Link
-              to="/gallery"
+              to="/galleries"
               className={`inline-flex items-center gap-1 text-sm font-medium transition-colors hover:text-secondary ${
-                location.pathname.startsWith("/gallery") ? "text-secondary" : "text-muted-foreground"
+                galleriesActive ? "text-secondary" : "text-muted-foreground"
               }`}
             >
-              Galleries <ChevronDown size={14} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+              Galleries{" "}
+              <ChevronDown
+                size={14}
+                className="opacity-60 group-hover:opacity-100 transition-opacity"
+              />
             </Link>
+
             <div className="absolute left-0 top-full pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
-              <div className="min-w-[220px] bg-background border border-border rounded-xl shadow-lg py-2">
-                {galleryChapters.map((c) => (
-                  <Link
-                    key={c.to}
-                    to={c.to}
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-secondary hover:bg-muted/50 transition-colors"
-                  >
-                    {c.label}
-                  </Link>
-                ))}
-                <div className="px-4 py-2 text-[11px] text-muted-foreground italic border-t border-border mt-1 pt-2">
-                  More chapters coming soon
-                </div>
+              <div className="min-w-[260px] bg-background border border-border rounded-xl shadow-lg py-2">
+                {galleryChapters.length > 0 ? (
+                  galleryChapters.map((chapter) => (
+                    <Link
+                      key={chapter.id}
+                      to={schoolGalleryPath(chapter.name)}
+                      className="block px-4 py-2 text-sm text-muted-foreground hover:text-secondary hover:bg-muted/50 transition-colors"
+                    >
+                      {chapter.name}
+                    </Link>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    Galleries are being prepared
+                  </div>
+                )}
+
+                <Link
+                  to="/galleries"
+                  className="block px-4 py-2 text-[11px] text-muted-foreground hover:text-secondary border-t border-border mt-1 pt-2"
+                >
+                  View all chapters
+                </Link>
               </div>
             </div>
           </div>
 
-          {desktopNavLinks.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -125,7 +191,9 @@ const Navbar = () => {
             <Link
               to="/admin"
               className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-secondary ${
-                location.pathname === "/admin" ? "text-secondary" : "text-muted-foreground"
+                location.pathname === "/admin"
+                  ? "text-secondary"
+                  : "text-muted-foreground"
               }`}
             >
               <Shield size={14} /> Admin
@@ -153,6 +221,33 @@ const Navbar = () => {
             className="md:hidden bg-background border-b border-border overflow-hidden"
           >
             <div className="container mx-auto px-6 py-4 flex flex-col gap-4">
+              <div>
+                <Link
+                  to="/galleries"
+                  onClick={() => setIsOpen(false)}
+                  className={`text-base font-medium transition-colors ${
+                    galleriesActive ? "text-secondary" : "text-muted-foreground"
+                  }`}
+                >
+                  Galleries
+                </Link>
+
+                {galleryChapters.length > 0 && (
+                  <div className="pl-4 mt-2 flex flex-col gap-2">
+                    {galleryChapters.map((chapter) => (
+                      <Link
+                        key={chapter.id}
+                        to={schoolGalleryPath(chapter.name)}
+                        onClick={() => setIsOpen(false)}
+                        className="text-sm text-muted-foreground"
+                      >
+                        {chapter.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
@@ -178,7 +273,7 @@ const Navbar = () => {
                       : "border-border text-muted-foreground"
                   }`}
                 >
-                  <LogIn size={16} /> Student &amp; Admin Login
+                  <LogIn size={16} /> Club &amp; Admin Login
                 </Link>
               )}
 
@@ -187,7 +282,9 @@ const Navbar = () => {
                   to="/admin"
                   onClick={() => setIsOpen(false)}
                   className={`inline-flex items-center gap-1.5 text-base font-medium transition-colors ${
-                    location.pathname === "/admin" ? "text-secondary" : "text-muted-foreground"
+                    location.pathname === "/admin"
+                      ? "text-secondary"
+                      : "text-muted-foreground"
                   }`}
                 >
                   <Shield size={16} /> Admin Dashboard
