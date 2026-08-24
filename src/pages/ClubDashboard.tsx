@@ -39,6 +39,9 @@ interface LinkedProfile {
   role: string;
   department: string | null;
   bio: string | null;
+  reflection_quote: string | null;
+  reflection_video_url: string | null;
+  reflection_recorded_date: string | null;
   status: string;
   nomination_id: string | null;
 }
@@ -59,6 +62,9 @@ interface WriteUpForm {
   department: string;
   featuredQuote: string;
   story: string;
+  reflectionQuote: string;
+  reflectionVideoUrl: string;
+  reflectionRecordedDate: string;
 }
 
 // Profiles already store a featured quote inside bio as a quoted paragraph.
@@ -127,6 +133,9 @@ const ClubDashboard = () => {
     department: "",
     featuredQuote: "",
     story: "",
+    reflectionQuote: "",
+    reflectionVideoUrl: "",
+    reflectionRecordedDate: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -205,7 +214,7 @@ const ClubDashboard = () => {
       supabase
         .from("profiles")
         .select(
-          "id, slug, name, role, department, bio, status, nomination_id"
+          "id, slug, name, role, department, bio, reflection_quote, reflection_video_url, reflection_recorded_date, status, nomination_id"
         )
         .in("nomination_id", nomIds),
       supabase
@@ -285,6 +294,9 @@ const ClubDashboard = () => {
         department: existing.department ?? "",
         featuredQuote,
         story,
+        reflectionQuote: existing.reflection_quote ?? "",
+        reflectionVideoUrl: existing.reflection_video_url ?? "",
+        reflectionRecordedDate: existing.reflection_recorded_date ?? "",
       });
       return;
     }
@@ -297,6 +309,9 @@ const ClubDashboard = () => {
       department: nom.nominee_department ?? "",
       featuredQuote: "",
       story: "",
+      reflectionQuote: "",
+      reflectionVideoUrl: "",
+      reflectionRecordedDate: "",
     });
   };
 
@@ -319,6 +334,9 @@ const ClubDashboard = () => {
       role: form.role.trim(),
       department: form.department.trim() || null,
       bio: buildBio(form.story, form.featuredQuote),
+      reflection_quote: form.reflectionQuote.trim() || null,
+      reflection_video_url: form.reflectionVideoUrl.trim() || null,
+      reflection_recorded_date: form.reflectionRecordedDate || null,
     };
 
     const { error } = existing
@@ -633,6 +651,64 @@ const ClubDashboard = () => {
                             placeholder="Tell their story... Use separate lines for each paragraph."
                             className="min-h-[200px]"
                           />
+                        </div>
+
+                        <div className="border-t border-border pt-5 space-y-4">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              Staff Reflection (optional)
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Add a short reflection shared by the staff member after seeing or participating in the project.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Reflection Quote</Label>
+                            <Textarea
+                              value={form.reflectionQuote}
+                              onChange={(e) =>
+                                setForm((p) => ({
+                                  ...p,
+                                  reflectionQuote: e.target.value,
+                                }))
+                              }
+                              placeholder="What did this recognition or portrait mean to them?"
+                              className="min-h-[100px]"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Reflection Video URL</Label>
+                            <Input
+                              type="url"
+                              value={form.reflectionVideoUrl}
+                              onChange={(e) =>
+                                setForm((p) => ({
+                                  ...p,
+                                  reflectionVideoUrl: e.target.value,
+                                }))
+                              }
+                              placeholder="https://..."
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Optional. Use a public YouTube, Vimeo, or direct video URL.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Recorded Date</Label>
+                            <Input
+                              type="date"
+                              value={form.reflectionRecordedDate}
+                              onChange={(e) =>
+                                setForm((p) => ({
+                                  ...p,
+                                  reflectionRecordedDate: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
                         </div>
 
                         <div className="flex gap-2">
