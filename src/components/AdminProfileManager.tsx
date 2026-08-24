@@ -24,6 +24,7 @@ interface Profile {
   department: string | null;
   bio: string | null;
   school_id: string | null;
+  nomination_id: string | null;
   status: string;
   created_at: string;
 }
@@ -400,21 +401,54 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   };
 
   const toggleStatus = async (profile: Profile) => {
-    const newStatus = profile.status === "published" ? "draft" : "published";
+    const newStatus =
+      profile.status === "published" ? "draft" : "published";
+  
     const { error } = await supabase
       .from("profiles")
       .update({ status: newStatus })
       .eq("id", profile.id);
-
+  
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
       return;
     }
-
-    toast({ title: newStatus === "published" ? "Profile published!" : "Profile unpublished" });
+  
+    // Publishing is already synchronized by the database trigger.
+    // When an admin unpublishes for revisions, put the linked
+    // nomination back into active work too.
+    if (newStatus === "draft" && profile.nomination_id) {
+      const { error: nominationError } = await supabase
+        .from("nominations")
+        .update({ status: "in_progress" })
+        .eq("id", profile.nomination_id)
+        .eq("status", "published");
+  
+      if (nominationError) {
+        toast({
+          title: "Profile unpublished",
+          description:
+            "The profile is now a draft, but the nomination status could not be updated.",
+          variant: "destructive",
+        });
+        await loadProfiles();
+        return;
+      }
+    }
+  
+    toast({
+      title:
+        newStatus === "published"
+          ? "Profile published!"
+          : "Profile unpublished for revisions",
+    });
+  
     loadProfiles();
   };
-
   const deleteProfile = async (id: string) => {
     if (!confirm("Delete this profile and all its images? This cannot be undone.")) return;
 
