@@ -32,6 +32,61 @@ interface AdminProfileManagerProps {
   schoolId: string | null;
 }
 
+interface ProfileForm {
+  name: string;
+  slug: string;
+  role: string;
+  department: string;
+  featuredQuote: string;
+  story: string;
+}
+
+// Profiles already store the featured quote inside bio as a quoted paragraph.
+// Keep that formatting detail out of the admin form too.
+const splitBio = (bio: string | null) => {
+  if (!bio) return { featuredQuote: "", story: "" };
+
+  const lines = bio.split("\n");
+  const quoteIndex = lines.findIndex((line) => {
+    const trimmed = line.trim();
+    return /^["“].+["”]$/.test(trimmed);
+  });
+
+  if (quoteIndex === -1) {
+    return { featuredQuote: "", story: bio };
+  }
+
+  const featuredQuote = lines[quoteIndex]
+    .trim()
+    .replace(/^["“]|["”]$/g, "");
+
+  const story = lines
+    .filter((_, index) => index !== quoteIndex)
+    .join("\n")
+    .trim();
+
+  return { featuredQuote, story };
+};
+
+const buildBio = (story: string, featuredQuote: string) => {
+  const storyLines = story
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const quote = featuredQuote.trim();
+
+  if (!quote) return storyLines.join("\n") || null;
+  if (storyLines.length === 0) return `"${quote}"`;
+
+  // The public profile already styles a quoted paragraph as the pull quote.
+  return [
+    storyLines[0],
+    `"${quote}"`,
+    ...storyLines.slice(1),
+  ].join("\n");
+};
+
 const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [editing, setEditing] = useState<Profile | null>(null);
@@ -39,17 +94,18 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   const [images, setImages] = useState<ProfileImage[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     name: "",
     slug: "",
     role: "",
     department: "",
-    bio: "",
+    featuredQuote: "",
+    story: "",
   });
 
   useEffect(() => {
     if (!schoolId) return;
-    
+
     supabase
       .from("profiles")
       .select("*")
@@ -82,18 +138,29 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     setIsNew(true);
     setEditing(null);
     setImages([]);
-    setForm({ name: "", slug: "", role: "", department: "", bio: "" });
+    setForm({
+      name: "",
+      slug: "",
+      role: "",
+      department: "",
+      featuredQuote: "",
+      story: "",
+    });
   };
 
   const startEdit = async (profile: Profile) => {
     setIsNew(false);
     setEditing(profile);
+
+    const { featuredQuote, story } = splitBio(profile.bio);
+
     setForm({
       name: profile.name,
       slug: profile.slug,
       role: profile.role,
       department: profile.department || "",
-      bio: profile.bio || "",
+      featuredQuote,
+      story,
     });
     await loadImages(profile.id);
   };
@@ -253,7 +320,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
             slug: form.slug.trim(),
             role: form.role.trim(),
             department: form.department.trim() || null,
-            bio: form.bio.trim() || null,
+            bio: buildBio(form.story, form.featuredQuote),
             school_id: schoolId,
             status: "draft",
           })
@@ -287,7 +354,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
             slug: form.slug.trim(),
             role: form.role.trim(),
             department: form.department.trim() || null,
-            bio: form.bio.trim() || null,
+            bio: buildBio(form.story, form.featuredQuote),
           })
           .eq("id", editing.id);
 
@@ -419,10 +486,23 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           </div>
 
           <div className="space-y-2">
+            <Label>Featured Quote (optional)</Label>
+            <p className="text-xs text-muted-foreground">
+              A short quote from the staff member that captures their voice. It will be placed
+              automatically after the opening paragraph.
+            </p>
+            <Input
+              value={form.featuredQuote}
+              onChange={(e) => setForm((p) => ({ ...p, featuredQuote: e.target.value }))}
+              placeholder="A warm welcome can make a difference in someone's day."
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Bio / Story</Label>
             <Textarea
-              value={form.bio}
-              onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
+              value={form.story}
+              onChange={(e) => setForm((p) => ({ ...p, story: e.target.value }))}
               placeholder="Tell their story... Use multiple paragraphs separated by line breaks."
               className="min-h-[200px]"
             />
