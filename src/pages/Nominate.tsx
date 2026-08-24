@@ -28,8 +28,6 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 
-const SCHOOL_OPTIONS = ["Lake Washington High School"] as const;
-
 const nominationSchema = z.object({
   nominee_name: z.string().trim().min(1, "Name is required").max(100),
   nominee_role: z.string().trim().min(1, "Role is required").max(100),
@@ -40,17 +38,35 @@ const nominationSchema = z.object({
     .optional()
     .or(z.literal("")),
   school_name: z.string().trim().min(1, "Please select a school"),
-  reason: z.string().trim().min(10, "Please share at least a sentence or two").max(2000),
-  nominator_name: z.string().trim().min(1, "Your name is required").max(100),
-  nominator_email: z.string().trim().email("Please enter a valid email").max(255),
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Please share at least a sentence or two")
+    .max(2000),
+  nominator_name: z
+    .string()
+    .trim()
+    .min(1, "Your name is required")
+    .max(100),
+  nominator_email: z
+    .string()
+    .trim()
+    .email("Please enter a valid email")
+    .max(255),
   nominee_informed: z.boolean(),
 });
 
 type NominationFormValues = z.infer<typeof nominationSchema>;
 
+interface SchoolOption {
+  id: string;
+  name: string;
+}
+
 const Nominate = () => {
   const [submitted, setSubmitted] = useState(false);
-  const [schoolMap, setSchoolMap] = useState<Record<string, string>>({});
+  const [schools, setSchools] = useState<SchoolOption[]>([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
 
   const form = useForm<NominationFormValues>({
     resolver: zodResolver(nominationSchema),
@@ -58,7 +74,7 @@ const Nominate = () => {
       nominee_name: "",
       nominee_role: "",
       nominee_department: "",
-      school_name: SCHOOL_OPTIONS[0],
+      school_name: "",
       reason: "",
       nominator_name: "",
       nominator_email: "",
@@ -68,32 +84,69 @@ const Nominate = () => {
 
   useEffect(() => {
     const fetchSchools = async () => {
-      const { data } = await supabase
+      setSchoolsLoading(true);
+
+      // A school only appears here after its admin opens it for public nominations.
+      const { data, error } = await supabase
         .from("schools")
         .select("id, name")
-        .in("name", SCHOOL_OPTIONS);
-      if (data) {
-        const map = Object.fromEntries(data.map((s) => [s.name, s.id]));
-        setSchoolMap(map);
+        .eq("accepting_nominations", true)
+        .order("name");
+
+      if (error) {
+        toast({
+          title: "Unable to load schools",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+
+        setSchoolsLoading(false);
+        return;
       }
+
+      const availableSchools = data ?? [];
+      setSchools(availableSchools);
+
+      // If there is only one active chapter, keep the form simple and select it automatically.
+      if (availableSchools.length === 1) {
+        form.setValue("school_name", availableSchools[0].name);
+      }
+
+      setSchoolsLoading(false);
     };
+
     fetchSchools();
-  }, []);
+  }, [form]);
 
   const onSubmit = async (values: NominationFormValues) => {
-    const schoolId = schoolMap[values.school_name];
-    if (!schoolId) return;
+    // The form shows the school name, but nominations are linked using the real school ID.
+    const school = schools.find(
+      (item) => item.name === values.school_name
+    );
 
-    const { error } = await supabase.from("nominations").insert([{
-      school_id: schoolId,
-      nominee_name: values.nominee_name,
-      nominee_role: values.nominee_role,
-      nominee_department: values.nominee_department || null,
-      reason: values.reason,
-      nominator_name: values.nominator_name,
-      nominator_email: values.nominator_email,
-      nominee_informed: values.nominee_informed,
-    }]);
+    if (!school) {
+      toast({
+        title: "School unavailable",
+        description:
+          "This school is not currently accepting public nominations.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase.from("nominations").insert([
+      {
+        school_id: school.id,
+        nominee_name: values.nominee_name,
+        nominee_role: values.nominee_role,
+        // Department is optional in the form, but the database still stores it as text.
+        nominee_department: values.nominee_department || "",
+        reason: values.reason,
+        nominator_name: values.nominator_name,
+        nominator_email: values.nominator_email,
+        nominee_informed: values.nominee_informed,
+      },
+    ]);
 
     if (error) {
       toast({
@@ -117,9 +170,15 @@ const Nominate = () => {
                 <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-6">
                   <CheckCircle size={40} className="text-secondary" />
                 </div>
-                <h1 className="font-display text-4xl text-foreground mb-4">Thank You!</h1>
+
+                <h1 className="font-display text-4xl text-foreground mb-4">
+                  Thank You!
+                </h1>
+
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  Your nomination has been submitted. We'll review it and reach out to the nominee with care and respect for their privacy.
+                  Your nomination has been submitted. We'll review it and
+                  reach out to the nominee with care and respect for their
+                  privacy.
                 </p>
               </AnimatedSection>
             </div>
@@ -133,24 +192,51 @@ const Nominate = () => {
     <Layout>
       <Helmet>
         <title>Nominate a Staff Member | Now We See You</title>
-        <meta name="description" content="Know a staff member who deserves to be celebrated? Submit a nomination so we can share their story with care and consent." />
-        <link rel="canonical" href="https://nowweseeyou.org/nominate" />
-        <meta property="og:title" content="Nominate a Staff Member" />
-        <meta property="og:description" content="Submit a staff member to be celebrated through Now We See You." />
-        <meta property="og:url" content="https://nowweseeyou.org/nominate" />
+
+        <meta
+          name="description"
+          content="Know a staff member who deserves to be celebrated? Submit a nomination so we can share their story with care and consent."
+        />
+
+        <link
+          rel="canonical"
+          href="https://nowweseeyou.org/nominate"
+        />
+
+        <meta
+          property="og:title"
+          content="Nominate a Staff Member"
+        />
+
+        <meta
+          property="og:description"
+          content="Submit a staff member to be celebrated through Now We See You."
+        />
+
+        <meta
+          property="og:url"
+          content="https://nowweseeyou.org/nominate"
+        />
+
         <meta property="og:type" content="website" />
       </Helmet>
+
       <section className="py-24">
         <div className="container mx-auto px-6">
           <div className="max-w-2xl mx-auto">
             <AnimatedSection>
               <div className="text-center mb-12">
-                <p className="text-secondary font-medium mb-2">Make Someone's Day</p>
+                <p className="text-secondary font-medium mb-2">
+                  Make Someone's Day
+                </p>
+
                 <h1 className="font-display text-5xl md:text-6xl text-foreground mb-6">
                   Nominate Someone
                 </h1>
+
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  Know a staff member who deserves to be seen and celebrated? Fill out the form below. Participation is always voluntary.
+                  Know a staff member who deserves to be seen and celebrated?
+                  Fill out the form below. Participation is always voluntary.
                 </p>
               </div>
             </AnimatedSection>
@@ -158,10 +244,18 @@ const Nominate = () => {
             <AnimatedSection delay={0.2}>
               <div className="bg-card rounded-2xl border border-border p-8 md:p-12">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                  >
                     <div className="space-y-1 mb-8">
-                      <h2 className="font-display text-2xl text-foreground">About the Nominee</h2>
-                      <p className="text-muted-foreground text-sm">Who would you like to nominate?</p>
+                      <h2 className="font-display text-2xl text-foreground">
+                        About the Nominee
+                      </h2>
+
+                      <p className="text-muted-foreground text-sm">
+                        Who would you like to nominate?
+                      </p>
                     </div>
 
                     <FormField
@@ -170,23 +264,48 @@ const Nominate = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>School</FormLabel>
+
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
+                            disabled={
+                              schoolsLoading || schools.length === 0
+                            }
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a school" />
+                                <SelectValue
+                                  placeholder={
+                                    schoolsLoading
+                                      ? "Loading schools..."
+                                      : schools.length === 0
+                                        ? "No schools are accepting nominations"
+                                        : "Select a school"
+                                  }
+                                />
                               </SelectTrigger>
                             </FormControl>
+
                             <SelectContent>
-                              {SCHOOL_OPTIONS.map((name) => (
-                                <SelectItem key={name} value={name}>
-                                  {name}
+                              {schools.map((school) => (
+                                <SelectItem
+                                  key={school.id}
+                                  value={school.name}
+                                >
+                                  {school.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+
+                          {!schoolsLoading &&
+                            schools.length === 0 && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                There are no schools accepting public
+                                nominations right now.
+                              </p>
+                            )}
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -198,9 +317,14 @@ const Nominate = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Their Name</FormLabel>
+
                           <FormControl>
-                            <Input placeholder="e.g. Brad Fisher" {...field} />
+                            <Input
+                              placeholder="e.g. Brad Fisher"
+                              {...field}
+                            />
                           </FormControl>
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -213,22 +337,35 @@ const Nominate = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Their Role</FormLabel>
+
                             <FormControl>
-                              <Input placeholder="e.g. Custodian" {...field} />
+                              <Input
+                                placeholder="e.g. Custodian"
+                                {...field}
+                              />
                             </FormControl>
+
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={form.control}
                         name="nominee_department"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Department (optional)</FormLabel>
+                            <FormLabel>
+                              Department (optional)
+                            </FormLabel>
+
                             <FormControl>
-                              <Input placeholder="e.g. Facilities" {...field} />
+                              <Input
+                                placeholder="e.g. Facilities"
+                                {...field}
+                              />
                             </FormControl>
+
                             <FormMessage />
                           </FormItem>
                         )}
@@ -240,7 +377,10 @@ const Nominate = () => {
                       name="reason"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Why are you nominating them?</FormLabel>
+                          <FormLabel>
+                            Why are you nominating them?
+                          </FormLabel>
+
                           <FormControl>
                             <Textarea
                               placeholder="Tell us what makes this person special and why they deserve to be seen..."
@@ -248,6 +388,7 @@ const Nominate = () => {
                               {...field}
                             />
                           </FormControl>
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -264,16 +405,23 @@ const Nominate = () => {
                               onCheckedChange={field.onChange}
                             />
                           </FormControl>
+
                           <FormLabel className="text-sm font-normal text-muted-foreground leading-snug">
-                            I've already told this person about the nomination (optional but encouraged)
+                            I've already told this person about the nomination
+                            (optional but encouraged)
                           </FormLabel>
                         </FormItem>
                       )}
                     />
 
                     <div className="border-t border-border pt-6 mt-8 space-y-1 mb-2">
-                      <h2 className="font-display text-2xl text-foreground">About You</h2>
-                      <p className="text-muted-foreground text-sm">So we can follow up if needed.</p>
+                      <h2 className="font-display text-2xl text-foreground">
+                        About You
+                      </h2>
+
+                      <p className="text-muted-foreground text-sm">
+                        So we can follow up if needed.
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -283,22 +431,34 @@ const Nominate = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Your Name</FormLabel>
+
                             <FormControl>
-                              <Input placeholder="Your full name" {...field} />
+                              <Input
+                                placeholder="Your full name"
+                                {...field}
+                              />
                             </FormControl>
+
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={form.control}
                         name="nominator_email"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Your Email</FormLabel>
+
                             <FormControl>
-                              <Input type="email" placeholder="you@example.com" {...field} />
+                              <Input
+                                type="email"
+                                placeholder="you@example.com"
+                                {...field}
+                              />
                             </FormControl>
+
                             <FormMessage />
                           </FormItem>
                         )}
@@ -308,7 +468,11 @@ const Nominate = () => {
                     <Button
                       type="submit"
                       className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 py-6 text-lg"
-                      disabled={form.formState.isSubmitting}
+                      disabled={
+                        form.formState.isSubmitting ||
+                        schoolsLoading ||
+                        schools.length === 0
+                      }
                     >
                       {form.formState.isSubmitting ? (
                         "Submitting..."
@@ -320,7 +484,8 @@ const Nominate = () => {
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
-                      Nominees will be contacted with care. They can always choose not to participate.
+                      Nominees will be contacted with care. They can always
+                      choose not to participate.
                     </p>
                   </form>
                 </Form>
