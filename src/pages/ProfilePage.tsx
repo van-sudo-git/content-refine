@@ -18,6 +18,9 @@ interface ProfileData {
   bio: string | null;
   nomination_id: string | null;
   school_id: string | null;
+  reflection_quote: string | null;
+  reflection_video_url: string | null;
+  reflection_recorded_date: string | null;
   created_at: string;
 }
 
@@ -34,6 +37,50 @@ interface ProfileContributor {
 }
 
 const CONTRIBUTOR_TRACKING_STARTED = "2026-08-20T00:00:00Z";
+
+const formatReflectionDate = (date: string | null) => {
+  if (!date) return null;
+
+  const parsed = new Date(`${date}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+};
+
+const getReflectionEmbedUrl = (videoUrl: string | null) => {
+  if (!videoUrl) return null;
+
+  try {
+    const url = new URL(videoUrl);
+    const host = url.hostname.replace(/^www\./, "");
+
+    if (host === "youtu.be") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (url.pathname.startsWith("/embed/")) return videoUrl;
+      const id = url.searchParams.get("v");
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+
+    if (host === "vimeo.com") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return id ? `https://player.vimeo.com/video/${id}` : null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const isDirectVideoUrl = (videoUrl: string) =>
+  /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl);
 
 const ProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -52,7 +99,7 @@ const ProfilePage = () => {
       const { data: profileData, error } = await supabase
         .from("profiles")
         .select(
-          "id, slug, name, role, department, bio, nomination_id, school_id, created_at"
+          "id, slug, name, role, department, bio, nomination_id, school_id, reflection_quote, reflection_video_url, reflection_recorded_date, created_at"
         )
         .eq("slug", slug)
         .eq("status", "published")
@@ -153,6 +200,8 @@ const ProfilePage = () => {
   const additionalPhotos = images.filter((i) => i.image_type === "additional");
   const bioParagraphs = profile.bio?.split("\n").filter((p) => p.trim()) || [];
   const firstName = profile.name.split(" ")[0];
+  const reflectionDate = formatReflectionDate(profile.reflection_recorded_date);
+  const reflectionEmbedUrl = getReflectionEmbedUrl(profile.reflection_video_url);
 
   const contributorLabels: Record<string, string> = {
     journalist: "Journalist",
@@ -413,6 +462,60 @@ const ProfilePage = () => {
               </div>
             </AnimatedSection>
           </div>
+
+          {profile.reflection_quote && (
+            <div className="max-w-4xl mt-14">
+              <AnimatedSection>
+                <div className="border-t border-border pt-10">
+                  <p className="text-secondary font-semibold text-xs uppercase tracking-wide mb-2">
+                    In Their Own Words
+                  </p>
+                  <h2 className="font-display text-3xl text-foreground mb-6">
+                    A Reflection from {firstName}
+                  </h2>
+
+                  {profile.reflection_video_url && (
+                    <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-muted shadow-sm mb-7">
+                      {reflectionEmbedUrl ? (
+                        <iframe
+                          src={reflectionEmbedUrl}
+                          title={`${profile.name} reflection video`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                        />
+                      ) : isDirectVideoUrl(profile.reflection_video_url) ? (
+                        <video
+                          src={profile.reflection_video_url}
+                          controls
+                          className="w-full h-full object-contain bg-black"
+                        />
+                      ) : (
+                        <a
+                          href={profile.reflection_video_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full h-full flex items-center justify-center text-secondary font-medium hover:underline p-6 text-center"
+                        >
+                          Watch {firstName}'s reflection
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  <blockquote className="font-display text-2xl md:text-3xl italic text-foreground leading-snug max-w-3xl">
+                    “{profile.reflection_quote}”
+                  </blockquote>
+
+                  <p className="text-xs text-muted-foreground mt-4">
+                    {reflectionDate
+                      ? `Recorded ${reflectionDate}, with permission.`
+                      : "Shared with permission."}
+                  </p>
+                </div>
+              </AnimatedSection>
+            </div>
+          )}
 
           <div className="max-w-6xl mt-8">
             <AppreciationWall profileSlug={profile.slug} personName={firstName} />
