@@ -571,18 +571,21 @@ export type Database = {
       }
       schools: {
         Row: {
+          accepting_nominations: boolean
           created_at: string
           district: string
           id: string
           name: string
         }
         Insert: {
+          accepting_nominations?: boolean
           created_at?: string
           district?: string
           id?: string
           name: string
         }
         Update: {
+          accepting_nominations?: boolean
           created_at?: string
           district?: string
           id?: string
