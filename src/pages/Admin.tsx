@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import DemoProfileManager from "@/components/DemoProfileManager";
+import SchoolSettings from "@/components/SchoolSettings";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import AdminFlyer from "@/pages/AdminFlyer";
 import SchoolOnboarding from "@/components/SchoolOnboarding";
@@ -964,6 +965,7 @@ const Admin = () => {
 
           {activeTab === "admins" && (
             <div className="space-y-6">
+              <SchoolSettings schoolId={schoolId} isDemo={isDemo} />
               <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-display text-xl text-foreground mb-4">
                   School Admins{" "}
