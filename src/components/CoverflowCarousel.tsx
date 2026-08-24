@@ -10,6 +10,7 @@ export interface CoverflowProfile {
   role: string;
   department: string | null;
   portrait_url: string | null;
+  school_name?: string | null;
   href?: string;
 }
 
@@ -128,6 +129,11 @@ export const CoverflowCarousel = ({ profiles }: { profiles: CoverflowProfile[] }
                   {p.role}
                   {p.department && `, ${p.department}`}
                 </p>
+                {p.school_name && (
+                  <p className="text-[10px] text-muted-foreground/70 text-center truncate px-2 mt-0.5">
+                    {p.school_name}
+                  </p>
+                )}
               </Link>
             </div>
           ))}
