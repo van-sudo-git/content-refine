@@ -25,6 +25,9 @@ interface Profile {
   bio: string | null;
   school_id: string | null;
   nomination_id: string | null;
+  reflection_quote: string | null;
+  reflection_video_url: string | null;
+  reflection_recorded_date: string | null;
   status: string;
   created_at: string;
 }
@@ -40,6 +43,9 @@ interface ProfileForm {
   department: string;
   featuredQuote: string;
   story: string;
+  reflectionQuote: string;
+  reflectionVideoUrl: string;
+  reflectionRecordedDate: string;
 }
 
 // Profiles already store the featured quote inside bio as a quoted paragraph.
@@ -102,6 +108,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     department: "",
     featuredQuote: "",
     story: "",
+    reflectionQuote: "",
+    reflectionVideoUrl: "",
+    reflectionRecordedDate: "",
   });
 
   useEffect(() => {
@@ -146,6 +155,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       department: "",
       featuredQuote: "",
       story: "",
+      reflectionQuote: "",
+      reflectionVideoUrl: "",
+      reflectionRecordedDate: "",
     });
   };
 
@@ -162,6 +174,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       department: profile.department || "",
       featuredQuote,
       story,
+      reflectionQuote: profile.reflection_quote ?? "",
+      reflectionVideoUrl: profile.reflection_video_url ?? "",
+      reflectionRecordedDate: profile.reflection_recorded_date ?? "",
     });
     await loadImages(profile.id);
   };
@@ -322,6 +337,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
             role: form.role.trim(),
             department: form.department.trim() || null,
             bio: buildBio(form.story, form.featuredQuote),
+            reflection_quote: form.reflectionQuote.trim() || null,
+            reflection_video_url: form.reflectionVideoUrl.trim() || null,
+            reflection_recorded_date: form.reflectionRecordedDate || null,
             school_id: schoolId,
             status: "draft",
           })
@@ -356,6 +374,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
             role: form.role.trim(),
             department: form.department.trim() || null,
             bio: buildBio(form.story, form.featuredQuote),
+            reflection_quote: form.reflectionQuote.trim() || null,
+            reflection_video_url: form.reflectionVideoUrl.trim() || null,
+            reflection_recorded_date: form.reflectionRecordedDate || null,
           })
           .eq("id", editing.id);
 
@@ -401,54 +422,44 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   };
 
   const toggleStatus = async (profile: Profile) => {
-    const newStatus =
-      profile.status === "published" ? "draft" : "published";
-  
+    const newStatus = profile.status === "published" ? "draft" : "published";
+
     const { error } = await supabase
       .from("profiles")
       .update({ status: newStatus })
       .eq("id", profile.id);
-  
+
     if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-  
+
     // Publishing is already synchronized by the database trigger.
-    // When an admin unpublishes for revisions, put the linked
-    // nomination back into active work too.
+    // When an admin unpublishes for revisions, put the linked nomination back into active work too.
     if (newStatus === "draft" && profile.nomination_id) {
       const { error: nominationError } = await supabase
         .from("nominations")
         .update({ status: "in_progress" })
         .eq("id", profile.nomination_id)
         .eq("status", "published");
-  
+
       if (nominationError) {
         toast({
           title: "Profile unpublished",
-          description:
-            "The profile is now a draft, but the nomination status could not be updated.",
+          description: "The profile is now a draft, but the nomination status could not be updated.",
           variant: "destructive",
         });
         await loadProfiles();
         return;
       }
     }
-  
+
     toast({
-      title:
-        newStatus === "published"
-          ? "Profile published!"
-          : "Profile unpublished for revisions",
+      title: newStatus === "published" ? "Profile published!" : "Profile unpublished for revisions",
     });
-  
     loadProfiles();
   };
+
   const deleteProfile = async (id: string) => {
     if (!confirm("Delete this profile and all its images? This cannot be undone.")) return;
 
@@ -540,6 +551,45 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
               placeholder="Tell their story... Use multiple paragraphs separated by line breaks."
               className="min-h-[200px]"
             />
+          </div>
+
+          <div className="border-t border-border pt-5 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Staff Reflection (optional)</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                A reflection shared by the staff member after seeing or participating in the project.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Reflection Quote</Label>
+              <Textarea
+                value={form.reflectionQuote}
+                onChange={(e) => setForm((p) => ({ ...p, reflectionQuote: e.target.value }))}
+                placeholder="What did this recognition or portrait mean to them?"
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Reflection Video URL</Label>
+              <Input
+                type="url"
+                value={form.reflectionVideoUrl}
+                onChange={(e) => setForm((p) => ({ ...p, reflectionVideoUrl: e.target.value }))}
+                placeholder="https://..."
+              />
+              <p className="text-xs text-muted-foreground">Optional. Use a public YouTube, Vimeo, or direct video URL.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Recorded Date</Label>
+              <Input
+                type="date"
+                value={form.reflectionRecordedDate}
+                onChange={(e) => setForm((p) => ({ ...p, reflectionRecordedDate: e.target.value }))}
+              />
+            </div>
           </div>
         </div>
 
