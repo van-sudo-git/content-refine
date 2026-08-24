@@ -7,6 +7,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import AppreciationWall from "@/components/AppreciationWall";
 import { supabase } from "@/integrations/supabase/client";
 import ShareButton from "@/components/ShareButton";
+import { schoolGalleryPath } from "@/lib/schoolGallery";
 
 interface ProfileData {
   id: string;
@@ -16,6 +17,7 @@ interface ProfileData {
   department: string | null;
   bio: string | null;
   nomination_id: string | null;
+  school_id: string | null;
   created_at: string;
 }
 
@@ -38,6 +40,8 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [images, setImages] = useState<ProfileImage[]>([]);
   const [contributors, setContributors] = useState<ProfileContributor[]>([]);
+  const [galleryPath, setGalleryPath] = useState("/galleries");
+  const [galleryName, setGalleryName] = useState("Galleries");
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -47,7 +51,9 @@ const ProfilePage = () => {
 
       const { data: profileData, error } = await supabase
         .from("profiles")
-        .select("id, slug, name, role, department, bio, nomination_id, created_at")
+        .select(
+          "id, slug, name, role, department, bio, nomination_id, school_id, created_at"
+        )
         .eq("slug", slug)
         .eq("status", "published")
         .single();
@@ -61,16 +67,33 @@ const ProfilePage = () => {
       const typedProfile = profileData as ProfileData;
       setProfile(typedProfile);
 
-      const [{ data: imgData }, { data: contributorData }] = await Promise.all([
-        supabase
-          .from("profile_images")
-          .select("id, image_url, image_type, sort_order")
-          .eq("profile_id", typedProfile.id)
-          .order("sort_order"),
-        supabase
-          .from("profile_contributors")
-          .select("contributor_name, contribution_type")
-          .eq("profile_id", typedProfile.id),
+      const imagePromise = supabase
+        .from("profile_images")
+        .select("id, image_url, image_type, sort_order")
+        .eq("profile_id", typedProfile.id)
+        .order("sort_order");
+
+      const contributorPromise = supabase
+        .from("profile_contributors")
+        .select("contributor_name, contribution_type")
+        .eq("profile_id", typedProfile.id);
+
+      const schoolPromise = typedProfile.school_id
+        ? supabase
+            .from("schools")
+            .select("name")
+            .eq("id", typedProfile.school_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null });
+
+      const [
+        { data: imgData },
+        { data: contributorData },
+        { data: schoolData },
+      ] = await Promise.all([
+        imagePromise,
+        contributorPromise,
+        schoolPromise,
       ]);
 
       if (imgData) setImages(imgData as ProfileImage[]);
@@ -82,6 +105,11 @@ const ProfilePage = () => {
           { contributor_name: "Evaan Ahlawat", contribution_type: "journalist" },
           { contributor_name: "Evaan Ahlawat", contribution_type: "artist" },
         ]);
+      }
+
+      if (schoolData?.name) {
+        setGalleryPath(schoolGalleryPath(schoolData.name));
+        setGalleryName(`${schoolData.name} Gallery`);
       }
 
       setLoading(false);
@@ -105,10 +133,14 @@ const ProfilePage = () => {
       <Layout>
         <section className="py-24 min-h-[70vh] flex items-center">
           <div className="container mx-auto px-6 text-center">
-            <h1 className="font-display text-4xl text-foreground mb-4">Profile Not Found</h1>
-            <p className="text-muted-foreground mb-6">This person may not have a published profile yet.</p>
-            <Link to="/gallery" className="text-secondary hover:underline">
-              Back to Gallery
+            <h1 className="font-display text-4xl text-foreground mb-4">
+              Profile Not Found
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              This person may not have a published profile yet.
+            </p>
+            <Link to="/galleries" className="text-secondary hover:underline">
+              Back to Galleries
             </Link>
           </div>
         </section>
@@ -161,7 +193,9 @@ const ProfilePage = () => {
     "@type": "Person",
     name: profile.name,
     jobTitle: profile.role,
-    ...(profile.department ? { worksFor: { "@type": "Organization", name: profile.department } } : {}),
+    ...(profile.department
+      ? { worksFor: { "@type": "Organization", name: profile.department } }
+      : {}),
     ...(portrait ? { image: portrait.image_url } : {}),
     url: canonical,
     description,
@@ -188,10 +222,10 @@ const ProfilePage = () => {
       <section className="py-24">
         <div className="container mx-auto px-6">
           <Link
-            to="/gallery"
+            to={galleryPath}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-10"
           >
-            <ArrowLeft size={16} /> Back to Gallery
+            <ArrowLeft size={16} /> Back to {galleryName}
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl">
@@ -205,10 +239,15 @@ const ProfilePage = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 bg-gradient-to-br from-muted to-card">
-                    <span className="font-display text-8xl opacity-20 mb-4">{profile.name[0]}</span>
-                    <p className="text-xs uppercase tracking-widest text-secondary font-semibold mb-2">Portrait in progress</p>
+                    <span className="font-display text-8xl opacity-20 mb-4">
+                      {profile.name[0]}
+                    </span>
+                    <p className="text-xs uppercase tracking-widest text-secondary font-semibold mb-2">
+                      Portrait in progress
+                    </p>
                     <p className="text-sm text-muted-foreground italic max-w-xs">
-                      A hand-drawn charcoal portrait of {firstName} is being prepared and will appear here soon.
+                      A hand-drawn charcoal portrait of {firstName} is being
+                      prepared and will appear here soon.
                     </p>
                   </div>
                 )}
@@ -287,7 +326,9 @@ const ProfilePage = () => {
                         className="w-full h-full object-contain p-1"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Scan to visit this page</p>
+                    <p className="text-xs text-muted-foreground">
+                      Scan to visit this page
+                    </p>
                   </div>
                 )}
 
@@ -340,9 +381,18 @@ const ProfilePage = () => {
                 )}
 
                 {additionalPhotos.length > 0 && (
-                  <div className={`grid gap-6 ${additionalPhotos.length === 1 ? "grid-cols-1 max-w-sm" : "grid-cols-2"}`}>
+                  <div
+                    className={`grid gap-6 ${
+                      additionalPhotos.length === 1
+                        ? "grid-cols-1 max-w-sm"
+                        : "grid-cols-2"
+                    }`}
+                  >
                     {additionalPhotos.map((img) => (
-                      <div key={img.id} className="rounded-xl overflow-hidden shadow-md">
+                      <div
+                        key={img.id}
+                        className="rounded-xl overflow-hidden shadow-md"
+                      >
                         <img
                           src={img.image_url}
                           alt={`${profile.name} photo`}
