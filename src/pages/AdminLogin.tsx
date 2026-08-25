@@ -192,7 +192,7 @@ const AdminLogin = () => {
                 </div>
                 <h1 className="font-display text-4xl text-foreground mb-2">Club &amp; Admin Access</h1>
                 <p className="text-muted-foreground">
-                  Sign in to review nominations and manage your school.
+                Sign in to access your club role or manage your chapter.
                 </p>
               </div>
             </AnimatedSection>
@@ -205,7 +205,7 @@ const AdminLogin = () => {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="admin@school.edu"
+                      placeholder="name@school.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
