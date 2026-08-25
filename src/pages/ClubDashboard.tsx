@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuthReady } from "@/hooks/use-auth-ready";
 import ImageUploader from "@/components/ImageUploader";
-import { LogOut, Trash2 } from "lucide-react";
+import { LogOut, QrCode, Trash2 } from "lucide-react";
+import { generateAndUploadProfileQR } from "@/lib/profileQr";
 
 type ClubRoleType = "journalist" | "photographer" | "artist" | "pr";
 
@@ -139,6 +140,7 @@ const ClubDashboard = () => {
   });
   const [saving, setSaving] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [generatingQrProfileId, setGeneratingQrProfileId] = useState<string | null>(null);
 
   // Someone can hold Community Outreach alongside a creative role.
   const hasPrRole = myRoles.some((r) => r.role === "pr");
@@ -279,42 +281,42 @@ const ClubDashboard = () => {
     profile?: LinkedProfile
   ) => {
     if (profile?.status === "published") return false;
-  
+
     if (rolesForNom.includes("journalist")) {
       return (
         image.image_type === "portrait" ||
         image.image_type === "additional"
       );
     }
-  
+
     if (image.image_type === "portrait") {
       return rolesForNom.includes("artist");
     }
-  
+
     if (image.image_type === "additional") {
       return rolesForNom.includes("photographer");
     }
-  
+
     return false;
   };
-  
+
   const storagePathFromPublicUrl = (imageUrl: string) => {
     const marker = "/storage/v1/object/public/profile-images/";
     const markerIndex = imageUrl.indexOf(marker);
-  
+
     if (markerIndex === -1) return null;
-  
+
     const encodedPath = imageUrl
       .slice(markerIndex + marker.length)
       .split("?")[0];
-  
+
     try {
       return decodeURIComponent(encodedPath);
     } catch {
       return encodedPath;
     }
   };
-  
+
   const deleteAsset = async (
     image: AssignmentImage,
     label: string
@@ -322,24 +324,24 @@ const ClubDashboard = () => {
     if (!confirm(`Remove this uploaded ${label.toLowerCase()}?`)) {
       return;
     }
-  
+
     setDeletingImageId(image.id);
-  
+
     try {
       const { error: rowError } = await supabase
         .from("profile_images")
         .delete()
         .eq("id", image.id);
-  
+
       if (rowError) throw rowError;
-  
+
       const storagePath = storagePathFromPublicUrl(image.image_url);
-  
+
       if (storagePath) {
         const { error: storageError } = await supabase.storage
           .from("profile-images")
           .remove([storagePath]);
-  
+
         if (storageError) {
           toast({
             title: `${label} removed`,
@@ -347,12 +349,12 @@ const ClubDashboard = () => {
               "The asset was removed, but its stored file could not be cleaned up.",
             variant: "destructive",
           });
-  
+
           await loadAssignments(myRoles);
           return;
         }
       }
-  
+
       toast({ title: `${label} removed` });
       await loadAssignments(myRoles);
     } catch (error: any) {
@@ -363,6 +365,53 @@ const ClubDashboard = () => {
       });
     } finally {
       setDeletingImageId(null);
+    }
+  };
+
+  const generateJournalistQR = async (profile: LinkedProfile) => {
+    if (profile.status === "published") {
+      toast({
+        title: "QR generation unavailable",
+        description:
+          "An admin must unpublish the profile before the journalist can regenerate its QR code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // QR generation always uses the saved slug. Do not silently generate a QR
+    // for stale data while the journalist has an unsaved slug edit on screen.
+    if (form.slug.trim() !== profile.slug) {
+      toast({
+        title: "Save changes first",
+        description:
+          "You changed the URL slug. Save the write-up, reopen Edit write-up, then generate the QR code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingQrProfileId(profile.id);
+
+    try {
+      const result = await generateAndUploadProfileQR({
+        profileId: profile.id,
+        slug: profile.slug,
+      });
+
+      toast({
+        title: result.replacedExisting ? "QR code refreshed" : "QR code generated",
+        description:
+          "This QR uses the tracked redirect, so scans continue to count in QR analytics.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "QR generation failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingQrProfileId(null);
     }
   };
 
@@ -587,91 +636,91 @@ const ClubDashboard = () => {
                         </p>
 
                         <div className="flex flex-wrap gap-3">
-                        {portraits.map((portrait, index) => {
-  const canDelete = canDeleteAsset(
-    portrait,
-    rolesForNom,
-    profile
-  );
+                          {portraits.map((portrait, index) => {
+                            const canDelete = canDeleteAsset(
+                              portrait,
+                              rolesForNom,
+                              profile
+                            );
 
-  return (
-    <div key={portrait.id} className="w-28">
-      <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-        <img
-          src={portrait.image_url}
-          alt={`${nom.nominee_name} portrait ${index + 1}`}
-          className="w-full h-full object-cover"
-        />
-      </div>
+                            return (
+                              <div key={portrait.id} className="w-28">
+                                <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                                  <img
+                                    src={portrait.image_url}
+                                    alt={`${nom.nominee_name} portrait ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
 
-      <div className="mt-1 space-y-1">
-        <p className="text-xs text-muted-foreground">
-          {portraits.length > 1
-            ? `Portrait ${index + 1}`
-            : "Portrait uploaded"}
-        </p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    {portraits.length > 1
+                                      ? `Portrait ${index + 1}`
+                                      : "Portrait uploaded"}
+                                  </p>
 
-        {canDelete && (
-          <button
-            type="button"
-            onClick={() =>
-              deleteAsset(portrait, "Portrait")
-            }
-            disabled={deletingImageId === portrait.id}
-            className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
-          >
-            <Trash2 size={11} />
-            {deletingImageId === portrait.id
-              ? "Removing..."
-              : "Delete"}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-})}
+                                  {canDelete && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        deleteAsset(portrait, "Portrait")
+                                      }
+                                      disabled={deletingImageId === portrait.id}
+                                      className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                                    >
+                                      <Trash2 size={11} />
+                                      {deletingImageId === portrait.id
+                                        ? "Removing..."
+                                        : "Delete"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
 
-{photos.map((photo, index) => {
-  const canDelete = canDeleteAsset(
-    photo,
-    rolesForNom,
-    profile
-  );
+                          {photos.map((photo, index) => {
+                            const canDelete = canDeleteAsset(
+                              photo,
+                              rolesForNom,
+                              profile
+                            );
 
-  return (
-    <div key={photo.id} className="w-28">
-      <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-        <img
-          src={photo.image_url}
-          alt={`${nom.nominee_name} photo ${index + 1}`}
-          className="w-full h-full object-cover"
-        />
-      </div>
+                            return (
+                              <div key={photo.id} className="w-28">
+                                <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                                  <img
+                                    src={photo.image_url}
+                                    alt={`${nom.nominee_name} photo ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
 
-      <div className="mt-1 space-y-1">
-        <p className="text-xs text-muted-foreground">
-          Photo {index + 1}
-        </p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    Photo {index + 1}
+                                  </p>
 
-        {canDelete && (
-          <button
-            type="button"
-            onClick={() =>
-              deleteAsset(photo, `Photo ${index + 1}`)
-            }
-            disabled={deletingImageId === photo.id}
-            className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
-          >
-            <Trash2 size={11} />
-            {deletingImageId === photo.id
-              ? "Removing..."
-              : "Delete"}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-})}
+                                  {canDelete && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        deleteAsset(photo, `Photo ${index + 1}`)
+                                      }
+                                      disabled={deletingImageId === photo.id}
+                                      className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                                    >
+                                      <Trash2 size={11} />
+                                      {deletingImageId === photo.id
+                                        ? "Removing..."
+                                        : "Delete"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -857,6 +906,36 @@ const ClubDashboard = () => {
                               }
                             />
                           </div>
+                        </div>
+
+                        <div className="border-t border-border pt-5 space-y-3">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              Profile QR Code
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Generate the QR after the profile has been saved. If you changed the URL slug above, save first, then reopen Edit write-up before generating.
+                            </p>
+                          </div>
+
+                          {profile ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => generateJournalistQR(profile)}
+                              disabled={generatingQrProfileId === profile.id}
+                            >
+                              <QrCode size={14} />
+                              {generatingQrProfileId === profile.id
+                                ? "Generating QR..."
+                                : "Generate / Refresh QR"}
+                            </Button>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              Save this new profile once, then reopen Edit write-up to generate its QR code.
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex gap-2">
