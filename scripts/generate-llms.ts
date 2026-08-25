@@ -152,13 +152,15 @@ function renderIndex(profiles: Profile[], schools: School[]) {
               ? schoolMap.get(profile.school_id)
               : null;
 
-            const details = [
-              profile.role,
-              profile.department || null,
-              schoolName || null,
-            ]
-              .filter(Boolean)
-              .join(", ");
+              const details = Array.from(
+                new Set(
+                  [
+                    profile.role,
+                    profile.department || null,
+                    schoolName || null,
+                  ].filter((value): value is string => Boolean(value))
+                )
+              ).join(", ");
 
             return `- [${profile.name}](${BASE_URL}/gallery/${profile.slug}): ${details}`;
           })
