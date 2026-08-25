@@ -7,7 +7,7 @@ const sections = [
   {
     icon: FileText,
     title: "1. Purpose",
-    content: "This project highlights the people who help make our school run every day,often behind the scenes. The goal is to build appreciation and understanding, and to learn how respectful storytelling and technology can strengthen community.",
+    content: "This project highlights the people who help make our school run every day, often behind the scenes. The goal is to build appreciation and understanding, and to learn how respectful storytelling and technology can strengthen community.",
   },
   {
     icon: UserCheck,
