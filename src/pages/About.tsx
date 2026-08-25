@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 import qrCode from "@/assets/about-qr.jpeg";
 
+const CHAPTER_CONTACT_EMAIL = "evaanahlawat@gmail.com";
+
 const About = () => {
   return (
     <Layout>
@@ -194,16 +196,20 @@ const About = () => {
               <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4">
                 Want to bring a chapter to your school?
               </h2>
+
               <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto leading-relaxed">
-                The model is designed to scale. Reach out through the nominate page to start a
-                conversation about expanding to your community.
+                If you're interested in starting a Now We See You chapter at your school,
+                we'd love to hear from you.
               </p>
-              <Link
-                to="/nominate"
+
+              <a
+                href={`mailto:${CHAPTER_CONTACT_EMAIL}?subject=${encodeURIComponent(
+                  "Now We See You — Chapter Interest"
+                )}`}
                 className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-7 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
               >
-                Get in Touch <ArrowRight size={16} />
-              </Link>
+                Start a Chapter <ArrowRight size={16} />
+              </a>
             </div>
           </AnimatedSection>
         </div>
