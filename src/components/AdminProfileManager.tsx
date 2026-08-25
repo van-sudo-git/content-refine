@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import QRCode from "qrcode";
+import { generateAndUploadProfileQR } from "@/lib/profileQr";
 
 interface ProfileImage {
   id: string;
@@ -197,60 +197,6 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     }));
   };
 
-  /** Generate a QR code PNG, upload to storage, and create a redirect entry */
-  const generateAndUploadQR = async (profileId: string, slug: string) => {
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const redirectId = slug; // use the slug as the redirect ID
-      const redirectUrl = `https://${projectId}.supabase.co/functions/v1/qr-redirect?id=${redirectId}`;
-
-      // Generate QR code as data URL
-      const qrDataUrl = await QRCode.toDataURL(redirectUrl, {
-        width: 512,
-        margin: 2,
-        color: { dark: "#1E293B", light: "#FFFFFF" },
-      });
-
-      // Convert data URL to blob
-      const response = await fetch(qrDataUrl);
-      const blob = await response.blob();
-
-      // Upload to storage
-      const path = `${slug}/qr-${Date.now()}.png`;
-      const { error: uploadError } = await supabase.storage
-        .from("profile-images")
-        .upload(path, blob, { contentType: "image/png" });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("profile-images")
-        .getPublicUrl(path);
-
-      // Save as profile image with type "qr"
-      await supabase.from("profile_images").insert({
-        profile_id: profileId,
-        image_url: urlData.publicUrl,
-        image_type: "qr",
-        sort_order: 999,
-      });
-
-      // Create or update the redirect entry
-      const destinationUrl = `https://nowweseeyou.lovable.app/gallery/${slug}`;
-      await supabase.from("redirects").upsert({
-        id: redirectId,
-        profile_slug: slug,
-        destination_url: destinationUrl,
-        active: true,
-      }, { onConflict: "id" });
-
-      return urlData.publicUrl;
-    } catch (error: any) {
-      console.error("QR generation error:", error);
-      toast({ title: "QR generation failed", description: error.message, variant: "destructive" });
-      return null;
-    }
-  };
 
   const uploadImage = async (file: File, imageType: string) => {
     const profileId = editing?.id;
@@ -361,10 +307,23 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           await supabase.from("profile_images").insert(imageInserts);
         }
 
-        // Auto-generate QR code
-        await generateAndUploadQR(newProfile.id, form.slug.trim());
-
-        toast({ title: "Profile created", description: "Saved as draft with QR code generated." });
+        // Auto-generate the same tracked QR used everywhere else.
+        try {
+          await generateAndUploadProfileQR({
+            profileId: newProfile.id,
+            slug: form.slug.trim(),
+          });
+          toast({
+            title: "Profile created",
+            description: "Saved as draft with QR code generated.",
+          });
+        } catch (qrError: any) {
+          toast({
+            title: "Profile created",
+            description: `Draft saved, but the QR code could not be generated: ${qrError.message}`,
+            variant: "destructive",
+          });
+        }
       } else if (editing) {
         const { error } = await supabase
           .from("profiles")
@@ -413,17 +372,28 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   /** Manually generate/regenerate a QR code for an existing profile */
   const handleGenerateQR = async (profileId: string, slug: string) => {
     setUploading(true);
-    const url = await generateAndUploadQR(profileId, slug);
-    if (url) {
-      toast({ title: "QR Code generated!", description: "QR code has been added to the profile images." });
+
+    try {
+      await generateAndUploadProfileQR({ profileId, slug });
+      toast({
+        title: "QR Code generated!",
+        description:
+          "QR code has been added to the profile and scans use the tracked analytics redirect.",
+      });
       await loadImages(profileId);
+    } catch (error: any) {
+      toast({
+        title: "QR generation failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const toggleStatus = async (profile: Profile) => {
     const newStatus = profile.status === "published" ? "draft" : "published";
-
     const { error } = await supabase
       .from("profiles")
       .update({ status: newStatus })
