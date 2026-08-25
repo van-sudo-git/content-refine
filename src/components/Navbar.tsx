@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Shield, ChevronDown, LogIn } from "lucide-react";
+import { Menu, X, Shield, ChevronDown, LogIn, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthReady } from "@/hooks/use-auth-ready";
@@ -19,9 +19,11 @@ interface GalleryChapter {
   name: string;
 }
 
+type DashboardDestination = "/admin" | "/club" | null;
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [dashboardDestination, setDashboardDestination] = useState<DashboardDestination>(null);
   const [galleryChapters, setGalleryChapters] = useState<GalleryChapter[]>([]);
   const location = useLocation();
   const { user, isReady } = useAuthReady();
@@ -71,32 +73,69 @@ const Navbar = () => {
 
   useEffect(() => {
     let cancelled = false;
+  
     const authEmail = user?.email?.toLowerCase() ?? null;
-
+    const userId = user?.id ?? null;
+  
     if (!isReady) {
       return () => {
         cancelled = true;
       };
     }
-
-    if (!authEmail) {
-      setIsAdmin(false);
+  
+    if (!authEmail || !userId) {
+      setDashboardDestination(null);
       return;
     }
-
-    const checkAdmin = async () => {
-      const { data } = await supabase
+  
+    const resolveDashboard = async () => {
+      // Keep the same priority as the login page:
+      // school admin -> Admin
+      // creative club role -> Club
+      // PR role -> Admin
+      const { data: adminRow } = await supabase
         .from("school_admins")
         .select("id")
         .eq("email", authEmail)
         .limit(1)
         .maybeSingle();
-
-      if (!cancelled) setIsAdmin(!!data);
+  
+      if (cancelled) return;
+  
+      if (adminRow) {
+        setDashboardDestination("/admin");
+        return;
+      }
+  
+      const { data: roleRows } = await supabase
+        .from("club_roles")
+        .select("role")
+        .eq("user_id", userId);
+  
+      if (cancelled) return;
+  
+      const roles = (roleRows ?? []).map((row) => row.role);
+  
+      const isCreative = roles.some(
+        (role) =>
+          role === "journalist" ||
+          role === "photographer" ||
+          role === "artist"
+      );
+  
+      const isPr = roles.includes("pr");
+  
+      if (isCreative) {
+        setDashboardDestination("/club");
+      } else if (isPr) {
+        setDashboardDestination("/admin");
+      } else {
+        setDashboardDestination(null);
+      }
     };
-
-    checkAdmin();
-
+  
+    resolveDashboard();
+  
     return () => {
       cancelled = true;
     };
@@ -187,16 +226,24 @@ const Navbar = () => {
             </Link>
           )}
 
-          {isAdmin && (
+          {dashboardDestination && (
             <Link
-              to="/admin"
+              to={dashboardDestination}
               className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-secondary ${
-                location.pathname === "/admin"
+                location.pathname.startsWith(dashboardDestination)
                   ? "text-secondary"
                   : "text-muted-foreground"
               }`}
             >
-              <Shield size={14} /> Admin
+              {dashboardDestination === "/admin" ? (
+                <>
+                  <Shield size={14} /> Admin
+                </>
+              ) : (
+                <>
+                  <Users size={14} /> Club
+                </>
+              )}
             </Link>
           )}
         </div>
@@ -277,17 +324,25 @@ const Navbar = () => {
                 </Link>
               )}
 
-              {isAdmin && (
+              {dashboardDestination && (
                 <Link
-                  to="/admin"
+                  to={dashboardDestination}
                   onClick={() => setIsOpen(false)}
                   className={`inline-flex items-center gap-1.5 text-base font-medium transition-colors ${
-                    location.pathname === "/admin"
+                    location.pathname.startsWith(dashboardDestination)
                       ? "text-secondary"
                       : "text-muted-foreground"
                   }`}
                 >
-                  <Shield size={16} /> Admin Dashboard
+                  {dashboardDestination === "/admin" ? (
+                    <>
+                      <Shield size={16} /> Admin Dashboard
+                    </>
+                  ) : (
+                    <>
+                      <Users size={16} /> Club Dashboard
+                    </>
+                  )}
                 </Link>
               )}
             </div>
