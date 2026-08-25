@@ -48,5 +48,7 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin/
+Disallow: /club
+Disallow: /club/
 
 Sitemap: https://nowweseeyou.org/sitemap.xml
