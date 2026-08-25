@@ -587,37 +587,91 @@ const ClubDashboard = () => {
                         </p>
 
                         <div className="flex flex-wrap gap-3">
-                          {portraits.map((portrait, index) => (
-                            <div key={portrait.id} className="w-28">
-                              <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                                <img
-                                  src={portrait.image_url}
-                                  alt={`${nom.nominee_name} portrait ${index + 1}`}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {portraits.length > 1
-                                  ? `Portrait ${index + 1}`
-                                  : "Portrait uploaded"}
-                              </p>
-                            </div>
-                          ))}
+                        {portraits.map((portrait, index) => {
+  const canDelete = canDeleteAsset(
+    portrait,
+    rolesForNom,
+    profile
+  );
 
-                          {photos.map((photo, index) => (
-                            <div key={photo.id} className="w-28">
-                              <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                                <img
-                                  src={photo.image_url}
-                                  alt={`${nom.nominee_name} photo ${index + 1}`}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Photo {index + 1}
-                              </p>
-                            </div>
-                          ))}
+  return (
+    <div key={portrait.id} className="w-28">
+      <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+        <img
+          src={portrait.image_url}
+          alt={`${nom.nominee_name} portrait ${index + 1}`}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      <div className="mt-1 space-y-1">
+        <p className="text-xs text-muted-foreground">
+          {portraits.length > 1
+            ? `Portrait ${index + 1}`
+            : "Portrait uploaded"}
+        </p>
+
+        {canDelete && (
+          <button
+            type="button"
+            onClick={() =>
+              deleteAsset(portrait, "Portrait")
+            }
+            disabled={deletingImageId === portrait.id}
+            className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+          >
+            <Trash2 size={11} />
+            {deletingImageId === portrait.id
+              ? "Removing..."
+              : "Delete"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+})}
+
+{photos.map((photo, index) => {
+  const canDelete = canDeleteAsset(
+    photo,
+    rolesForNom,
+    profile
+  );
+
+  return (
+    <div key={photo.id} className="w-28">
+      <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+        <img
+          src={photo.image_url}
+          alt={`${nom.nominee_name} photo ${index + 1}`}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      <div className="mt-1 space-y-1">
+        <p className="text-xs text-muted-foreground">
+          Photo {index + 1}
+        </p>
+
+        {canDelete && (
+          <button
+            type="button"
+            onClick={() =>
+              deleteAsset(photo, `Photo ${index + 1}`)
+            }
+            disabled={deletingImageId === photo.id}
+            className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+          >
+            <Trash2 size={11} />
+            {deletingImageId === photo.id
+              ? "Removing..."
+              : "Delete"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+})}
                         </div>
                       </div>
                     )}
