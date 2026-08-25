@@ -87,7 +87,7 @@ export const generateAndUploadProfileQR = async ({
     .from("profile-images")
     .getPublicUrl(path);
 
-  const destinationUrl = `https://nowweseeyou.lovable.app/gallery/${savedSlug}`;
+  const destinationUrl = `https://nowweseeyou.org/gallery/${savedSlug}`;
 
   // This redirect is what makes every scan count in redirect_events_daily via
   // the existing qr-redirect Edge Function.
