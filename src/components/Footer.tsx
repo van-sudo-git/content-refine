@@ -18,7 +18,7 @@ const Footer = () => {
             <div className="flex flex-col gap-1.5">
               {[
                 { to: "/", label: "Home" },
-                { to: "/gallery", label: "Galleries" },
+                { to: "/galleries", label: "Galleries" },
                 { to: "/about", label: "Our Story" },
                 { to: "/media", label: "In the Community" },
                 { to: "/nominate", label: "Nominate" },
