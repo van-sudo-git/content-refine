@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useAuthReady } from "@/hooks/use-auth-ready";
 import ImageUploader from "@/components/ImageUploader";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
 
 type ClubRoleType = "journalist" | "photographer" | "artist" | "pr";
 
@@ -138,6 +138,7 @@ const ClubDashboard = () => {
     reflectionRecordedDate: "",
   });
   const [saving, setSaving] = useState(false);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
   // Someone can hold Community Outreach alongside a creative role.
   const hasPrRole = myRoles.some((r) => r.role === "pr");
@@ -270,6 +271,99 @@ const ClubDashboard = () => {
     }
 
     return roles;
+  };
+
+  const canDeleteAsset = (
+    image: AssignmentImage,
+    rolesForNom: ClubRoleType[],
+    profile?: LinkedProfile
+  ) => {
+    if (profile?.status === "published") return false;
+  
+    if (rolesForNom.includes("journalist")) {
+      return (
+        image.image_type === "portrait" ||
+        image.image_type === "additional"
+      );
+    }
+  
+    if (image.image_type === "portrait") {
+      return rolesForNom.includes("artist");
+    }
+  
+    if (image.image_type === "additional") {
+      return rolesForNom.includes("photographer");
+    }
+  
+    return false;
+  };
+  
+  const storagePathFromPublicUrl = (imageUrl: string) => {
+    const marker = "/storage/v1/object/public/profile-images/";
+    const markerIndex = imageUrl.indexOf(marker);
+  
+    if (markerIndex === -1) return null;
+  
+    const encodedPath = imageUrl
+      .slice(markerIndex + marker.length)
+      .split("?")[0];
+  
+    try {
+      return decodeURIComponent(encodedPath);
+    } catch {
+      return encodedPath;
+    }
+  };
+  
+  const deleteAsset = async (
+    image: AssignmentImage,
+    label: string
+  ) => {
+    if (!confirm(`Remove this uploaded ${label.toLowerCase()}?`)) {
+      return;
+    }
+  
+    setDeletingImageId(image.id);
+  
+    try {
+      const { error: rowError } = await supabase
+        .from("profile_images")
+        .delete()
+        .eq("id", image.id);
+  
+      if (rowError) throw rowError;
+  
+      const storagePath = storagePathFromPublicUrl(image.image_url);
+  
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage
+          .from("profile-images")
+          .remove([storagePath]);
+  
+        if (storageError) {
+          toast({
+            title: `${label} removed`,
+            description:
+              "The asset was removed, but its stored file could not be cleaned up.",
+            variant: "destructive",
+          });
+  
+          await loadAssignments(myRoles);
+          return;
+        }
+      }
+  
+      toast({ title: `${label} removed` });
+      await loadAssignments(myRoles);
+    } catch (error: any) {
+      toast({
+        title: "Could not remove asset",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingImageId(null);
+    }
   };
 
   const generateSlug = (name: string) =>
