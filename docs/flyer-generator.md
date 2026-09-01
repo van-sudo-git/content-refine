@@ -1,154 +1,345 @@
-# Flyer Generator — Architecture Notes
+# Flyer Generator - Architecture Notes
 
-*Written July 2026 before implementation.*
-
----
-
-## What I'm trying to build
-
-A page in the admin dashboard (`/admin/flyer`) that lets me generate a
-printable flyer for any staff member's profile. The flyer includes the
-staff member's name, role, a QR code, and Now We See You branding.
-
-The QR code on the flyer must point to the permanent heros-redirect URL
-(`https://heros-redirect.vercel.app/r/<redirect-id>`) — not the profile
-URL directly. This ensures the printed flyer stays valid even if the
-profile URL changes in the future.
+*Written July 2026 before implementation. Updated August 2026 to document the version that is now running in the dashboard.*
 
 ---
 
-## Why I'm building this
+## What I was trying to build
 
-Every time I add a new staff profile I need to print a physical flyer or
-placard to display in the school building. Right now I generate the QR code
-manually and design the flyer separately. This is slow and inconsistent
-across profiles. This is the issue I encountered for Brad's profile when it 
-got selected in Kirkland Art Center exhibition and I wanted to generate a 
-flyer to check analytics specifically for users coming from the exhibition.
+The original idea was a page that would let me generate a printable flyer for any published staff profile.
 
-The flyer generator automates this: I select a staff member, the app looks
-up their redirect ID, generates the correct QR code, and renders a
-print-ready flyer in one step. This matters more as the platform grows —
-adding four new profiles this summer means four new placards, and doing
-each one manually doesn't scale.
+The flyer needed:
 
----
+- staff member name
+- role
+- tracked QR code
+- readable profile URL
+- Now We See You branding
+- a layout that prints cleanly without needing a separate design tool
 
-## How it will work
+Before this feature, I generated QR codes manually and designed each flyer separately.
 
-1. Admin visits `/admin/flyer`
-2. Dropdown shows all published staff profiles pulled from Supabase
-3. Admin selects a profile
-4. App queries the `redirects` table for that profile's active redirect ID
-5. App generates a QR code pointing to
-   `https://heros-redirect.vercel.app/r/<redirect-id>`
-6. Flyer renders with staff member's name, role, QR code, and NYSM branding
-7. Admin clicks Print — browser print dialog opens with print-optimized layout
+That was manageable for one or two profiles.
+
+It did not make sense as a chapter workflow.
 
 ---
 
-## Data flow
+## Why I built it
 
-```
-Admin selects profile from dropdown
-  → profile.slug identified
-  → query redirects table WHERE profile_slug = slug AND active = true
-  → get redirect.id
-  → generate QR code for https://heros-redirect.vercel.app/r/<redirect-id>
-  → render flyer layout with name, role, QR code, branding
-  → window.print() on button click
+The problem became obvious with Brad's profile.
+
+When Brad's portrait was selected for the Kirkland Arts Center exhibition, I wanted a QR code that could be connected to that physical display and measured separately from normal website traffic.
+
+That experience made physical displays a real part of the platform.
+
+Every new profile may eventually need a flyer or placard.
+
+If generating one requires me to open a design tool, find the right QR, copy the URL, and rebuild the same layout manually, then the chapter still depends on me.
+
+The Flyer Generator moves that work into the platform.
+
+---
+
+## Where it lives now
+
+The original plan was a separate:
+
+```text
+/admin/flyer
 ```
 
----
+route.
 
-## Technical decisions
+I changed that during implementation.
 
-**QR code library**
-The `qrcode` package is already in `package.json`. It generates a QR code
-as a canvas element that can be rendered inline in React. No new dependency
-needed.
+The Flyer Generator now appears as a tab inside the existing dashboard.
 
-**Print layout**
-Browser `window.print()` with `@media print` CSS to hide the admin
-navigation and show only the flyer content. No external PDF library needed —
-printing to PDF from the browser dialog covers the use case.
+That keeps it inside the same school-scoped context as the rest of the admin tools.
 
-**Data source**
-Main Supabase project — same client already used by the rest of the admin
-dashboard. The `redirects` table has a `profile_slug` column that links each
-redirect ID to a profile.
+A school administrator sees the Flyer Generator for the currently selected school.
 
-**Auth**
-`/admin/flyer` is an admin-only route protected by the existing
-`useAuthReady` hook and admin session check. No new authentication logic
-needed.
+A Community Outreach user can also access the Flyer Generator without receiving the rest of the administrator dashboard.
 
-**Component location**
-New page at `src/pages/AdminFlyer.tsx` with a route added in `App.tsx`.
-The flyer layout itself will be a separate component
-`src/components/FlyerPreview.tsx` so it can be tested independently.
+For a Community Outreach-only account, the Flyer Generator is effectively the restricted dashboard experience.
 
 ---
 
-## Redirect ID lookup — edge case
+## How it works now
 
-A profile may have more than one redirect ID if the redirect was recreated
-at some point. The query will filter for `active = true` and take the first
-result. If no active redirect exists for a profile, the flyer generator will
-show an error state rather than generating a QR code with a broken link.
+1. The dashboard provides the current `schoolId`.
+2. Flyer Generator loads published profiles for that school.
+3. The user selects a staff member.
+4. The app looks through active redirect records for one whose destination matches that profile.
+5. If a redirect is found, its ID is passed to `FlyerPreview`.
+6. `FlyerPreview` generates a QR code pointing to the main Supabase `qr-redirect` Edge Function.
+7. The flyer displays the staff member's name, role, QR code, readable profile URL, and project branding.
+8. The user clicks **Print Flyer**.
+9. Browser print mode hides the rest of the application and prints only the flyer.
 
----
+The current data flow is:
 
-## Flyer layout (planned)
-
-```
-┌─────────────────────────────────┐
-│                                 │
-│       NOW WE SEE YOU            │
-│                                 │
-│       [Staff Member Name]       │
-│       [Role / Title]            │
-│                                 │
-│            [QR CODE]            │
-│                                 │
-│     Scan to read their story    │
-│       nowweseeyou.org           │
-│                                 │
-└─────────────────────────────────┘
+```text
+school
+  |
+published profiles
+  |
+selected profile slug
+  |
+active redirect lookup
+  |
+redirect ID
+  |
+Supabase qr-redirect URL
+  |
+QR code
+  |
+printable flyer
 ```
 
-Single page, portrait orientation, designed to fit on a standard sheet
-of paper or card stock for display in the school building.
+---
+
+## The QR destination
+
+The original July plan expected flyer QR codes to point to:
+
+```text
+https://heros-redirect.vercel.app/r/<redirect-id>
+```
+
+That changed.
+
+The current Flyer Generator uses the main application's tracked redirect endpoint:
+
+```text
+https://<supabase-project>.supabase.co/functions/v1/qr-redirect?id=<redirect-id>
+```
+
+That redirect then sends the visitor to the production profile:
+
+```text
+https://nowweseeyou.org/gallery/<slug>
+```
+
+The QR itself therefore does not point directly to the public profile page.
+
+The readable profile URL is still printed on the flyer underneath the QR.
+
+That gives someone a fallback if they want to type the address manually.
 
 ---
 
-## What I'm not building in v1
+## Redirect lookup
 
-- Bulk flyer generation (one at a time is sufficient)
-- Custom flyer designs per profile (one standard template)
-- Portrait image on the flyer (name + role + QR is enough for v1)
-- Email or download as PDF (browser print to PDF covers this)
-- QR code for heros-redirect project redirects vs main project redirects
-  distinction (will use main project redirects table for now)
+The Flyer Generator does not silently create a random untracked QR.
+
+It looks for an active redirect that belongs to the selected profile.
+
+The current implementation loads active redirects and looks for a destination containing:
+
+```text
+/gallery/<selected-slug>
+```
+
+If it finds one, the flyer can be rendered.
+
+If it does not find one, the user sees:
+
+```text
+No active QR redirect found for this profile.
+```
+
+That is safer than printing a QR code that bypasses tracking or points somewhere incorrect.
+
+Profile QR generation elsewhere in the workflow is responsible for establishing the tracked redirect.
 
 ---
 
-## Files to create or modify
+## School scoping
 
-| File | Action |
-|------|--------|
-| `src/pages/AdminFlyer.tsx` | Create — main page component |
-| `src/components/FlyerPreview.tsx` | Create — flyer layout component |
-| `src/App.tsx` | Modify — add `/admin/flyer` route |
+The profile dropdown is school-scoped.
+
+The query requires:
+
+```text
+status = published
+school_id = current school
+```
+
+This was an important correction after the first version of the feature.
+
+A school should not see another school's staff profiles just because the user has access to the Flyer Generator.
+
+Global administrators switch the current school at the dashboard level.
+
+The Flyer Generator then receives that selected school ID.
+
+---
+
+## Community Outreach access
+
+The original Flyer Generator was designed as an admin-only feature.
+
+That became too restrictive once the club role system was added.
+
+Community Outreach needs to produce and share flyers.
+
+They do not need permission to:
+
+- approve nominations
+- edit profiles
+- manage administrators
+- manage club roles
+- view the full admin workflow
+
+The current access model therefore allows a Community Outreach user to reach the Flyer Generator for their own school without granting full administrator access.
+
+The permission is school-wide for published profiles.
+
+Community Outreach does not need a separate assignment for every individual profile.
+
+---
+
+## QR code library
+
+The project uses the existing `qrcode` package.
+
+`FlyerPreview.tsx` renders the QR into a canvas.
+
+No extra QR dependency was needed.
+
+The QR is generated in the browser from the redirect URL.
+
+---
+
+## Print layout
+
+The flyer uses browser printing rather than a PDF-generation library.
+
+Clicking:
+
+```text
+Print Flyer
+```
+
+calls:
+
+```text
+window.print()
+```
+
+Print-specific CSS:
+
+- hides the dashboard
+- keeps only the flyer visible
+- centers the flyer
+- uses A4 portrait sizing
+- preserves the intended background and border colors
+- removes normal browser page margins
+
+This also means someone can choose **Save as PDF** from the browser print dialog if they want a digital copy.
+
+I did not need to build separate PDF-generation code.
+
+---
+
+## Current flyer layout
+
+The implemented flyer contains:
+
+```text
+NOW WE SEE YOU
+
+Meet [Staff Member Name]
+
+[Role]
+
+[QR CODE]
+
+SCAN TO READ [FIRST NAME]'S STORY
+
+and discover the people who keep our community running
+
+nowweseeyou.org/gallery/[slug]
+
+A student-led portrait and storytelling project
+```
+
+The design intentionally stays simple.
+
+The portrait is not included in the flyer itself.
+
+The QR and the person's name are the focus.
+
+---
+
+## Files involved
+
+| File | Purpose |
+|---|---|
+| `src/pages/AdminFlyer.tsx` | Loads school-scoped published profiles and finds the active redirect |
+| `src/components/FlyerPreview.tsx` | Generates the QR and renders the printable layout |
+| `src/pages/Admin.tsx` | Places Flyer Generator inside the dashboard and controls administrator or Community Outreach access |
+
+The original plan called for adding a separate route in `App.tsx`.
+
+The final implementation did not need that route because the Flyer Generator became a dashboard tab instead.
+
+---
+
+## What I am not building right now
+
+- bulk generation of every profile flyer at once
+- different visual templates for every profile
+- portrait images embedded into the flyer
+- a separate server-generated PDF system
+- a unique tracking ID for every individual printed copy
+- a redesign that forces all historical `heros-redirect` codes into the main redirect system
+
+The current flyer uses the profile's existing active redirect.
+
+That means the scan is tracked against that redirect.
+
+It does not create a brand-new unique redirect for every physical copy of the flyer.
+
+If I later need to compare two different physical placements for the same profile, that would require a separate per-placement redirect feature.
 
 ---
 
 ## Success criteria
 
-The flyer generator is complete when:
-- [ ] Dropdown shows all published profiles
-- [ ] Selecting a profile generates the correct QR code
-- [ ] QR code resolves to the correct heros-redirect URL when scanned
-- [ ] Flyer renders cleanly in print preview
-- [ ] Error state shown if no active redirect exists for selected profile
-- [ ] Feature works for both Brad Fisher and Shirley P. profiles
+The original success criteria are now mostly complete:
+
+- [x] Dropdown shows published profiles
+- [x] Profiles are scoped to the selected school
+- [x] Selecting a profile uses its active tracked redirect
+- [x] QR code routes through the tracking endpoint
+- [x] Flyer displays the correct staff name and role
+- [x] Flyer displays the readable production profile URL
+- [x] Flyer renders in print preview
+- [x] Missing redirect produces an error instead of an untracked QR
+- [x] Community Outreach can use the Flyer Generator without full admin access
+- [x] Existing profile flyer flow has been manually tested
+- [ ] Add a current final Flyer Generator screenshot to `docs/assets/`
+
+---
+
+## What changed from the first design
+
+There were three main changes.
+
+First, it moved from a separate page into the dashboard.
+
+Second, Community Outreach gained access without becoming an administrator.
+
+Third, the QR source changed from the independent `heros-redirect` service to the main application's tracked `qr-redirect` system for this workflow.
+
+The feature is still doing what I originally wanted.
+
+Pick a person.
+
+Get the correct tracked QR.
+
+Print a consistent flyer.
+
+The implementation underneath it just became more connected to the rest of the chapter workflow than I expected when I first wrote the plan.
