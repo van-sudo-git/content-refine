@@ -161,7 +161,10 @@ const AppreciationWall = ({ profileSlug, personName }: AppreciationWallProps) =>
                     {a.author_name || "Anonymous"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(a.created_at).toLocaleDateString()}
+                  {new Date(a.created_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
                   </p>
                 </div>
                 {isAdmin && (
