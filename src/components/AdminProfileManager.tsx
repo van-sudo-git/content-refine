@@ -343,9 +343,14 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
 
         // Update redirect destination if slug changed
         if (editing.slug !== form.slug.trim()) {
-          const destinationUrl = `https://nowweseeyou.lovable.app/gallery/${form.slug.trim()}`;
-          await supabase.from("redirects")
-            .update({ destination_url: destinationUrl, profile_slug: form.slug.trim() })
+          const destinationUrl = `https://nowweseeyou.org/gallery/${form.slug.trim()}`;
+
+          await supabase
+            .from("redirects")
+            .update({
+              destination_url: destinationUrl,
+              profile_slug: form.slug.trim(),
+            })
             .eq("profile_slug", editing.slug);
         }
 
