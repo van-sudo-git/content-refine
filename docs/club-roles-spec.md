@@ -9,7 +9,10 @@ Check out my retrospective: [`docs/retrospective-one-person-to-club.md`](./retro
 - Chapter onboarding guide: [`docs/start-a-chapter-guide.md`](./start-a-chapter-guide.md) — step-by-step guide for launching Now We See You at a new school or community
 - Roles and nomination workflow diagram: [`docs/assets/roles-and-nomination-workflow-jul2026.png`](./assets/roles-and-nomination-workflow-jul2026.png)
 
-![Roles and Workflow](./assets/roles-and-nomination-workflow-jul2026.png)
+**Workflow diagrams:**
+
+- Original design: [`docs/assets/roles-and-nomination-workflow-jul2026.png`](./assets/roles-and-nomination-workflow-jul2026.png)
+- Final implemented workflow: [`docs/assets/roles-and-nomination-workflow-sep2026.png`](./assets/roles-and-nomination-workflow-sep2026.png)
 
 ## Admin dashboard today
 
@@ -77,6 +80,16 @@ The same user cannot hold the same role twice at the same school, and the same e
 Per nomination, there is still one journalist assignment, one photographer assignment, and one artist assignment, but the same person can occupy more than one of those assignments.
 
 ### Current workflow, tied to existing admin features
+
+![Final roles and nomination workflow](./assets/roles-and-nomination-workflow-sep2026.png)
+
+The final workflow separates student creation from administrator publication.
+
+After an administrator approves a nomination and assigns roles, the Journalist, Artist, and Photographer can work in parallel. The Journalist creates the draft profile, while artwork and photography can begin directly from the approved nomination.
+
+Once the story and creative work are ready, an administrator reviews and publishes the profile. Staff Reflection can be added after publication, once the recognized person has seen or participated in the project.
+
+Community Outreach then uses the published profile and tracked QR for flyers, sharing, and school recognition.
 
 The active workflow now works like this:
 
@@ -498,5 +511,8 @@ That is probably the most useful thing I learned from this feature: a permission
 - **Chapter onboarding guide** — [`docs/start-a-chapter-guide.md`](./start-a-chapter-guide.md)  
   Step-by-step instructions for launching Now We See You at a new school or community, including how to set up admin accounts, onboard the first staff member, and hand off to a student club.
 
-- **Roles and nomination workflow diagram** — [`docs/assets/roles-and-nomination-workflow-jul2026.png`](./assets/roles-and-nomination-workflow-jul2026.png)  
+- **Roles and nomination workflow diagram**
   Visual overview of the original role and nomination workflow. The core role structure still applies, although the final implementation now keeps publishing with the administrator and allows Artist/Photographer work to begin directly from the approved nomination.
+
+  - [`docs/assets/roles-and-nomination-workflow-jul2026.png`](./assets/roles-and-nomination-workflow-jul2026.png) - original role and nomination design
+  - [`docs/assets/roles-and-nomination-workflow-sep2026.png`](./assets/roles-and-nomination-workflow-sep2026.png) - final implemented chapter workflow after end-to-end testing
