@@ -197,6 +197,16 @@ The temporary test data was not intended to become part of the public project.
 
 The temporary test chapter appears alongside Lake Washington High School because it was published during end-to-end testing. It is test data, not a second live school chapter.
 
+Screenshots from the role-based end-to-end test:
+
+![Journalist workflow test](./docs/assets/club-dashboard-role-workflow-sep2026.png)
+
+The Journalist test account shows the nomination in `in_progress` with access to edit the write-up, while the interface makes clear that an administrator will publish the completed work.
+
+![Photographer workflow test](./docs/assets/club-dashboard-photographer-sep2026.png)
+
+The Photographer test account receives the photo workflow for the same assigned nomination without receiving administrator permissions.
+
 ### What this test cannot fully reproduce
 
 A test chapter can verify that the software works, but it cannot reproduce every part of running a real student team.
