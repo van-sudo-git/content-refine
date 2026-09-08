@@ -207,6 +207,8 @@ The Journalist test account shows the nomination in `in_progress` with access to
 
 The Photographer test account receives the photo workflow for the same assigned nomination without receiving administrator permissions.
 
+The final implemented role and nomination flow is summarized in
+[`docs/assets/roles-and-nomination-workflow-sep2026.png`](./docs/assets/roles-and-nomination-workflow-sep2026.png).
 ### What this test cannot fully reproduce
 
 A test chapter can verify that the software works, but it cannot reproduce every part of running a real student team.
