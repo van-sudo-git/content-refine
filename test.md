@@ -193,6 +193,10 @@ It also helped confirm an important boundary in the system: students can do the 
 
 The temporary test data was not intended to become part of the public project.
 
+![Multi-school chapter test](./docs/assets/chapter-directory-sep2026.png)
+
+The temporary test chapter appears alongside Lake Washington High School because it was published during end-to-end testing. It is test data, not a second live school chapter.
+
 ### What this test cannot fully reproduce
 
 A test chapter can verify that the software works, but it cannot reproduce every part of running a real student team.
