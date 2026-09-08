@@ -139,6 +139,12 @@ That means a role at one school does not automatically grant any permissions at 
 
 The Manage Roles tab uses the currently selected school in the same way as the rest of the admin dashboard.
 
+### Admin assignment workflow
+
+![Admin approve and assign workflow](./assets/admin-approve-assign-sep2026.png)
+
+An administrator can review a pending nomination, add internal notes, assign Journalist, Photographer, and Artist roles, and move the nomination into the active workflow.
+
 ### Control public nominations by school
 
 Each school now has an:
