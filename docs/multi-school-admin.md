@@ -24,7 +24,7 @@ That work is now implemented.
 
 This is the part that surprised me when I first looked at it closely.
 
-The multi-school architecture was partly designed in from the beginning, before I knew I would actually need it.
+The multi-school architecture was partly designed in from the beginning, before I was sure I would actually need it.
 
 The `schools` table already existed. Every school has its own row with a unique ID.
 
@@ -173,6 +173,14 @@ The public routes are now:
 /gallery/:profileSlug
 ```
 
+### Multi-school test chapter
+
+I tested the chapter architecture using a temporary second school before another real school was available.
+
+The test chapter was used to verify school onboarding, administrator access, role assignment, nominations, student-role workflows, media uploads, and administrator publishing.
+
+![Multi-school chapter directory](./assets/chapter-directory-sep2026.png)
+
 ### `/galleries`
 
 This is the chapter directory.
@@ -297,8 +305,8 @@ These were the criteria I wrote before implementation.
 - [x] Analytics and profile manager scope to the selected school
 - [x] Multi-school behavior has been manually tested
 - [x] README updated to describe the chapter model
-- [ ] Final multi-school screenshots added to `docs/assets/`
-- [ ] `test.md` updated with the complete final multi-school test record
+- [x] Final multi-school screenshots added to `docs/assets/`
+- [x] `test.md` updated with the complete final multi-school test record
 
 The remaining unchecked items are documentation work, not missing product functionality.
 
