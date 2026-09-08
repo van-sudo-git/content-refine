@@ -116,6 +116,20 @@ pending → approved → in_progress → published
 
 The database enum also contains `assigned` and `submitted` because they were part of the earlier workflow design. They remain valid status values, but they are not part of the current main UI path.
 
+### Club Dashboard workflow
+
+The final Club Dashboard was tested with temporary role accounts before onboarding the first real student team.
+
+![Journalist Club Dashboard](./assets/club-dashboard-role-workflow-sep2026.png)
+
+An assigned Journalist can see the nomination, shared creative work, and current workflow state. While the nomination is `in_progress`, the Journalist can edit the write-up, but publication remains an administrator action.
+
+![Photographer Club Dashboard](./assets/club-dashboard-photographer-sep2026.png)
+
+The same nomination looks different for a Photographer. The Photographer receives the media actions needed for the assignment without getting access to the Journalist's writing or administrator controls.
+
+These test accounts were used to verify that role permissions change what a student can actually do, rather than only changing a label in the interface.
+
 ## Decisions
 
 ### Journalist publishing changed
