@@ -130,6 +130,12 @@ The same nomination looks different for a Photographer. The Photographer receive
 
 These test accounts were used to verify that role permissions change what a student can actually do, rather than only changing a label in the interface.
 
+### Administrator publishing control
+
+![Administrator publishing control](./assets/admin-publish-control-sep2026.png)
+
+Publication is intentionally separated from student content creation. The Journalist can prepare and edit the draft, but an administrator reviews and publishes the final profile.
+
 ## Decisions
 
 ### Journalist publishing changed
