@@ -245,6 +245,12 @@ I did not need to build separate PDF-generation code.
 
 ## Current flyer layout
 
+### Current Flyer Generator
+
+![Current Flyer Generator](./assets/flyer-generator-sep2026.png)
+
+The current dashboard lets an authorized user select a published staff profile and preview the tracked QR flyer before printing it. The QR routes through the application's redirect system while the readable production profile URL remains visible on the flyer.
+
 The implemented flyer contains:
 
 ```text
@@ -320,7 +326,7 @@ The original success criteria are now mostly complete:
 - [x] Missing redirect produces an error instead of an untracked QR
 - [x] Community Outreach can use the Flyer Generator without full admin access
 - [x] Existing profile flyer flow has been manually tested
-- [ ] Add a current final Flyer Generator screenshot to `docs/assets/`
+- [x] Add a current final Flyer Generator screenshot to `docs/assets/`
 
 ---
 
