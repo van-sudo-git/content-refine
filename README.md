@@ -1,141 +1,678 @@
 # Now We See You
 
-**nowweseeyou.org** — a platform that creates long-term, consent-based digital profiles for the essential workers who keep communities running but are rarely acknowledged by name. Designed to extend to any school, organization, or community where essential contributors go unseen. Current chapter: Lake Washington High School, Kirkland, WA.
+**[nowweseeyou.org](https://nowweseeyou.org)**
 
-Created by Evaan Ahlawat, a student at Lake Washington High School in Kirkland, WA. The initial proototype was in Google Sites [Now We See Me](https://sites.google.com/view/now-we-see-me), after which the first React and Supabase application foundation was developed with Lovable assistance; major later components were written directly by Evaan outside Lovable. See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md).
+Now We See You is a consent-based recognition platform I built for the people in a school community who are seen every day but are often not known by name.
 
+The project started at Lake Washington High School in Kirkland, Washington. I interview staff members, create charcoal portraits, and build permanent profiles that combine their stories, photographs, appreciation messages, and QR-based recognition in the school.
+
+What began as a project I mostly ran myself has grown into a platform designed so a student team, and eventually another school chapter, can run the same process without rebuilding the application.
+
+**Created by:** Evaan Ahlawat, Lake Washington High School  
 **Live site:** [nowweseeyou.org](https://nowweseeyou.org)  
 **Original Google Sites prototype:** [Now We See Me](https://sites.google.com/view/now-we-see-me)  
-**AI disclosure:** [AI_DISCLOSURE.md](./AI_DISCLOSURE.md)  
-**Project documentation:** [`docs/`](./docs/)
+**Technical design:** [`public/docs/technical-design-document.md`](./public/docs/technical-design-document.md)  
+**Testing:** [`test.md`](./test.md)  
+**AI disclosure:** [`AI_DISCLOSURE.md`](./AI_DISCLOSURE.md)
 
 ---
 
-## The problem
+## Why I built it
 
-The Lake Washington School District employs hundreds of classified staff members. They show up every day — fixing broken fixtures, managing school finances, supporting students with disabilities — and most people in the building do not know their names. When they retire or move on, there is often no shared record of the role they played in the school community.
+The first person I drew was Brad Fisher, a custodian at my school.
 
-Now We See You is designed as a durable, consent-based archive rather than a one-time recognition campaign. When Brad Fisher eventually leaves Lake Washington High School, students who come after him can still read his story and understand the contribution he made to the school.
+I had seen Brad constantly, but I did not really know him.
+
+That made me think about how easily someone can become familiar without actually being seen.
+
+Custodians, receptionists, bookkeepers, office professionals, and other classified staff keep a school working every day. Students may pass them hundreds of times without knowing their names or what they contribute.
+
+A thank-you card eventually disappears. A recognition event ends.
+
+I wanted to build something that could last.
+
+Now We See You connects physical recognition in the school to a permanent digital story. A student can see a portrait or QR flyer, scan it, learn the person's name and story, and leave a message of appreciation.
+
+The goal is not just to archive people after they leave. It is to help a community notice them while they are still there.
+
+---
+## Table of contents
+
+- [Why I built it](#why-i-built-it)
+- [What the platform does](#what-the-platform-does)
+- [Design and implementation evidence](#design-and-implementation-evidence)
+- [How a recognition moves through the platform](#how-a-recognition-moves-through-the-platform)
+- [From one person to a student team](#from-one-person-to-a-student-team)
+- [Real-world use](#real-world-use)
+- [Building for another school](#building-for-another-school)
+- [Engineering challenges](#engineering-challenges)
+- [Development history (monthly)](#development-history)
+- [Testing](#testing)
+- [Privacy and consent](#privacy-and-consent)
+- [AI disclosure](#ai-disclosure)
+
+## What the platform does
+
+### For the public
+
+- **Staff profiles** with charcoal portraits, interviews, stories, photography, and contributor attribution
+- **Consent-based publishing** so a staff member is not publicly profiled without approval
+- **Appreciation wall** where students and staff can leave messages that are moderated before publication
+- **QR codes** connecting physical portraits and flyers to digital profiles
+- **Tracked QR redirects** so printed QR codes can keep working even if their destination changes later
+- **Profile sharing** through the native mobile share sheet with a desktop clipboard fallback
+- **Staff Reflections** that can be added after publication, once the recognized person has experienced the portrait and recognition
+- **Public nominations** for future staff members
+
+### For a student chapter
+
+- **Journalist, Artist, Photographer, and Community Outreach roles**
+- **Role-based Club Dashboard**
+- **Nomination-first creative workflow**
+- **Shared draft profiles**
+- **Administrator review and publishing**
+- **Tracked QR generation**
+- **Print-ready Flyer Generator**
+
+### For expansion
+
+- **Multiple schools**
+- **Global and school-level administrators**
+- **School-scoped profiles, nominations, roles, analytics, and settings**
+- **Public chapter galleries**
+- **Chapter onboarding without manually editing the database**
+
+---
+## Design and implementation evidence
+
+I kept the design documents as the system evolved so the repository shows not only the final product, but also what I originally planned and what I changed after implementation.
+
+| Area | Documentation | Evidence |
+|---|---|---|
+| Current architecture | [`technical-design-document.md`](./public/docs/technical-design-document.md) | Current architecture map |
+| Club roles and permissions | [`club-roles-spec.md`](./docs/club-roles-spec.md) | [`Final workflow`](./docs/assets/roles-and-nomination-workflow-sep2026.png), [`Journalist`](./docs/assets/club-dashboard-role-workflow-sep2026.png), [`Photographer`](./docs/assets/club-dashboard-photographer-sep2026.png), [`Admin publish`](./docs/assets/admin-publish-control-sep2026.png) |
+| Original role design | [`club-roles-spec.md`](./docs/club-roles-spec.md) | [`July workflow`](./docs/assets/roles-and-nomination-workflow-jul2026.png) |
+| Multi-school architecture | [`multi-school-admin.md`](./docs/multi-school-admin.md) | [`Chapter test`](./docs/assets/chapter-directory-sep2026.png), [`Approve & Assign`](./docs/assets/admin-approve-assign-sep2026.png) |
+| New chapter onboarding | [`start-a-chapter-guide.md`](./docs/start-a-chapter-guide.md) | End-to-end chapter test in [`test.md`](./test.md) |
+| Flyer Generator | [`flyer-generator.md`](./docs/flyer-generator.md) | [`Final Flyer Generator`](./docs/assets/flyer-generator-sep2026.png) |
+| Profile sharing | [`share-button.md`](./docs/share-button.md) | [`Mobile`](./docs/assets/share-button-jul2026.png), [`Desktop`](./docs/assets/share-button-desktop-jul2026.png) |
+| QR architecture | [`retrospective-qr-redirect.md`](./docs/retrospective-qr-redirect.md) | QR and scan verification in [`test.md`](./test.md) |
+| Founder to club transition | [`retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md) | Club Dashboard evidence |
+| Testing | [`test.md`](./test.md) | Historical and September end-to-end results |
+| AI use | [`AI_DISCLOSURE.md`](./AI_DISCLOSURE.md) | Technical ownership disclosure |
+
+The `docs/assets/` directory also contains earlier screenshots from the project's development history.
+
+I have kept some of those because they show how the application changed rather than presenting the final system as if it appeared all at once.
 
 ---
 
-## What it does
+## How a recognition moves through the platform
 
-- **Staff profiles** — hand-drawn charcoal portraits, personal bios, and full stories for each featured staff member, published with explicit consent
-- **Appreciation wall** — students and staff can leave public messages that are AI-moderated before going live
-- **QR code system** — each featured profile can be reached through a QR code displayed in the school building; QR codes are permanent and resolve correctly even if the platform's hosting changes
-- **Nomination workflow** — anyone can nominate the next staff member at [nowweseeyou.org/nominate](https://nowweseeyou.org/nominate). Nominations land in the admin dashboard where administrators review, approve, decline, or feature them. The `nominee_informed` field confirms whether the nominee knows they have been nominated. Approved nominations trigger in-person outreach and explicit consent before any profile work begins. Real nominations from LWSD staff are visible in [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-nominations-jul2026.png) and the admin workflow in [`docs/assets/admin-profiles-jul2026.png`](./docs/assets/admin-profiles-jul2026.png)
-- **Club roles** — journalist, photographer, artist, and PR roles can be assigned per school through the Manage Roles tab, replacing the single all-or-nothing admin account with role-scoped access matched to what each person actually needs to do. See [`docs/club-roles-spec.md`](./docs/club-roles-spec.md)
-- **Admin dashboard** — school administrators can review nominations, manage profiles, track engagement, and generate print-ready QR flyers
-- **Multi-school admin** — global admin view for the founder with a school selector to switch between campuses; school admins see only their school's nominations, profiles, and analytics; new schools can be onboarded directly from the dashboard without touching the database 
-- **Flyer generator** — admin tool that generates print-ready QR placards for each staff profile, with per-flyer scan tracking so engagement from each physical placard is measured independently
-- **Share button** — one-tap sharing on every staff profile page; opens native share sheet on mobile so visitors can text or post a staff member's story directly from their phone; falls back to clipboard copy on desktop [`docs/assets/share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
-- **Club and handoff model** — the platform is designed to transition from a solo founder to a student club or chapter lead at each school, removing the single-person dependency for ongoing operations. See [`docs/retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md)
-- **Club dashboard** — journalists, photographers, and artists sign in at the same login page as admins and are automatically routed to their own dashboard, separate from the admin view, showing only the nominations assigned to them. A journalist can draft and edit their assigned profile there; a photographer or artist can upload once the journalist has started it. None of them can publish it — publishing stays an administrator-only action, enforced at the database level so the restriction holds even if the interface has a bug. A new account is automatically linked to its invited role the first time it signs in.
-- **Analytics** — per-profile page views, daily QR scan counts from two Supabase projects, appreciation-message tracking, and period-over-period trends. Real engagement data in [`docs/assets/analytics-traffic-jul2026.png`](./docs/assets/analytics-traffic-jul2026.png) and [`docs/assets/analytics-per-profile-breakdown-jul2026.png`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
+The workflow changed significantly as I moved the project from something I operated myself into something a student team could run.
+
+![Now We See You chapter workflow](./docs/assets/roles-and-nomination-workflow-sep2026.png)
+
+The main workflow is:
+
+```text
+Nomination
+    ↓
+Admin review and role assignment
+    ↓
+Journalist + Artist + Photographer
+    ↓
+Shared draft
+    ↓
+Admin review and publish
+    ↓
+Published profile + QR
+    ↓
+Staff Reflection
+    ↓
+Community Outreach
+```
+
+The creative roles can work in parallel.
+
+The Journalist writes the story and creates the draft profile. The Artist can work on the portrait and the Photographer can upload photographs without waiting for the entire story to be finished.
+
+The most important permission boundary is:
+
+**Students create. Admin publishes.**
+
+That rule is enforced in the database as well as the interface.
+
+The full design history, including the original July workflow and what changed during implementation, is documented in [`docs/club-roles-spec.md`](./docs/club-roles-spec.md).
+
+Original workflow design: [`roles-and-nomination-workflow-jul2026.png`](./docs/assets/roles-and-nomination-workflow-jul2026.png)
+
+---
+
+## From one person to a student team
+
+Originally, most of the project depended on me.
+
+I interviewed the staff member, created the portrait, wrote the profile, uploaded the content, generated the QR code, and maintained the website.
+
+That worked for the first profiles, but it would not scale.
+
+I redesigned the platform around separate student responsibilities:
+
+| Role | Responsibility |
+|---|---|
+| Journalist | Interview, write the story, and create/edit the draft profile |
+| Artist | Create and upload portrait artwork |
+| Photographer | Upload supporting photography |
+| Community Outreach | Generate flyers and share published recognition |
+| Administrator | Review nominations, assign roles, review work, and publish |
+
+Students sign in through the same authentication system but are routed according to their permissions.
+
+### Journalist workflow
+
+![Journalist Club Dashboard](./docs/assets/club-dashboard-role-workflow-sep2026.png)
+
+An assigned Journalist can see the nomination, the creative work already attached to it, and the current workflow state.
+
+The Journalist can create and edit the write-up but cannot publish it.
+
+A Photographer working on the same nomination gets a different set of controls.
+
+Supporting evidence:
+
+- [`Photographer Club Dashboard`](./docs/assets/club-dashboard-photographer-sep2026.png)
+- [`Administrator publishing control`](./docs/assets/admin-publish-control-sep2026.png)
+
+The full permission model and implementation decisions are in [`docs/club-roles-spec.md`](./docs/club-roles-spec.md).
+
+I also documented why I changed the project from a founder-operated workflow to a chapter model in [`docs/retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md).
+
+---
+
+## Nomination to assignment
+
+Anyone can nominate someone through:
+
+**[nowweseeyou.org/nominate](https://nowweseeyou.org/nominate)**
+
+A nomination first enters the administrator dashboard as `pending`.
+
+The administrator can review the nomination, add internal notes, and assign the creative team.
+
+![Admin approve and assign workflow](./docs/assets/admin-approve-assign-sep2026.png)
+
+The active nomination states are:
+
+```text
+pending → approved → in_progress → published
+```
+
+After approval, the creative roles can begin their work.
+
+The Journalist's first save creates the linked draft profile and moves the nomination into `in_progress`.
+
+Publication remains an administrator checkpoint.
+
+---
+
+## Connecting the digital project to the physical school
+
+I did not want Now We See You to exist only as a website.
+
+The physical portrait, flyer, or display is what makes someone stop and notice the person.
+
+Each published profile can therefore have a tracked QR code.
+
+The administrator dashboard contains a Flyer Generator that creates a printable placard:
+
+![Flyer Generator](./docs/assets/flyer-generator-sep2026.png)
+
+The QR does not have to point directly to a hard-coded profile URL.
+
+It can route through a redirect system that lets the destination change later without reprinting the physical QR code.
+
+The redirect also records scan activity.
+
+That means I can measure whether someone actually moved from the physical recognition to the person's story.
+
+Technical details:
+
+- [`docs/flyer-generator.md`](./docs/flyer-generator.md)
+- [`docs/retrospective-qr-redirect.md`](./docs/retrospective-qr-redirect.md)
 
 ---
 
 ## Current profiles
 
-- **Brad Fisher** — Head Custodian, Lake Washington High School
-- **Shirley P.** — Bookkeeper / Accounting Technician, Lake Washington High School
-- **Pauline Gillespie** — Office Professional, Lake Washington High School 
-  - Added portrait via admin flow (no-code workflow) [`docs/assets/admin-update-portrait-jul2026.png`](./docs/assets/admin-update-portrait-jul2026.png)
-- **Jose Guerrero** — Night Lead Custodian, Lake Washington High School
-- **Michele Raymer** — Transition Center Teacher, Lake Washington High School
-- **Beth Da Luz** — Receptionist, Lake Washington High School
+Six real Lake Washington High School staff profiles have been published:
 
-Brad Fisher's portrait was exhibited at the Kirkland Arts Center in 2026.
+- **Brad Fisher** - Head Custodian
+- **Shirley P.** - Bookkeeper / Accounting Technician
+- **Pauline Gillespie** - Office Professional
+- **Jose Guerrero** - Night Lead Custodian
+- **Michele Raymer** - Transition Center Teacher
+- **Beth Da Luz** - Receptionist
+
+Brad Fisher's portrait was also exhibited at the Kirkland Arts Center in 2026.
 
 ---
 
-## Platform usage — July 2026
+## Real-world use
 
-Real engagement data as of July 2026. Screenshots in [`docs/assets/`](./docs/assets/).
+Now We See You is not only a demo application.
 
-- **1,173 page views** across all profiles (all time)
-- **39 QR scans** from physical placards in school buildings and KAC exhibition
-- **10 approved appreciation messages** — AI moderation active, 20 messages rejected
-- **2,050% traffic increase** the week of the Kirkland Arts Center exhibition
-- **3 nominations** received from LWSD staff email addresses
-- **brad-kac** QR code deployed at KAC — 16 scans recorded from exhibition visitors
+### Recorded engagement as of July 2026
+
+- **1,173 profile page views**
+- **39 QR scans**
+- **10 approved appreciation messages**
+- **3 nominations received from LWSD staff email addresses**
+- **16 scans** from Brad's QR at the Kirkland Arts Center exhibition
+- **2,050% traffic increase** during the week of the exhibition
+
+![Traffic analytics](./docs/assets/analytics-traffic-jul2026.png)
+
+More detailed evidence:
+
+[`Per-profile analytics`](./docs/assets/analytics-per-profile-breakdown-jul2026.png)
+
+These figures come from actual platform activity rather than seeded demonstration data.
+
+The original production screenshots from this stage of the project are preserved in [`docs/assets/`](./docs/assets/).
+
+---
+
+## Building for another school
+
+One of the biggest questions I wanted to answer was:
+
+**Could another school use Now We See You without me rebuilding the application?**
+
+I added:
+
+- a `schools` data model
+- global and school-level administrators
+- school-scoped nominations
+- school-scoped profiles
+- school-scoped club roles
+- school-scoped analytics
+- school settings
+- chapter-specific public galleries
+- administrator-based school onboarding
+
+Before another real school chapter was available, I created a temporary test school and ran the full workflow through it.
+
+![Multi-school chapter test](./docs/assets/chapter-directory-sep2026.png)
+
+The second chapter shown in this screenshot is **test data**, not a second live school.
+
+I used it to verify:
+
+1. creating a school
+2. creating its first administrator
+3. assigning student roles
+4. submitting a nomination
+5. reviewing and assigning the nomination
+6. logging in through different role accounts
+7. creating a draft profile
+8. uploading artwork and photography
+9. administrator review
+10. publication
+11. school-level data isolation
+
+That test was important because it tested the chapter as a complete system rather than checking each screen separately.
+
+The detailed architecture and test evidence are in:
+
+[`docs/multi-school-admin.md`](./docs/multi-school-admin.md)
+
+The onboarding process for a future chapter is documented separately in:
+
+[`docs/start-a-chapter-guide.md`](./docs/start-a-chapter-guide.md)
+
+---
+
+## Engineering challenges
+
+The most difficult parts of Now We See You were not individual pages. They were the systems connecting them.
+
+### Role-based access
+
+Giving every student administrator permissions would have been easy, but it would also have been unsafe.
+
+The role system determines both what a person sees and what the database allows that person to change.
+
+A Journalist can edit an assigned draft but cannot publish it.
+
+An Artist or Photographer can work with the media allowed for their assignment.
+
+Community Outreach can generate flyers without receiving the rest of the administrator dashboard.
+
+### School isolation
+
+A school administrator should never be able to see or change another school's information.
+
+I did not want that boundary to depend only on a school dropdown in React.
+
+The application therefore uses Supabase Row Level Security and database permission checks to enforce school boundaries.
+
+### Nomination-first media
+
+My first design treated the profile as the container for everything.
+
+That created a problem: the Artist or Photographer would have to wait for the Journalist to create the profile.
+
+In the final system, creative work can be attached to the nomination first.
+
+That lets different students work in parallel and matches how the real club process works.
+
+### Administrator-only publication
+
+The original role design allowed the Journalist to publish.
+
+I changed that while implementing and testing the Club Dashboard.
+
+Writing and publishing turned out to be different kinds of permission.
+
+A student should be able to do real creative work without administrator access, but publishing changes what the public sees about another person.
+
+So the final rule became:
+
+**Journalist can create and edit. Administrator publishes.**
+
+I also enforced this in the database rather than only hiding the Publish button in the interface.
+
+### Permanent physical QR codes
+
+A printed QR code may stay on a wall much longer than the code around the website stays unchanged.
+
+Separating the physical QR identifier from its final destination means I can update the destination without replacing the printed placard.
+
+### Two generations of QR infrastructure
+
+Some earlier QR codes already existed through the separate `heros-redirect` service before the main application gained its own redirect system.
+
+Rather than breaking those codes, I kept them working and combined their analytics while avoiding overlapping counts.
+
+### Moving from founder workflow to team workflow
+
+The original application assumed that one person controlled most of the process.
+
+Adding student roles affected authentication, nominations, draft creation, media uploads, QR generation, publication permissions, and the database schema.
+
+This became one of the largest architectural changes in the project.
 
 ---
 
 ## Tech stack
 
-- React + TypeScript + Vite + Tailwind CSS
-- Supabase: PostgreSQL, Row Level Security, Edge Functions, and Storage
-- Lovable: AI-assisted web development platform
-- Deployed at [nowweseeyou.org](https://nowweseeyou.org)
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Supabase PostgreSQL
+- Supabase Authentication
+- Supabase Storage
+- Supabase Row Level Security
+- Supabase Edge Functions
+- PL/pgSQL
+- Playwright
+
+The main site is deployed at **nowweseeyou.org**.
+
+I also used Lovable as an AI-assisted development tool, particularly during the earlier React/Supabase build.
+
+My use of AI is documented rather than hidden:
+
+[`AI_DISCLOSURE.md`](./AI_DISCLOSURE.md)
 
 ---
 
-## QR and analytics architecture
+## Architecture
 
-The project currently includes two QR-related systems.
+The main application handles:
 
-### Main application
+- staff profiles
+- nominations
+- appreciation messages
+- student role assignments
+- school administrators
+- school/chapter data
+- profile and nomination media
+- QR generation
+- QR analytics
+- profile page analytics
+- public galleries
+- publishing
 
-This repository handles profiles, appreciations, nominations, page views, admin access control, and QR redirect records created through the flyer generator.
+A separate Next.js project, [`heros-redirect`](https://github.com/van-sudo-git/heros-redirect), continues to support QR codes created earlier in the project.
 
-### Standalone redirect service
+The administrator analytics dashboard combines information from both QR systems.
 
-[`heros-redirect`](https://github.com/van-sudo-git/heros-redirect) is a separate Next.js service used to support QR-to-profile routing and daily scan logging independently of the main application.
-
-The dashboard combines analytics from both systems and avoids double-counting overlapping QR records. By using an independently deployable redirect layer, the project can update profile destinations without reprinting physical QR placards.
-
-### Key backend components
-
-- `supabase/functions/moderate-appreciation` — Deno Edge Function that routes appreciation messages through AI moderation before storing them. Moderation rules and approval criteria were designed for the school context.
-- `supabase/functions/qr-redirect` — Deno Edge Function that resolves QR scan IDs to destination URLs and logs daily analytics through an atomic PL/pgSQL upsert.
-- `supabase/migrations/` — migrations defining the schema, Row Level Security policies, and PL/pgSQL functions for atomic view and scan counting.
-
----
-
-## Database schema
+### Main database tables
 
 | Table | Purpose |
 |---|---|
-| `schools` | District schools; designed to support future multi-school expansion |
-| `school_admins` | Email-based administrator access control per school; `is_global_admin` flag distinguishes global from school-scoped admins |
-| `profiles` | Staff profiles with slug, bio, role, and publication status |
-| `club_roles` | Journalist, photographer, artist, and PR role assignments, scoped per school |
-| `nominations` | Community nominations with status workflow, school dropdown, and journalist/photographer/artist assignment |
-| `profile_images` | Portrait, QR, and additional profile images |
-| `appreciations` | Wall messages with moderation status |
-| `redirects` | QR-code-to-destination URL mapping |
-| `redirect_events_daily` | Daily scan counts per QR code |
-| `page_views` | Daily page-view counts per profile slug |
+| `schools` | School/chapter records |
+| `school_admins` | School and global administrator access |
+| `profiles` | Staff profile content and publication state |
+| `club_roles` | Student role assignments |
+| `nominations` | Nomination state and assigned creative roles |
+| `profile_images` | Portrait and supporting media |
+| `appreciations` | Moderated appreciation messages |
+| `redirects` | QR identifier to destination mapping |
+| `redirect_events_daily` | Daily QR scan totals |
+| `page_views` | Profile page-view counts |
 
-Row Level Security is enabled on all application tables. Administrative access is governed through PostgreSQL functions `is_school_admin()` and `is_any_school_admin()` defined in the migrations.
+Row Level Security is enabled on application tables.
+
+Administrative and role-based access is enforced through database policies and helper functions rather than depending only on frontend controls.
+
+For a shorter current architecture map, see:
+
+[`public/docs/technical-design-document.md`](./public/docs/technical-design-document.md)
+
+---
+
+## Key backend components
+
+### Appreciation moderation
+
+`supabase/functions/moderate-appreciation`
+
+Appreciation messages are moderated before they can appear publicly.
+
+This is especially important because the application is being used around real staff members in a school.
+
+### QR redirects
+
+`supabase/functions/qr-redirect`
+
+The QR redirect function resolves a tracked identifier to the saved profile destination and records scan activity.
+
+### Database migrations
+
+`supabase/migrations/`
+
+The migrations are the source of truth for the production schema, Row Level Security policies, role permissions, school isolation, workflow changes, and analytics functions.
+
+---
+
+## Public routes
+
+The public chapter structure is:
+
+```text
+/galleries
+/galleries/:schoolSlug
+/gallery/:profileSlug
+```
+
+`/galleries` lists public chapters.
+
+A school only appears there after it has at least one published profile.
+
+Creating a school in the administrator dashboard does not automatically make it look like a live chapter.
+
+Individual staff profiles remain on the original singular `/gallery/:profileSlug` route so existing physical QR codes do not break when the chapter navigation changes.
 
 ---
 
 ## Testing
 
-Automated verification scripts are in `scripts/`:
+I kept the earlier testing history instead of rewriting it after the application changed.
 
-- `scripts/verify-live-browser.ts` — Playwright headless browser tests checking SEO, auth redirects, and page functionality on nowweseeyou.org
-- `scripts/verify-live-readonly.ts` — Supabase read-only checks verifying published profiles, QR redirect resolution, and appreciation data
+The original July testing covered:
 
-Manual and automated test results are documented in [`test.md`](./test.md).
+- published profiles
+- authentication
+- QR redirects
+- nominations
+- appreciation moderation
+- analytics
+- sharing
+- Flyer Generator
+- multi-school administration
+- role management
 
-Run automated checks:
+As the platform expanded, I added end-to-end chapter testing with temporary school and role accounts.
+
+### End-to-end test chapter
+
+The temporary test chapter included:
+
+- new school creation
+- school administrator creation
+- Journalist role assignment
+- Photographer role assignment
+- Artist role assignment
+- Community Outreach role assignment
+- fake nomination submission
+- administrator approval and assignment
+- Journalist draft-profile creation
+- photography upload
+- artwork workflow
+- content editing
+- administrator review
+- administrator publication
+
+The Journalist test account:
+
+![Journalist workflow test](./docs/assets/club-dashboard-role-workflow-sep2026.png)
+
+The corresponding Photographer workflow is preserved here:
+
+[`club-dashboard-photographer-sep2026.png`](./docs/assets/club-dashboard-photographer-sep2026.png)
+
+The administrator publication boundary is preserved here:
+
+[`admin-publish-control-sep2026.png`](./docs/assets/admin-publish-control-sep2026.png)
+
+### September production regression
+
+The final production regression covered:
+
+- public chapter routes
+- school isolation
+- nomination to assignment
+- Club Dashboard workflows
+- overlapping student roles
+- administrator-only publishing
+- Staff Reflection
+- contributor attribution
+- tracked QR generation
+- publish/unpublish synchronization
+- profile-specific metadata
+- sitemap generation
+- mobile public workflows
+- mobile Club Dashboard workflows
+- administrator mobile behavior
+
+All major workflows passed.
+
+The administrator dashboard works on mobile, although some dense admin screens are compressed on narrow phones and are easier to use on a laptop or desktop.
+
+Full test history:
+
+[`test.md`](./test.md)
+
+### Automated checks
+
 ```bash
 npx playwright install chromium
 npx tsx scripts/verify-live-browser.ts
 npx tsx scripts/verify-live-readonly.ts
 ```
 
+### Repository checks
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+The build process regenerates the sitemap and LLM files before the Vite build.
+
+---
+
+## Profile sharing
+
+Every published staff profile has a Share action.
+
+On supported mobile devices, the site uses the native share sheet.
+
+On desktop, it falls back to copying the profile URL.
+
+The detailed implementation and manual testing are in:
+
+[`docs/share-button.md`](./docs/share-button.md)
+
+Historical evidence:
+
+- [`share-button-jul2026.png`](./docs/assets/share-button-jul2026.png)
+- [`share-button-desktop-jul2026.png`](./docs/assets/share-button-desktop-jul2026.png)
+
+---
+
+## Privacy and consent
+
+The people being recognized should control how they appear.
+
+Every real staff member published through Now We See You has given consent before publication.
+
+The process includes:
+
+- asking whether the nominee already knows about the nomination
+- speaking with the person before beginning the profile
+- explaining what the project is
+- receiving permission for the portrait and story
+- allowing the staff member to review their profile
+- allowing the profile to be unpublished if requested
+- moderating appreciation messages before they appear publicly
+
+Staff Reflection happens later because I want the person to respond after they have actually experienced receiving the portrait and recognition.
+
+The platform is supposed to give power to the people being profiled, not just the people building it.
+
 ---
 
 ## AI disclosure
 
-See [AI_DISCLOSURE.md](./AI_DISCLOSURE.md) for full details.
+I used AI development tools during this project, and I think it is important to explain that clearly.
 
-Short version: Lovable generated significant portions of the front-end code based on Evaan's product requirements and design direction. The database schema, QR redirect architecture, analytics requirements, moderation behavior, nomination workflow, and flyer generator were designed and iterated through a mix of AI-assisted and manually edited code. All portrait artwork, staff interviews, consent conversations, and community relationships are Evaan's own work.
+The original Google Sites prototype came first.
+
+The first React and Supabase application foundation was then developed with Lovable assistance from my requirements and design direction.
+
+As the application became more complicated, I worked directly with the repository on later architecture decisions, database changes, role workflows, testing, debugging, and documentation.
+
+The portraits, interviews, staff relationships, consent conversations, and decisions about what Now We See You should become are my own work.
+
+Full disclosure:
+
+[`AI_DISCLOSURE.md`](./AI_DISCLOSURE.md)
 
 ---
 
@@ -144,29 +681,30 @@ Short version: Lovable generated significant portions of the front-end code base
 ```text
 nowweseeyou/
 ├── docs/
-│   ├── assets/                  # Analytics screenshots and platform evidence
-│   ├── flyer-generator.md             # Architecture notes for the flyer generator
-│   ├── share-button.md                # Architecture notes for the share button
-│   ├── multi-school-admin.md          # Architecture notes for multi-school admin
-│   ├── club-roles-spec.md             # Club roles permissions spec
-│   ├── retrospective-qr-redirect.md   # QR redirect architecture retrospective
-│   └── retrospective-one-person-to-club.md  # Founder to club structure retrospective
+│   ├── assets/
+│   ├── club-roles-spec.md
+│   ├── flyer-generator.md
+│   ├── multi-school-admin.md
+│   ├── retrospective-one-person-to-club.md
+│   ├── retrospective-qr-redirect.md
+│   ├── share-button.md
+│   └── start-a-chapter-guide.md
+├── public/
+│   └── docs/
+│       └── technical-design-document.md
 ├── scripts/
-│   ├── verify-live-browser.ts   # Playwright live site verification
-│   └── verify-live-readonly.ts  # Supabase data verification
 ├── src/
-│   ├── components/              # React components including AdminAnalytics, AppreciationWall, FlyerPreview
-│   ├── pages/                   # Route pages: Index, Gallery, ProfilePage, Admin, AdminFlyer, ClubDashboard, Nominate
-│   ├── hooks/                   # useAuthReady (auth-loading state handling)
-│   ├── lib/                     # herosRedirectClient, demoData, utilities
-│   └── integrations/
-│       └── supabase/            # Client and generated TypeScript types
+│   ├── components/
+│   ├── hooks/
+│   ├── integrations/
+│   ├── lib/
+│   └── pages/
 ├── supabase/
-│   ├── functions/               # Edge functions: moderate-appreciation, qr-redirect
-│   └── migrations/              # Database schema and policy migrations
-├── AI_DISCLOSURE.md             # How AI tools were used
-├── test.md                      # Manual and automated testing results
-└── .env.example                 # Environment variable template
+│   ├── functions/
+│   └── migrations/
+├── AI_DISCLOSURE.md
+├── test.md
+└── .env.example
 ```
 
 ---
@@ -178,78 +716,84 @@ npm install
 npm run dev
 ```
 
-Create a local `.env` file using `.env.example` as a template. Never commit real keys, service-role credentials, or production connection details.
+Create a local `.env` using `.env.example`.
+
+Production keys and service-role credentials should never be committed.
 
 ---
 
-## Changelog
+## Development history
+
+### September 2026
+
+- Completed end-to-end chapter testing using a temporary second school
+- Tested Journalist, Photographer, Artist, and Community Outreach permissions
+- Tested nomination, role assignment, draft creation, media contribution, administrator review, and publishing
+- Added final Club Dashboard workflow evidence
+- Added administrator-only publishing evidence
+- Added final multi-school testing evidence
+- Added the final chapter workflow diagram
+- Added the final Flyer Generator screenshot and documentation
+- Completed final production regression
+- Fixed production-domain profile redirects after slug changes
+- Regenerated the production sitemap and generated files
+- Updated public appreciation dates to show month and year
 
 ### August 2026
-- Club roles system: journalist, photographer, artist, and PR roles assignable per school via a new Manage Roles tab; database layer (roles table, nomination status enum, assignment columns, RLS policies) already shipped, UI still in progress [`club-roles-spec.md`](./docs/club-roles-spec.md)
-- Club dashboard shipped and tested: journalist, photographer, and artist accounts sign in at the existing admin login page and are automatically routed to a separate dashboard showing only their own assigned nominations. A new account is automatically linked to its invited role the first time it signs in. A journalist can draft and edit their assigned profile; a photographer or artist can upload once the journalist has started the write-up. Publishing stays an administrator-only action, enforced at the database level so the restriction holds even if the interface has a bug. [`retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md)
+
+- Built the Club Dashboard
+- Added Journalist, Photographer, Artist, and Community Outreach roles
+- Added role-aware login routing
+- Added invitation claiming for role accounts
+- Added nomination-first creative media
+- Added Journalist draft-profile creation
+- Added administrator-only publishing
+- Added database-level role permissions
+- Added Staff Reflection and contributor workflow
 
 ### July 2026
-- Flyer Generator fixes: moved from a standalone route into the admin dashboard as a tab, now scoped to the currently selected school (previously showed all schools' published profiles)
-- Multi-school admin: `is_global_admin` column added to `school_admins`; global admin sees all schools with selector; school admins see only their school's data enforced at RLS level [`multi-school-admin.md`](./docs/multi-school-admin.md)
-- Retrospectives added: QR redirect architecture and founder-to-club transition
-- Shirley P. school assignment fixed in database
-- Share button: native mobile share sheet + clipboard fallback on every staff profile page [`share-button.md`](./docs/share-button.md)  
-- Flyer generator: admin tool to generate print-ready QR placards with per-flyer analytics tracking [`flyer-generator.md`](./docs/flyer-generator.md)
-- Nomination form update: added school dropdown, made department optional, added database migration
-- QR redirect URLs updated to nowweseeyou.org across all records
-- Automated verification scripts added for live platform testing
-- Analytics evidence documented: 1,173 page views, 39 QR scans, KAC traffic spike captured
-- 4 new profiles added: Pauline Gillespie, Jose Guerrero, Michele Raymer, Beth Da Luz
+
+- Added multi-school administration
+- Added global and school-level administrator behavior
+- Added school-level data isolation
+- Added Flyer Generator
+- Added native profile sharing
+- Added public school selection to nominations
+- Added automated browser and database verification
+- Documented analytics evidence
+- Added four additional staff profiles
 
 ### June 2026
-- brad-kac QR code deployed at Kirkland Arts Center exhibition — 16 scans recorded
-- AI moderation active — 20 messages rejected, 10 approved
 
-### March–May 2026
-- Initial platform build — profiles, appreciations, nominations, QR system, admin dashboard, analytics
-- Brad Fisher and Shirley P. profiles launched
+- Brad Fisher's portrait exhibited at the Kirkland Arts Center
+- Exhibition QR recorded 16 scans
+- Appreciation-message moderation running in production
 
----
+### March-May 2026
 
-## Privacy and consent
-
-Every staff member profiled on Now We See You has given explicit, informed consent before any content is published. The consent process is built into the platform workflow:
-
-- No profile is published without the staff member's direct approval
-- Staff members are shown exactly what their profile will look like before it goes live
-- Profiles can be unpublished at any time at the staff member's request
-- The nomination workflow is end-to-end consent-aware:
-  - Anyone can submit a nomination at [nowweseeyou.org/nominate](https://nowweseeyou.org/nominate) — name, role, school, and reason required; department optional
-  - The `nominee_informed` field confirms whether the nominee has been told they are being nominated before submission
-  - Nominations land in the admin dashboard where they are reviewed, approved, declined, or featured by school administrators
-  - Approved nominations trigger outreach to the nominee — Evaan meets them in person, explains the project, and gets explicit consent before any profile work begins
-  - Only after consent is given does portrait work and profile creation start
-  - Real nominations from LWSD staff are visible in [`docs/assets/admin-nominations-jul2026.png`](./docs/assets/admin-nominations-jul2026.png)
-- Appreciation messages are AI-moderated before publication to protect staff members from inappropriate content
-- The platform does not collect personal data from visitors beyond standard page view analytics
-
-The platform is designed to give power to the people being profiled, not just the people building it.
+- Built the first React/Supabase version
+- Added staff profiles
+- Added appreciation messages
+- Added nominations
+- Added QR redirects
+- Added administrator dashboard
+- Added analytics
+- Published the first staff profiles
 
 ---
 
-## Extending to other schools and communities
+## What I want to test next
 
-Now We See You is designed from the beginning to be repeatable. The database schema includes a `schools` table with per-school admin access control — adding a new school is an administrative action, not a rebuild.
+The next challenge is not another major feature.
 
-The model works for any organization where essential workers are under-recognized:
+It is seeing what happens when a real group of students uses the chapter workflow independently.
 
-- **Other school districts** — any district can run their own instance using the same platform
-- **Community organizations** — libraries, community centers, municipal services
-- **Nonprofits** — staff and volunteers who keep organizations running
+The software now supports the process end to end.
 
-### How replication works
+The next stage is learning whether a Journalist, Artist, Photographer, and Community Outreach student can coordinate through it without relying on me to explain every step.
 
-The platform follows a no-code replication model for new chapters:
+That will show me where the chapter workflow is confusing and what needs to change before another real school uses it.
 
-1. A school or organization identifies a founding student or community member to lead the project
-2. They receive access to the admin dashboard for their school
-3. They follow the portrait and consent process to onboard their first staff member
-4. QR placards are generated using the built-in flyer generator and displayed in the building
-5. The appreciation wall and nomination form activate immediately for their community
+If that works, Now We See You can become more than a project at one school.
 
-A completed onboarding guide for new chapter admins is available at [`docs/start-a-chapter-guide.md`](./docs/start-a-chapter-guide.md).
+It can become a repeatable way for students to notice the people who have been around them all along.
