@@ -442,7 +442,7 @@ const AdminAnalytics = ({
         const today = new Date();
         const days: DailyStat[] = [];
 
-        for (let offset = 89; offset >= 0; offset -= 1) {
+        for (let offset = 179; offset >= 0; offset -= 1) {
           const date = new Date(today);
           date.setDate(date.getDate() - offset);
           const day = toLocalDay(date);
