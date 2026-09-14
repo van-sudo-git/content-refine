@@ -217,7 +217,7 @@ const AdminAnalytics = ({
         },
   );
   const [loading, setLoading] = useState(!isDemo);
-  const [rangeDays, setRangeDays] = useState<7 | 14 | 30>(7);
+  const [rangeDays, setRangeDays] = useState<7 | 14 | 30 | 60 | 90>(7);
 
   useEffect(() => {
     if (isDemo) return;
@@ -442,7 +442,7 @@ const AdminAnalytics = ({
         const today = new Date();
         const days: DailyStat[] = [];
 
-        for (let offset = 59; offset >= 0; offset -= 1) {
+        for (let offset = 89; offset >= 0; offset -= 1) {
           const date = new Date(today);
           date.setDate(date.getDate() - offset);
           const day = toLocalDay(date);
@@ -647,7 +647,7 @@ const AdminAnalytics = ({
           </div>
 
           <div className="inline-flex overflow-hidden rounded-lg border border-border text-xs">
-            {([7, 14, 30] as const).map((days) => (
+            {([7, 14, 30, 60, 90] as const).map((days) => (
               <button
                 key={days}
                 type="button"
