@@ -29,6 +29,10 @@ interface Profile {
   reflection_video_url: string | null;
   reflection_recorded_date: string | null;
   status: string;
+  consent_status: string;
+  consent_requested_at: string | null;
+  consent_approved_at: string | null;
+  consent_method: string | null;
   created_at: string;
 }
 
@@ -101,6 +105,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   const [images, setImages] = useState<ProfileImage[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [consentEmail, setConsentEmail] = useState("");
+  const [requestingConsent, setRequestingConsent] = useState(false);
+  const [recordingConsent, setRecordingConsent] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     slug: "",
@@ -122,7 +129,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       .eq("school_id", schoolId)  // ADD THE School id
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setProfiles(data);
+        if (data) setProfiles(data as Profile[]);
       });
   }, [schoolId]);
 
@@ -148,6 +155,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     setIsNew(true);
     setEditing(null);
     setImages([]);
+    setConsentEmail("");
     setForm({
       name: "",
       slug: "",
@@ -164,6 +172,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   const startEdit = async (profile: Profile) => {
     setIsNew(false);
     setEditing(profile);
+    setConsentEmail("");
 
     const { featuredQuote, story } = splitBio(profile.bio);
 
@@ -360,6 +369,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       setEditing(null);
       setIsNew(false);
       setImages([]);
+      setConsentEmail("");
       loadProfiles();
     } catch (error: any) {
       toast({
@@ -397,7 +407,131 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     }
   };
 
+  const requestPublicationPermission = async () => {
+    if (!editing) return;
+
+    const email = consentEmail.trim();
+
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Enter the staff member's email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRequestingConsent(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "request-profile-consent",
+        {
+          body: {
+            profileId: editing.id,
+            mode: "email",
+            email,
+          },
+        },
+      );
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setEditing((current) =>
+        current
+          ? {
+              ...current,
+              consent_status: "requested",
+              consent_requested_at: data?.requestedAt ?? new Date().toISOString(),
+              consent_approved_at: null,
+              consent_method: null,
+            }
+          : current,
+      );
+
+      setConsentEmail("");
+
+      toast({
+        title: "Permission requested",
+        description: `A private review link was sent to ${email}.`,
+      });
+
+      await loadProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Could not request permission",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setRequestingConsent(false);
+    }
+  };
+
+  const recordInPersonPermission = async () => {
+    if (!editing) return;
+
+    const confirmed = confirm(
+      `I confirm that ${editing.name} reviewed the profile and explicitly gave permission for the profile and its media to be published publicly.`,
+    );
+
+    if (!confirmed) return;
+
+    setRecordingConsent(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "request-profile-consent",
+        {
+          body: {
+            profileId: editing.id,
+            mode: "in_person",
+          },
+        },
+      );
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setEditing((current) =>
+        current
+          ? {
+              ...current,
+              consent_status: "approved",
+              consent_approved_at: data?.approvedAt ?? new Date().toISOString(),
+              consent_method: "in_person",
+            }
+          : current,
+      );
+
+      toast({
+        title: "Permission recorded",
+        description: "In-person publication permission has been recorded. The profile is still a draft until you publish it.",
+      });
+
+      await loadProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Could not record permission",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setRecordingConsent(false);
+    }
+  };
+
   const toggleStatus = async (profile: Profile) => {
+    if (profile.status !== "published" && profile.consent_status !== "approved") {
+      toast({
+        title: "Permission required",
+        description: "This profile cannot be published until the person being recognized has approved publication.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newStatus = profile.status === "published" ? "draft" : "published";
     const { error } = await supabase
       .from("profiles")
@@ -455,7 +589,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     return (
       <div className="space-y-6">
         <button
-          onClick={() => { setEditing(null); setIsNew(false); setImages([]); }}
+          onClick={() => { setEditing(null); setIsNew(false); setImages([]); setConsentEmail(""); }}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
         >
           <ArrowLeft size={14} /> Back to profiles
@@ -568,6 +702,105 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           </div>
         </div>
 
+        {/* Publication Permission */}
+        {editing && editing.status !== "published" && (
+          <div className="bg-card rounded-xl border border-border p-6 space-y-5">
+            <div>
+              <h4 className="font-display text-lg text-foreground">Publication Permission</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                The person being recognized must approve the profile before it can be published.
+              </p>
+            </div>
+
+            {editing.consent_status === "approved" ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-sm font-semibold text-emerald-800">Permission received</p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  {editing.consent_method === "in_person"
+                    ? "Explicit permission was recorded in person."
+                    : editing.consent_method === "legacy"
+                      ? "This profile was published before the permission workflow was introduced."
+                      : "The staff member approved publication using their private review link."}
+                </p>
+
+                {editing.consent_approved_at && (
+                  <p className="text-xs text-emerald-700 mt-2">
+                    Approved{" "}
+                    {new Date(editing.consent_approved_at).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <>
+                {editing.consent_status === "requested" && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-semibold text-amber-800">Awaiting permission</p>
+                    <p className="text-xs text-amber-700 mt-1">
+                      A private review link has been sent. You can send a new link below if needed.
+                    </p>
+
+                    {editing.consent_requested_at && (
+                      <p className="text-xs text-amber-700 mt-2">
+                        Requested{" "}
+                        {new Date(editing.consent_requested_at).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Staff Member Email</Label>
+                  <Input
+                    type="email"
+                    value={consentEmail}
+                    onChange={(e) => setConsentEmail(e.target.value)}
+                    placeholder="name@example.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    They will receive a private link to review the profile. Opening the link does not approve it.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    onClick={requestPublicationPermission}
+                    disabled={requestingConsent || recordingConsent || !consentEmail.trim()}
+                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  >
+                    {requestingConsent
+                      ? "Sending..."
+                      : editing.consent_status === "requested"
+                        ? "Send New Review Link"
+                        : "Request Permission"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={recordInPersonPermission}
+                    disabled={requestingConsent || recordingConsent}
+                  >
+                    {recordingConsent ? "Recording..." : "Record In-Person Permission"}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Use in-person permission only after the person has reviewed the profile and explicitly agreed that the profile and its media may be published publicly.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Image Management */}
         <div className="bg-card rounded-xl border border-border p-6 space-y-5">
           <h4 className="font-display text-lg text-foreground">Images</h4>
@@ -648,7 +881,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           <Button onClick={saveProfile} disabled={saving} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
             <Save size={14} /> {saving ? "Saving..." : "Save Profile"}
           </Button>
-          <Button variant="outline" onClick={() => { setEditing(null); setIsNew(false); setImages([]); }}>
+          <Button variant="outline" onClick={() => { setEditing(null); setIsNew(false); setImages([]); setConsentEmail(""); }}>
             Cancel
           </Button>
         </div>
@@ -681,6 +914,21 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
                 <Badge className={profile.status === "published" ? "bg-emerald-100 text-emerald-800 border-0" : "bg-amber-100 text-amber-800 border-0"}>
                   {profile.status}
                 </Badge>
+                {profile.status !== "published" && profile.consent_status === "approved" && (
+                  <Badge className="bg-emerald-100 text-emerald-800 border-0">
+                    Permission received
+                  </Badge>
+                )}
+                {profile.status !== "published" && profile.consent_status === "requested" && (
+                  <Badge className="bg-amber-100 text-amber-800 border-0">
+                    Awaiting permission
+                  </Badge>
+                )}
+                {profile.status !== "published" && (!profile.consent_status || profile.consent_status === "not_requested") && (
+                  <Badge variant="outline">
+                    Permission needed
+                  </Badge>
+                )}
               </div>
               <p className="text-muted-foreground text-sm truncate">{profile.role} · /gallery/{profile.slug}</p>
             </div>
@@ -692,6 +940,8 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
                 size="sm"
                 variant="outline"
                 onClick={() => toggleStatus(profile)}
+                disabled={profile.status !== "published" && profile.consent_status !== "approved"}
+                title={profile.status !== "published" && profile.consent_status !== "approved" ? "Publication permission is required first" : undefined}
                 className={profile.status === "published" ? "text-amber-600" : "text-emerald-600"}
               >
                 <Eye size={14} /> {profile.status === "published" ? "Unpublish" : "Publish"}
