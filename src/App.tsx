@@ -16,6 +16,7 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import ClubDashboard from "./pages/ClubDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PageViewTracker from "./components/PageViewTracker.tsx";
+import ProfileConsent from "./pages/ProfileConsent";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
           {/* Individual profile URLs stay unchanged so QR codes keep working. */}
           <Route path="/gallery/:slug" element={<ProfilePage />} />
 
+          <Route path="/consent/:token" element={<ProfileConsent />} />
           <Route path="/about" element={<About />} />
           <Route path="/media" element={<Media />} />
           <Route path="/nominate" element={<Nominate />} />
