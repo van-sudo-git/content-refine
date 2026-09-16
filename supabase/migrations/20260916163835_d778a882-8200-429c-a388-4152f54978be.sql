@@ -1,0 +1,2 @@
+revoke all on function public.require_profile_publication_consent() from public, anon, authenticated;
+revoke all on function public.require_new_profile_publication_consent() from public, anon, authenticated;
