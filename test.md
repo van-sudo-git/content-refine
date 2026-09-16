@@ -3,7 +3,7 @@
 Manual and automated verification of nowweseeyou.org.
 
 **Last captured automated live run:** July 17, 2026  
-**Latest production regression:** September 8, 2026
+**Latest production regression:** September 16, 2026
 
 The July results below record tests that were actually run against the live application.
 
@@ -144,6 +144,7 @@ Detailed feature-level tests and success criteria are kept with the original des
 
 | Area | Detailed testing record |
 |---|---|
+| Profile publication consent | [`docs/profile-publication-consent-design.md`](./docs/profile-publication-consent-design.md) |
 | Multi-school administration | [`docs/multi-school-admin.md`](./docs/multi-school-admin.md) |
 | Club roles and permissions | [`docs/club-roles-spec.md`](./docs/club-roles-spec.md) |
 | Flyer Generator | [`docs/flyer-generator.md`](./docs/flyer-generator.md) |
@@ -264,6 +265,31 @@ All major public, chapter, administrator, club-role, QR, publishing, metadata, a
 | 37 | Generated sitemap and LLM files | ✅ Pass |
 | 38 | Mobile public and club workflows | ✅ Pass |
 | 39 | Mobile administrator dashboard | ✅ Functional, with minor layout limitation |
+
+### Profile publication consent regression
+
+The publication-consent workflow was tested end to end on September 16, 2026.
+
+| # | Test | Result |
+|---|---|---|
+| 40 | Request publication permission by email | ✅ Pass |
+| 41 | Admin shows `Awaiting permission` after request | ✅ Pass |
+| 42 | Private review link opens without requiring an account | ✅ Pass |
+| 43 | Draft profile content and media are visible on the review page | ✅ Pass |
+| 44 | Staff member can explicitly approve publication | ✅ Pass |
+| 45 | Approval records permission without automatically publishing | ✅ Pass |
+| 46 | Admin profile changes to `Permission received` after approval | ✅ Pass |
+| 47 | Publish remains an administrator action after consent | ✅ Pass |
+| 48 | Publish control becomes available only after permission is approved | ✅ Pass |
+| 49 | In-person permission path can be recorded separately | ✅ Pass |
+| 50 | Existing published profiles remain available after the consent migration | ✅ Pass |
+
+The tested flow preserves two separate decisions:
+
+1. the person being recognized approves public publication
+2. an administrator decides when the approved profile is published
+
+The implementation is documented in [`docs/profile-publication-consent-design.md`](./docs/profile-publication-consent-design.md).
 
 ### Minor known limitation
 
