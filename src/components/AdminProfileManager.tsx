@@ -29,10 +29,10 @@ interface Profile {
   reflection_video_url: string | null;
   reflection_recorded_date: string | null;
   status: string;
-  consent_status: string;
-  consent_requested_at: string | null;
-  consent_approved_at: string | null;
-  consent_method: string | null;
+  consent_status?: string;
+  consent_requested_at?: string | null;
+  consent_approved_at?: string | null;
+  consent_method?: string | null;
   created_at: string;
 }
 
