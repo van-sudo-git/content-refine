@@ -124,6 +124,8 @@ Journalist + Artist + Photographer
     ↓
 Shared draft
     ↓
+Nominated staff member reviews and approves publication
+    ↓
 Admin review and publish
     ↓
 Published profile + QR
@@ -146,6 +148,16 @@ That rule is enforced in the database as well as the interface.
 The full design history, including the original July workflow and what changed during implementation, is documented in [`docs/club-roles-spec.md`](./docs/club-roles-spec.md).
 
 Original workflow design: [`roles-and-nomination-workflow-jul2026.png`](./docs/assets/roles-and-nomination-workflow-jul2026.png)
+
+There is also a separate consent boundary:
+
+**The person being recognized approves being made public. The administrator decides when the approved profile is published.**
+
+A staff member can review a private draft through a secure link without creating an account. Approval records permission but does not publish the profile automatically.
+
+The consent workflow is enforced in the database as well as the administrator interface.
+
+Technical design: [`docs/profile-publication-consent-design.md`](./docs/profile-publication-consent-design.md)
 
 ---
 
