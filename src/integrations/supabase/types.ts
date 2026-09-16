@@ -41,53 +41,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profile_consent_requests: {
-        Row: {
-          id: string
-          profile_id: string
-          email: string
-          token_hash: string
-          requested_at: string
-          approved_at: string | null
-          expires_at: string
-          invalidated_at: string | null
-          created_by: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          profile_id: string
-          email: string
-          token_hash: string
-          requested_at?: string
-          approved_at?: string | null
-          expires_at: string
-          invalidated_at?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          profile_id?: string
-          email?: string
-          token_hash?: string
-          requested_at?: string
-          approved_at?: string | null
-          expires_at?: string
-          invalidated_at?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_consent_requests_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       club_roles: {
         Row: {
           created_at: string
@@ -481,10 +434,6 @@ export type Database = {
           slug: string
           status: string
           updated_at: string
-          consent_status: string
-          consent_requested_at: string | null
-          consent_approved_at: string | null
-          consent_method: string | null
         }
         Insert: {
           bio?: string | null
@@ -501,10 +450,6 @@ export type Database = {
           slug: string
           status?: string
           updated_at?: string
-          consent_status?: string
-          consent_requested_at?: string | null
-          consent_approved_at?: string | null
-          consent_method?: string | null
         }
         Update: {
           bio?: string | null
@@ -521,10 +466,6 @@ export type Database = {
           slug?: string
           status?: string
           updated_at?: string
-          consent_status?: string
-          consent_requested_at?: string | null
-          consent_approved_at?: string | null
-          consent_method?: string | null
         }
         Relationships: [
           {
