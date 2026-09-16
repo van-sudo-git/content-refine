@@ -2,7 +2,7 @@
 
 **Project:** Now We See You  
 **Date:** September 2026  
-**Status:** Initial implementation
+**Status:** Implemented and Tested
 
 ## Why this exists
 
@@ -68,3 +68,26 @@ Permission recorded
       |
       v
 Admin may publish
+
+## Implemented workflow evidence
+
+The consent workflow was implemented and tested end to end in September 2026.
+The end-to-end regression results are recorded in [`../test.md`](../test.md).
+
+### Permission requested
+
+After an administrator sends the private review link, the profile remains a draft and the administrator sees an `Awaiting permission` state.
+
+![Publication permission awaiting approval](./assets/consent-awaiting-permission-sep2026.png)
+
+### Private review and approval
+
+The person being recognized can open a private review page without creating an account. The page shows the profile content and media before asking for explicit publication permission.
+
+![Private profile review and publication approval](./assets/consent-review-approval-sep2026.png)
+
+### Permission received, publication still separate
+
+After approval, the administrator sees `Permission received` and the Publish action becomes available. Approval itself does not publish the profile.
+
+![Administrator publication enabled after consent](./assets/consent-approved-admin-sep2026.png)
