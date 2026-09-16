@@ -32,7 +32,7 @@
   </url>
   <url>
     <loc>https://nowweseeyou.org/galleries/lake-washington-high-school</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -45,12 +45,6 @@
   <url>
     <loc>https://nowweseeyou.org/gallery/shirley-p</loc>
     <lastmod>2026-07-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nowweseeyou.org/gallery/jose-guerrero</loc>
-    <lastmod>2026-08-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -69,6 +63,12 @@
   <url>
     <loc>https://nowweseeyou.org/gallery/pauline-gillespie</loc>
     <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nowweseeyou.org/gallery/jose-guerrero</loc>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
