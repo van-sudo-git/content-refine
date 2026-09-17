@@ -465,6 +465,38 @@ export type Database = {
           },
         ]
       }
+      profile_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          reaction_type: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          reaction_type?: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          reaction_type?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_reactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -681,26 +713,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_profile_appreciation_state: {
-        Args: {
-          p_profile_id: string
-          p_visitor_id: string
-        }
-        Returns: {
-          appreciation_count: number
-          appreciated: boolean
-        }[]
-      }
-      toggle_profile_appreciation: {
-        Args: {
-          p_profile_id: string
-          p_visitor_id: string
-        }
-        Returns: {
-          appreciation_count: number
-          appreciated: boolean
-        }[]
-      }
       claim_club_role_invites: {
         Args: never
         Returns: {
@@ -717,6 +729,13 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_profile_appreciation_state: {
+        Args: { p_profile_id: string; p_visitor_id: string }
+        Returns: {
+          appreciated: boolean
+          appreciation_count: number
+        }[]
       }
       increment_page_view: {
         Args: { p_day: string; p_slug: string }
@@ -741,6 +760,13 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      toggle_profile_appreciation: {
+        Args: { p_profile_id: string; p_visitor_id: string }
+        Returns: {
+          appreciated: boolean
+          appreciation_count: number
         }[]
       }
     }
