@@ -117,6 +117,7 @@ const ProfilePage = () => {
   const [galleryName, setGalleryName] = useState("Galleries");
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [activeSection, setActiveSection] = useState("story");
 
   // Lightbox state for additional photos only.
   const [selectedAdditionalPhotoIndex, setSelectedAdditionalPhotoIndex] =
@@ -208,6 +209,59 @@ const ProfilePage = () => {
   const additionalPhotos = images.filter(
     (image) => image.image_type === "additional"
   );
+
+  useEffect(() => {
+    if (loading || !profile) return;
+
+    const updateActiveSection = () => {
+      const sectionIds = [
+        "story",
+        ...(additionalPhotos.length > 0 ? ["photos"] : []),
+        ...(profile.reflection_quote ? ["from-them"] : []),
+        "appreciation",
+      ];
+
+      const scrollMarker = window.scrollY + 180;
+      let currentSection = "story";
+
+      for (const id of sectionIds) {
+        const element = document.getElementById(id);
+        if (!element) continue;
+
+        const sectionTop =
+          element.getBoundingClientRect().top + window.scrollY;
+
+        if (sectionTop <= scrollMarker) {
+          currentSection = id;
+        }
+      }
+
+      if (
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 8
+      ) {
+        currentSection = "appreciation";
+      }
+
+      setActiveSection(currentSection);
+    };
+
+    updateActiveSection();
+
+    window.addEventListener("scroll", updateActiveSection, {
+      passive: true,
+    });
+    window.addEventListener("resize", updateActiveSection);
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, [
+    loading,
+    profile,
+    additionalPhotos.length,
+  ]);
 
   const goToPreviousAdditionalPhoto = () => {
     if (additionalPhotos.length <= 1) return;
@@ -520,7 +574,11 @@ const ProfilePage = () => {
             Back to {galleryName}
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl">
+          <div className="relative max-w-6xl">
+            <div
+              id="story"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start scroll-mt-28"
+            >
             <AnimatedSection>
               <div className="aspect-[4/5] bg-muted rounded-2xl overflow-hidden sticky top-28 shadow-lg">
                 {portrait ? (
@@ -566,6 +624,61 @@ const ProfilePage = () => {
                   name={profile.name}
                   slug={profile.slug}
                 />
+
+                <nav
+                  aria-label="Profile sections"
+                  className="xl:hidden -mx-1 overflow-x-auto pb-1"
+                >
+                  <div className="flex gap-2 px-1 min-w-max">
+                    <a
+                      href="#story"
+                      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                        activeSection === "story"
+                          ? "border-secondary bg-secondary text-secondary-foreground"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                      }`}
+                    >
+                      Story
+                    </a>
+
+                    {additionalPhotos.length > 0 && (
+                      <a
+                        href="#photos"
+                        className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                          activeSection === "photos"
+                            ? "border-secondary bg-secondary text-secondary-foreground"
+                            : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                        }`}
+                      >
+                        Photos
+                      </a>
+                    )}
+
+                    {profile.reflection_quote && (
+                      <a
+                        href="#from-them"
+                        className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                          activeSection === "from-them"
+                            ? "border-secondary bg-secondary text-secondary-foreground"
+                            : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                        }`}
+                      >
+                        Reflection from {firstName}
+                      </a>
+                    )}
+
+                    <a
+                      href="#appreciation"
+                      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                        activeSection === "appreciation"
+                          ? "border-secondary bg-secondary text-secondary-foreground"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                      }`}
+                    >
+                      Appreciation
+                    </a>
+                  </div>
+                </nav>
 
                 {contributorRows.length > 0 && (
                   <div>
@@ -643,7 +756,7 @@ const ProfilePage = () => {
                       href="#from-them"
                       className="inline-block mt-3 text-sm text-secondary font-medium hover:underline"
                     >
-                      From {firstName} ↓
+                      Reflection from {firstName} ↓
                     </a>
                   </div>
                 )}
@@ -727,7 +840,8 @@ const ProfilePage = () => {
                 {/* Additional photos only */}
                 {additionalPhotos.length > 0 && (
                   <div
-                    className={`grid gap-6 ${
+                    id="photos"
+                    className={`scroll-mt-28 grid gap-6 ${
                       additionalPhotos.length === 1
                         ? "grid-cols-1 max-w-sm"
                         : "grid-cols-2"
@@ -773,7 +887,110 @@ const ProfilePage = () => {
                 </p>
               </div>
             </AnimatedSection>
-          </div>
+
+            </div>
+
+            <aside className="hidden xl:block absolute left-[calc(100%+2rem)] top-0 bottom-0 w-48">
+              <nav
+                aria-label="Profile sections"
+                className="sticky top-28 rounded-2xl border border-border bg-card/95 backdrop-blur px-5 py-5 shadow-sm"
+              >
+                <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold mb-4">
+                  On this page
+                </p>
+
+                <div className="space-y-3 text-sm">
+                  <a
+                    href="#story"
+                    className={`flex items-center gap-3 transition-colors ${
+                      activeSection === "story"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-secondary"
+                    }`}
+                  >
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                        activeSection === "story"
+                          ? "bg-secondary"
+                          : "border border-muted-foreground/60"
+                      }`}
+                    />
+                    Story
+                  </a>
+
+                  {additionalPhotos.length > 0 && (
+                    <a
+                      href="#photos"
+                      className={`flex items-center gap-3 transition-colors ${
+                        activeSection === "photos"
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-secondary"
+                      }`}
+                    >
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                          activeSection === "photos"
+                            ? "bg-secondary"
+                            : "border border-muted-foreground/60"
+                        }`}
+                      />
+                      Photos
+                    </a>
+                  )}
+
+                  {profile.reflection_quote && (
+                    <a
+                      href="#from-them"
+                      className={`flex items-center gap-3 transition-colors ${
+                        activeSection === "from-them"
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-secondary"
+                      }`}
+                    >
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                          activeSection === "from-them"
+                            ? "bg-secondary"
+                            : "border border-muted-foreground/60"
+                        }`}
+                      />
+                      Reflection from {firstName}
+                    </a>
+                  )}
+
+                  <a
+                    href="#appreciation"
+                    className={`flex items-center gap-3 transition-colors ${
+                      activeSection === "appreciation"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-secondary"
+                    }`}
+                  >
+                    <span
+                      className={
+                        activeSection === "appreciation"
+                          ? "text-secondary text-base leading-none"
+                          : "text-muted-foreground text-base leading-none"
+                      }
+                    >
+                      {activeSection === "appreciation" ? "♥" : "♡"}
+                    </span>
+                    Appreciation
+                  </a>
+                </div>
+
+                {reflectionTeaser && (
+                  <div className="mt-5 pt-5 border-t border-border">
+                    <blockquote className="font-display text-base italic text-foreground leading-snug">
+                      “{reflectionTeaser}”
+                    </blockquote>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      — {firstName}
+                    </p>
+                  </div>
+                )}
+              </nav>
+            </aside>
 
           {profile.reflection_quote && (
             <div
@@ -783,7 +1000,7 @@ const ProfilePage = () => {
               <AnimatedSection>
                 <div className="border-t border-border pt-10">
                   <p className="text-secondary font-semibold text-xs uppercase tracking-wide mb-2">
-                    In Their Own Words
+                    In {firstName}'s Voice
                   </p>
 
                   <h2 className="font-display text-3xl text-foreground mb-6">
@@ -839,11 +1056,15 @@ const ProfilePage = () => {
             </div>
           )}
 
-          <div className="max-w-6xl mt-8">
+          <div
+            id="appreciation"
+            className="max-w-6xl mt-8 scroll-mt-28"
+          >
             <AppreciationWall
               profileSlug={profile.slug}
               personName={firstName}
             />
+          </div>
           </div>
         </div>
       </section>
