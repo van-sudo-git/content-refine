@@ -465,6 +465,38 @@ export type Database = {
           },
         ]
       }
+      profile_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          reaction_type: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          reaction_type?: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          reaction_type?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_reactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -698,6 +730,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_profile_appreciation_state: {
+        Args: { p_profile_id: string; p_visitor_id: string }
+        Returns: {
+          appreciated: boolean
+          appreciation_count: number
+        }[]
+      }
       increment_page_view: {
         Args: { p_day: string; p_slug: string }
         Returns: undefined
@@ -721,6 +760,13 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      toggle_profile_appreciation: {
+        Args: { p_profile_id: string; p_visitor_id: string }
+        Returns: {
+          appreciated: boolean
+          appreciation_count: number
         }[]
       }
     }
