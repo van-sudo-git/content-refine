@@ -574,6 +574,63 @@ const ProfilePage = () => {
             Back to {galleryName}
           </Link>
 
+          <div className="xl:hidden sticky top-16 z-30 -mx-6 mb-8 border-y border-border bg-background/95 backdrop-blur">
+            <nav
+              aria-label="Profile sections"
+              className="overflow-x-auto px-6 py-3"
+            >
+              <div className="flex gap-2 min-w-max">
+                <a
+                  href="#story"
+                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                    activeSection === "story"
+                      ? "border-secondary bg-secondary text-secondary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                  }`}
+                >
+                  Story
+                </a>
+
+                {additionalPhotos.length > 0 && (
+                  <a
+                    href="#photos"
+                    className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                      activeSection === "photos"
+                        ? "border-secondary bg-secondary text-secondary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                    }`}
+                  >
+                    Photos
+                  </a>
+                )}
+
+                {profile.reflection_quote && (
+                  <a
+                    href="#from-them"
+                    className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                      activeSection === "from-them"
+                        ? "border-secondary bg-secondary text-secondary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                    }`}
+                  >
+                    Reflection
+                  </a>
+                )}
+
+                <a
+                  href="#appreciation"
+                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                    activeSection === "appreciation"
+                      ? "border-secondary bg-secondary text-secondary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                  }`}
+                >
+                  Appreciation
+                </a>
+              </div>
+            </nav>
+          </div>
+
           <div className="relative max-w-6xl">
             <div
               id="story"
@@ -624,61 +681,6 @@ const ProfilePage = () => {
                   name={profile.name}
                   slug={profile.slug}
                 />
-
-                <nav
-                  aria-label="Profile sections"
-                  className="xl:hidden sticky top-16 z-30 -mx-6 px-6 py-3 overflow-x-auto border-y border-border bg-background/95 backdrop-blur"
-                >
-                  <div className="flex gap-2 px-1 min-w-max">
-                    <a
-                      href="#story"
-                      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                        activeSection === "story"
-                          ? "border-secondary bg-secondary text-secondary-foreground"
-                          : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
-                      }`}
-                    >
-                      Story
-                    </a>
-
-                    {additionalPhotos.length > 0 && (
-                      <a
-                        href="#photos"
-                        className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                          activeSection === "photos"
-                            ? "border-secondary bg-secondary text-secondary-foreground"
-                            : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
-                        }`}
-                      >
-                        Photos
-                      </a>
-                    )}
-
-                    {profile.reflection_quote && (
-                      <a
-                        href="#from-them"
-                        className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                          activeSection === "from-them"
-                            ? "border-secondary bg-secondary text-secondary-foreground"
-                            : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
-                        }`}
-                      >
-                        Reflection
-                      </a>
-                    )}
-
-                    <a
-                      href="#appreciation"
-                      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                        activeSection === "appreciation"
-                          ? "border-secondary bg-secondary text-secondary-foreground"
-                          : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
-                      }`}
-                    >
-                      Appreciation
-                    </a>
-                  </div>
-                </nav>
 
                 {contributorRows.length > 0 && (
                   <div>
