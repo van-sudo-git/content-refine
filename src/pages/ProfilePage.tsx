@@ -627,7 +627,7 @@ const ProfilePage = () => {
 
                 <nav
                   aria-label="Profile sections"
-                  className="xl:hidden -mx-1 overflow-x-auto pb-1"
+                  className="xl:hidden sticky top-16 z-30 -mx-6 px-6 py-3 overflow-x-auto border-y border-border bg-background/95 backdrop-blur"
                 >
                   <div className="flex gap-2 px-1 min-w-max">
                     <a
@@ -663,7 +663,7 @@ const ProfilePage = () => {
                             : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
                         }`}
                       >
-                        Reflection from {firstName}
+                        Reflection
                       </a>
                     )}
 
@@ -756,7 +756,7 @@ const ProfilePage = () => {
                       href="#from-them"
                       className="inline-block mt-3 text-sm text-secondary font-medium hover:underline"
                     >
-                      Reflection from {firstName} ↓
+                      From {firstName} ↓
                     </a>
                   </div>
                 )}
