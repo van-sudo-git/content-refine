@@ -18,6 +18,7 @@ import AppreciationWall from "@/components/AppreciationWall";
 import { supabase } from "@/integrations/supabase/client";
 import ShareButton from "@/components/ShareButton";
 import { schoolGalleryPath } from "@/lib/schoolGallery";
+/*import AppreciateButton from "@/components/AppreciateButton";*/
 
 interface ProfileData {
   id: string;
@@ -58,6 +59,19 @@ const formatReflectionDate = (date: string | null) => {
     month: "long",
     year: "numeric",
   });
+};
+
+const getReflectionTeaser = (quote: string | null) => {
+  if (!quote) return null;
+
+  const cleaned = quote.trim();
+
+  if (cleaned.length <= 170) return cleaned;
+
+  const shortened = cleaned.slice(0, 170);
+  const lastSpace = shortened.lastIndexOf(" ");
+
+  return `${shortened.slice(0, lastSpace)}...`;
 };
 
 const getReflectionEmbedUrl = (videoUrl: string | null) => {
@@ -348,6 +362,10 @@ const ProfilePage = () => {
     profile.reflection_video_url
   );
 
+  const reflectionTeaser = getReflectionTeaser(
+    profile.reflection_quote
+  );
+
   const contributorLabels: Record<string, string> = {
     journalist: "Journalist",
     artist: "Artist",
@@ -611,6 +629,25 @@ const ProfilePage = () => {
                   )}
                 </div>
 
+                {reflectionTeaser && (
+                  <div className="border-y border-border py-5">
+                    <p className="text-secondary font-semibold text-xs uppercase tracking-wide mb-2">
+                      In {firstName}'s Voice
+                    </p>
+
+                    <blockquote className="font-display text-xl italic text-foreground leading-relaxed">
+                      “{reflectionTeaser}”
+                    </blockquote>
+
+                    <a
+                      href="#from-them"
+                      className="inline-block mt-3 text-sm text-secondary font-medium hover:underline"
+                    >
+                      From {firstName} ↓
+                    </a>
+                  </div>
+                )}
+
                 {qr && (
                   <div className="sm:hidden pt-4 border-t border-border flex items-center gap-4">
                     <div className="w-24 h-24 bg-card rounded-xl overflow-hidden border border-border shadow-sm flex-shrink-0">
@@ -739,7 +776,10 @@ const ProfilePage = () => {
           </div>
 
           {profile.reflection_quote && (
-            <div className="max-w-4xl mt-14">
+            <div
+              id="from-them"
+              className="max-w-4xl mt-14 scroll-mt-28"
+            >
               <AnimatedSection>
                 <div className="border-t border-border pt-10">
                   <p className="text-secondary font-semibold text-xs uppercase tracking-wide mb-2">
@@ -747,7 +787,7 @@ const ProfilePage = () => {
                   </p>
 
                   <h2 className="font-display text-3xl text-foreground mb-6">
-                    A Reflection from {firstName}
+                    What This Recognition Meant to {firstName}
                   </h2>
 
                   {profile.reflection_video_url && (
