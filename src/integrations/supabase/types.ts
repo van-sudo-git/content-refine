@@ -681,6 +681,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_profile_appreciation_state: {
+        Args: {
+          p_profile_id: string
+          p_visitor_id: string
+        }
+        Returns: {
+          appreciation_count: number
+          appreciated: boolean
+        }[]
+      }
+      toggle_profile_appreciation: {
+        Args: {
+          p_profile_id: string
+          p_visitor_id: string
+        }
+        Returns: {
+          appreciation_count: number
+          appreciated: boolean
+        }[]
+      }
       claim_club_role_invites: {
         Args: never
         Returns: {
