@@ -18,6 +18,7 @@ import AppreciationWall from "@/components/AppreciationWall";
 import { supabase } from "@/integrations/supabase/client";
 import ShareButton from "@/components/ShareButton";
 import { schoolGalleryPath } from "@/lib/schoolGallery";
+import AppreciateButton from "@/components/AppreciateButton";
 /*import AppreciateButton from "@/components/AppreciateButton";*/
 
 interface ProfileData {
@@ -681,7 +682,10 @@ const ProfilePage = () => {
                   name={profile.name}
                   slug={profile.slug}
                 />
-
+                <AppreciateButton
+                  profileId={profile.id}
+                  personName={profile.name}
+                />
                 {contributorRows.length > 0 && (
                   <div>
                     <p className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
