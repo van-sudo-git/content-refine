@@ -18,7 +18,7 @@
  * source failures are logged only to the browser console.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   Eye,
@@ -218,6 +218,10 @@ const AdminAnalytics = ({
   );
   const [loading, setLoading] = useState(!isDemo);
   const [rangeDays, setRangeDays] = useState<7 | 14 | 30 | 60 | 90>(7);
+  const [expandedProfileSlug, setExpandedProfileSlug] = useState<string | null>(
+    null,
+  );
+  const [schoolPageViewRows, setSchoolPageViewRows] = useState<PageViewRow[]>([]);
 
   useEffect(() => {
     if (isDemo) return;
@@ -463,6 +467,7 @@ const AdminAnalytics = ({
         setProfileStats(stats);
         setAllQrIds(Array.from(schoolQrIds).sort());
         setDailyStats(days);
+        setSchoolPageViewRows(schoolPageViews);
         setTotals({
           // Global traffic for every admin.
           views: pageViews.reduce(
@@ -504,6 +509,7 @@ const AdminAnalytics = ({
           setProfileStats([]);
           setAllQrIds([]);
           setDailyStats([]);
+          setSchoolPageViewRows([]);
           setTotals({
             views: 0,
             scans: 0,
@@ -556,6 +562,55 @@ const AdminAnalytics = ({
 
     return { views, scans, previousViews, delta };
   }, [chartData]);
+
+  const expandedProfileTrend = useMemo(() => {
+    if (!expandedProfileSlug) return null;
+
+    const today = new Date();
+    const viewsByDay = new Map<string, number>();
+
+    schoolPageViewRows
+      .filter((view) => view.profile_slug === expandedProfileSlug)
+      .forEach((view) => {
+        viewsByDay.set(
+          view.day,
+          (viewsByDay.get(view.day) ?? 0) + Number(view.views || 0),
+        );
+      });
+
+    const current = Array.from({ length: rangeDays }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (rangeDays - 1 - index));
+      const day = toLocalDay(date);
+
+      return {
+        day,
+        label: date.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }),
+        views: viewsByDay.get(day) ?? 0,
+      };
+    });
+
+    const previous = Array.from({ length: rangeDays }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (rangeDays * 2 - 1 - index));
+      const day = toLocalDay(date);
+      return viewsByDay.get(day) ?? 0;
+    });
+
+    const views = current.reduce((sum, day) => sum + day.views, 0);
+    const previousViews = previous.reduce((sum, value) => sum + value, 0);
+    const delta =
+      previousViews > 0
+        ? ((views - previousViews) / previousViews) * 100
+        : views > 0
+          ? 100
+          : 0;
+
+    return { data: current, views, previousViews, delta };
+  }, [expandedProfileSlug, rangeDays, schoolPageViewRows]);
 
   if (loading) {
     return (
@@ -763,7 +818,7 @@ const AdminAnalytics = ({
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="pb-3 font-medium">Profile</th>
                   <th className="pb-3 text-center font-medium">
-                    Website Views
+                    All-time Views
                   </th>
                   {allQrIds.map((qrId) => (
                     <th
@@ -784,34 +839,156 @@ const AdminAnalytics = ({
 
               <tbody>
                 {profileStats.map((profile) => (
-                  <tr
-                    key={profile.slug}
-                    className="border-b border-border/50 last:border-0"
-                  >
-                    <td className="py-3 font-medium text-foreground">
-                      {profile.name}
-                    </td>
-                    <td className="py-3 text-center font-medium text-blue-600">
-                      {profile.totalViews}
-                    </td>
-                    {allQrIds.map((qrId) => (
-                      <td
-                        key={qrId}
-                        className="py-3 text-center font-medium text-secondary"
-                      >
-                        {profile.qrScans[qrId] ?? "—"}
+                  <Fragment key={profile.slug}>
+                    <tr className="border-b border-border/50">
+                      <td className="py-3 font-medium text-foreground">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedProfileSlug((current) =>
+                              current === profile.slug ? null : profile.slug,
+                            )
+                          }
+                          className="inline-flex items-center gap-2 text-left hover:text-secondary transition-colors"
+                          aria-expanded={expandedProfileSlug === profile.slug}
+                        >
+                          <span>{profile.name}</span>
+                          <span
+                            className={`text-xs text-muted-foreground transition-transform ${
+                              expandedProfileSlug === profile.slug
+                                ? "rotate-180"
+                                : ""
+                            }`}
+                            aria-hidden="true"
+                          >
+                            ▾
+                          </span>
+                        </button>
                       </td>
-                    ))}
-                    <td className="py-3 text-center font-medium text-emerald-600">
-                      {profile.approvedMessages}
-                    </td>
-                    <td className="py-3 text-center font-medium text-amber-600">
-                      {profile.pendingMessages}
-                    </td>
-                    <td className="py-3 text-center font-medium text-red-600">
-                      {profile.rejectedMessages}
-                    </td>
-                  </tr>
+                      <td className="py-3 text-center font-medium text-blue-600">
+                        {profile.totalViews}
+                      </td>
+                      {allQrIds.map((qrId) => (
+                        <td
+                          key={qrId}
+                          className="py-3 text-center font-medium text-secondary"
+                        >
+                          {profile.qrScans[qrId] ?? "—"}
+                        </td>
+                      ))}
+                      <td className="py-3 text-center font-medium text-emerald-600">
+                        {profile.approvedMessages}
+                      </td>
+                      <td className="py-3 text-center font-medium text-amber-600">
+                        {profile.pendingMessages}
+                      </td>
+                      <td className="py-3 text-center font-medium text-red-600">
+                        {profile.rejectedMessages}
+                      </td>
+                    </tr>
+
+                    {expandedProfileSlug === profile.slug && (
+                      <tr className="border-b border-border/50">
+                        <td
+                          colSpan={allQrIds.length + 5}
+                          className="pb-4 pt-1"
+                        >
+                          <div className="rounded-lg border border-border bg-muted/30 px-4 py-4">
+                            <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">
+                                  Profile traffic
+                                </p>
+                                <div className="mt-2 flex flex-wrap items-baseline gap-3">
+                                  <span className="font-display text-2xl text-foreground">
+                                    {expandedProfileTrend?.views ?? 0}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    views in last {rangeDays} days
+                                  </span>
+                                  {expandedProfileTrend && (
+                                    <span
+                                      className={`text-xs ${
+                                        expandedProfileTrend.delta >= 0
+                                          ? "text-emerald-600"
+                                          : "text-red-600"
+                                      }`}
+                                    >
+                                      {expandedProfileTrend.delta >= 0 ? "↑" : "↓"}{" "}
+                                      {Math.abs(expandedProfileTrend.delta).toFixed(1)}%
+                                      <span className="ml-1 text-muted-foreground">
+                                        vs previous period
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <span className="text-xs text-muted-foreground">
+                                Uses the {rangeDays}-day range selected above
+                              </span>
+                            </div>
+
+                            <div style={{ width: "100%", height: 180 }}>
+                              <ResponsiveContainer>
+                                <LineChart
+                                  data={expandedProfileTrend?.data ?? []}
+                                  margin={{ top: 8, right: 12, left: -20, bottom: 0 }}
+                                >
+                                  <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke="hsl(var(--border))"
+                                    vertical={false}
+                                  />
+                                  <XAxis
+                                    dataKey="label"
+                                    tick={{
+                                      fontSize: 10,
+                                      fill: "hsl(var(--muted-foreground))",
+                                    }}
+                                    tickLine={false}
+                                    axisLine={{ stroke: "hsl(var(--border))" }}
+                                    minTickGap={24}
+                                  />
+                                  <YAxis
+                                    allowDecimals={false}
+                                    tick={{
+                                      fontSize: 10,
+                                      fill: "hsl(var(--muted-foreground))",
+                                    }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    width={34}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      background: "hsl(var(--card))",
+                                      border: "1px solid hsl(var(--border))",
+                                      borderRadius: "8px",
+                                      fontSize: "12px",
+                                    }}
+                                    labelStyle={{
+                                      color: "hsl(var(--foreground))",
+                                      fontWeight: 600,
+                                    }}
+                                  />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="views"
+                                    name="Profile Views"
+                                    stroke="hsl(217, 91%, 60%)"
+                                    strokeWidth={2.25}
+                                    dot={{ r: 2.5 }}
+                                    activeDot={{ r: 4 }}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
