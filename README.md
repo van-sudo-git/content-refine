@@ -57,7 +57,8 @@ The goal is not just to archive people after they leave. It is to help a communi
 
 - **Staff profiles** with charcoal portraits, interviews, stories, photography, and contributor attribution
 - **Consent-based publishing** so a staff member is not publicly profiled without approval
-- **Appreciation wall** where students and staff can leave messages that are moderated before publication
+- **Appreciation wall** where students and staff can leave written messages that are moderated before publication
+- **One-tap appreciation** for visitors who want to show support without writing a message
 - **QR codes** connecting physical portraits and flyers to digital profiles
 - **Tracked QR redirects** so printed QR codes can keep working even if their destination changes later
 - **Profile sharing** through the native mobile share sheet with a desktop clipboard fallback
@@ -100,6 +101,7 @@ I kept the design documents as the system evolved so the repository shows not on
 | Founder to club transition | [`retrospective-one-person-to-club.md`](./docs/retrospective-one-person-to-club.md) | Club Dashboard evidence |
 | Testing | [`test.md`](./test.md) | Historical and September end-to-end results |
 | AI use | [`AI_DISCLOSURE.md`](./AI_DISCLOSURE.md) | Technical ownership disclosure |
+| Profile appreciation reactions | [`profile-appreciation-design.md`](./docs/profile-appreciation-design.md) | One-tap appreciation and profile navigation behavior |
 
 The `docs/assets/` directory also contains earlier screenshots from the project's development history.
 
