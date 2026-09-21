@@ -32,6 +32,7 @@ Core model:
 - profile media
 - contributors
 - QR redirects and analytics
+- profile appreciation reactions
 
 ## Public Routes
 
@@ -126,6 +127,11 @@ Native mobile sharing and desktop clipboard fallback.
 
 How another school can use the existing platform without building code.
 
+### Profile appreciation and navigation
+[`docs/profile-appreciation-design.md`](../../docs/profile-appreciation-design.md)
+
+Anonymous one-tap appreciation, aggregate reaction state, and responsive profile section navigation.
+
 ## Database
 
 Important tables include:
@@ -141,6 +147,7 @@ Important tables include:
 - `redirects`
 - `redirect_events_daily`
 - `page_views`
+- `profile_reactions`
 
 Generated TypeScript definitions are in:
 
