@@ -291,6 +291,31 @@ The tested flow preserves two separate decisions:
 
 The implementation is documented in [`docs/profile-publication-consent-design.md`](./docs/profile-publication-consent-design.md).
 
+### Profile appreciation and navigation regression
+
+Profile appreciation and section navigation were tested on September 17, 2026.
+
+| # | Test | Result |
+|---|---|---|
+| 51 | Published profile loads appreciation count | ✅ Pass |
+| 52 | First tap adds one appreciation | ✅ Pass |
+| 53 | Button changes from `Appreciate` to `Appreciated` | ✅ Pass |
+| 54 | Refresh preserves appreciation state for the same browser | ✅ Pass |
+| 55 | Second tap removes the appreciation | ✅ Pass |
+| 56 | Same browser cannot create duplicate active reactions | ✅ Pass |
+| 57 | Separate browser session can add another appreciation | ✅ Pass |
+| 58 | Anonymous client cannot directly read `profile_reactions` rows | ✅ Pass |
+| 59 | Appreciation RPC rejects unpublished profiles | ✅ Pass |
+| 60 | Desktop profile section navigation remains sticky through the full profile | ✅ Pass |
+| 61 | Desktop active section indicator updates while scrolling | ✅ Pass |
+| 62 | Mobile section navigation remains sticky through Story, Reflection, and Appreciation | ✅ Pass |
+| 63 | Mobile navigation uses compact `Reflection` label | ✅ Pass |
+| 64 | Written Appreciation Wall continues to operate independently | ✅ Pass |
+
+The one-tap appreciation feature is intentionally separate from written Appreciation Wall messages.
+
+Implementation details are documented in [`docs/profile-appreciation-design.md`](./docs/profile-appreciation-design.md).
+
 ### Minor known limitation
 
 The public site and club workflows work well on mobile.
