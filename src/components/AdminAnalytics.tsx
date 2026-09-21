@@ -22,6 +22,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   Eye,
+  Heart,
   MessageCircle,
   QrCode,
   TrendingUp,
@@ -51,6 +52,7 @@ interface ProfileStat {
   name: string;
   totalViews: number;
   qrScans: Record<string, number>;
+  appreciatedCount?: number;
   approvedMessages: number;
   pendingMessages: number;
   rejectedMessages: number;
@@ -63,6 +65,7 @@ interface DailyStat {
 }
 
 type ProfileRow = {
+  id: string;
   slug: string;
   name: string;
 };
@@ -242,7 +245,7 @@ const AdminAnalytics = ({
         const schoolProfilesQuery = schoolId
           ? supabase
               .from("profiles")
-              .select("slug, name")
+              .select("id, slug, name")
               .eq("school_id", schoolId)
               .eq("status", "published")
           : Promise.resolve({ data: [] as ProfileRow[], error: null });
@@ -273,6 +276,46 @@ const AdminAnalytics = ({
           schoolProfiles.map((profile) => profile.slug),
         );
         const schoolSlugs = Array.from(schoolSlugSet);
+
+        /*
+         * One-tap appreciation counts are direct reads from profile_reactions.
+         */
+        const appreciationCounts = new Map<string, number>();
+
+        if (schoolProfiles.length > 0) {
+          const appreciationResults = await Promise.allSettled(
+            schoolProfiles.map(async (profile) => {
+              const { data, error } = await supabase.rpc(
+                "get_profile_appreciation_state",
+                {
+                  p_profile_id: profile.id,
+                  p_visitor_id: "admin-analytics",
+                },
+              );
+
+              if (error) throw error;
+
+              const row = Array.isArray(data) ? data[0] : null;
+
+              return {
+                slug: profile.slug,
+                count: Number(row?.appreciation_count ?? 0),
+              };
+            }),
+          );
+
+          appreciationResults.forEach((result) => {
+            if (result.status === "fulfilled") {
+              appreciationCounts.set(result.value.slug, result.value.count);
+            } else {
+              const message = `Profile appreciation count: ${getErrorMessage(
+                result.reason,
+              )}`;
+              console.error(message, result.reason);
+              loadWarnings.push(message);
+            }
+          });
+        }
 
         const appreciationsQuery = schoolSlugs.length
           ? supabase
@@ -431,6 +474,7 @@ const AdminAnalytics = ({
             name: profile.name,
             totalViews,
             qrScans,
+            appreciatedCount: appreciationCounts.get(profile.slug) ?? 0,
             approvedMessages: profileAppreciations.filter(
               (appreciation) => appreciation.status === "approved",
             ).length,
@@ -831,6 +875,12 @@ const AdminAnalytics = ({
                       </span>
                     </th>
                   ))}
+                  <th className="pb-3 text-center font-medium">
+                    <span className="flex items-center justify-center gap-1">
+                      <Heart size={12} />
+                      Appreciated
+                    </span>
+                  </th>
                   <th className="pb-3 text-center font-medium">Approved</th>
                   <th className="pb-3 text-center font-medium">Pending</th>
                   <th className="pb-3 text-center font-medium">Rejected</th>
@@ -876,6 +926,9 @@ const AdminAnalytics = ({
                           {profile.qrScans[qrId] ?? "—"}
                         </td>
                       ))}
+                      <td className="py-3 text-center font-medium text-secondary">
+                        {profile.appreciatedCount ?? 0}
+                      </td>
                       <td className="py-3 text-center font-medium text-emerald-600">
                         {profile.approvedMessages}
                       </td>
@@ -890,7 +943,7 @@ const AdminAnalytics = ({
                     {expandedProfileSlug === profile.slug && (
                       <tr className="border-b border-border/50">
                         <td
-                          colSpan={allQrIds.length + 5}
+                          colSpan={allQrIds.length + 6}
                           className="pb-4 pt-1"
                         >
                           <div className="rounded-lg border border-border bg-muted/30 px-4 py-4">
