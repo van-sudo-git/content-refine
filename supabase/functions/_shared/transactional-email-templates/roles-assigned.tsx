@@ -97,18 +97,22 @@ const roleBlurbs: Record<string, string> = {
 // what to say happens next - pr doesn't wait on a nomination assignment
 // the way the other three roles do, so it needs its own line
 const nextSteps: Record<string, string> = {
-  journalist: "When a nomination gets assigned to you, you'll get another email with the details.",
-  photographer: "When a nomination gets assigned to you, you'll get another email with the details.",
-  artist: "When a nomination gets assigned to you, you'll get another email with the details.",
-  pr: "You can start generating flyers for any published profile at your school right away - no assignment needed.",
-}
+  journalist:
+    "To get started, create your account using this email address. When a nomination gets assigned to you, you'll get another email with the details.",
+  photographer:
+    "To get started, create your account using this email address. When a nomination gets assigned to you, you'll get another email with the details.",
+  artist:
+    "To get started, create your account using this email address. When a nomination gets assigned to you, you'll get another email with the details.",
+  pr:
+    "To get started, create your account using this email address. Once you sign up, you'll be able to access the admin dashboard and start generating flyers for published profiles at your school.",
+};
 
 // pr uses the admin dashboard, everyone else uses the club dashboard
 const destinationLabel: Record<string, string> = {
-  journalist: 'Open club dashboard',
-  photographer: 'Open club dashboard',
-  artist: 'Open club dashboard',
-  pr: 'Open admin dashboard',
+  journalist: 'Create account & get started',
+  photographer: 'Create account & get started',
+  artist: 'Create account & get started',
+  pr: 'Create account & get started',
 }
 
 const Email = ({
