@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
@@ -63,9 +63,11 @@ const resolveDestination = async (): Promise<LoginDestination> => {
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const inviteSignUp = searchParams.get("mode") === "signup";
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(inviteSignUp);
   const [loading, setLoading] = useState(false);
   const [existingAccountEmail, setExistingAccountEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
@@ -99,6 +101,10 @@ const AdminLogin = () => {
         if (!cancelled) setLoading(false);
       }
     };
+
+    useEffect(() => {
+      setIsSignUp(inviteSignUp);
+    }, [inviteSignUp]);
 
     checkSession();
 
