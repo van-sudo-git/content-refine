@@ -18,11 +18,6 @@ function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   })
 }
 
-// pr uses the admin dashboard, everyone else uses the club dashboard
-function destinationUrlForRole(role: string): string {
-  if (role === 'pr') return 'https://nowweseeyou.org/admin'
-  return 'https://nowweseeyou.org/club'
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -67,6 +62,7 @@ Deno.serve(async (req) => {
 
   const schoolName = school?.name || 'your school'
   const idempotencyKey = `role-assigned-${schoolId}-${role}-${email}`
+  const signupUrl = 'https://nowweseeyou.org/admin/login?mode=signup'
 
   const { error: invokeError } = await supabase.functions.invoke('send-transactional-email', {
     body: {
@@ -76,7 +72,7 @@ Deno.serve(async (req) => {
       templateData: {
         role,
         schoolName,
-        dashboardUrl: destinationUrlForRole(role),
+        dashboardUrl: signupUrl,
       },
     },
   })
