@@ -4,7 +4,7 @@ import {
   useRef,
   type TouchEvent,
 } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   ArrowLeft,
@@ -109,6 +109,7 @@ const isDirectVideoUrl = (videoUrl: string) =>
   /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl);
 
 const ProfilePage = () => {
+  const { hash } = useLocation();
   const { slug } = useParams<{ slug: string }>();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -119,6 +120,17 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeSection, setActiveSection] = useState("story");
+
+  // Cross-page reflection/appreciation links must wait for the profile to load.
+  useEffect(() => {
+    if (loading || !profile || !hash) return;
+    const sectionId = hash.slice(1);
+    if (!["story", "photos", "from-them", "appreciation"].includes(sectionId)) return;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loading, profile, hash]);
 
   // Lightbox state for additional photos only.
   const [selectedAdditionalPhotoIndex, setSelectedAdditionalPhotoIndex] =
