@@ -4,10 +4,14 @@ import { ArrowDown, ArrowRight, RefreshCw } from "lucide-react";
 import Layout from "@/components/Layout";
 import ReflectionCard from "@/components/ReflectionCard";
 import { useReflections } from "@/hooks/use-reflections";
+import { useEffect } from "react";
 
 export default function WhyItMatters() {
   const { data = [], isPending, isError, refetch, isFetching } = useReflections();
   const [featured, ...remaining] = data;
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
   return (
     <Layout>
       <Helmet>
