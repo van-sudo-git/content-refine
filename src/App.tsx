@@ -8,6 +8,7 @@ import Galleries from "./pages/Galleries.tsx";
 import Gallery from "./pages/Gallery.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import About from "./pages/About.tsx";
+import WhyItMatters from "./pages/WhyItMatters.tsx";
 import Media from "./pages/Media.tsx";
 import Nominate from "./pages/Nominate.tsx";
 import Privacy from "./pages/Privacy.tsx";
@@ -40,6 +41,7 @@ const App = () => (
 
           <Route path="/consent/:token" element={<ProfileConsent />} />
           <Route path="/about" element={<About />} />
+          <Route path="/why-it-matters" element={<WhyItMatters />} />
           <Route path="/media" element={<Media />} />
           <Route path="/nominate" element={<Nominate />} />
           <Route path="/privacy" element={<Privacy />} />
