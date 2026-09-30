@@ -6,7 +6,15 @@ import { useReflections } from "@/hooks/use-reflections";
 /** Homepage teaser, sourced from the same public profiles as Why It Matters. */
 export default function HomeReflection() {
   const { data, isPending, isError } = useReflections();
-  const reflection = data?.[0];
+  const reflection =
+  data?.find((person) =>
+    person.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .split(/\s+/)[0]
+      .toLowerCase() === "jose"
+  ) ?? data?.[0];
   // Keep the rest of the homepage usable if reflections are unavailable.
   if (isPending || isError || !reflection) return null;
 
