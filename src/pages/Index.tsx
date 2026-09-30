@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet-async";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
 import CoverflowCarousel from "@/components/CoverflowCarousel";
+import HomeReflection from "@/components/HomeReflection";
 import { supabase } from "@/integrations/supabase/client";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 
@@ -197,6 +198,8 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      <HomeReflection />
 
       {/* How It Works */}
       <section className="py-20">
