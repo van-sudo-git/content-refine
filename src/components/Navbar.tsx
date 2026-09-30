@@ -10,6 +10,7 @@ const navLinks = [
   { to: "/", label: "Home" },
   { to: "/nominate", label: "Nominate" },
   { to: "/about", label: "Our Story" },
+  { to: "/why-it-matters", label: "Why It Matters" },
   { to: "/media", label: "In the Community" },
   { to: "/privacy", label: "Privacy & Ethics" },
 ];
@@ -156,7 +157,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden xl:flex items-center gap-4">
           <div className="relative group">
             <Link
               to="/galleries"
@@ -250,7 +251,7 @@ const Navbar = () => {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden text-foreground"
+          className="xl:hidden text-foreground"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -265,7 +266,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-background border-b border-border overflow-hidden"
+            className="xl:hidden bg-background border-b border-border overflow-hidden"
           >
             <div className="container mx-auto px-6 py-4 flex flex-col gap-4">
               <div>
