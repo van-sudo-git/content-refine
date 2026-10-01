@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Layout from "@/components/Layout";
 import AnimatedSection from "@/components/AnimatedSection";
+import AppreciateButton from "@/components/AppreciateButton";
 import { supabase } from "@/integrations/supabase/client";
 import { schoolToGallerySlug } from "@/lib/schoolGallery";
 
@@ -268,41 +269,50 @@ const Gallery = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {profiles.map((profile, i) => (
                 <AnimatedSection key={profile.id} delay={i * 0.1}>
-                  <Link to={`/gallery/${profile.slug}`} className="group block">
-                    <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-shadow">
-                      {profile.portrait_url ? (
-                        <img
-                          src={profile.portrait_url}
-                          alt={profile.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-gradient-to-br from-muted to-card p-6 text-center">
-                          <span className="font-display text-6xl opacity-30 mb-3">
-                            {profile.name[0]}
-                          </span>
-                          <p className="text-xs uppercase tracking-widest text-secondary font-semibold">
-                            Portrait in progress
-                          </p>
-                          <p className="text-[11px] text-muted-foreground italic mt-1">
-                            A hand-drawn portrait is being prepared
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <h2 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
-                      {profile.name}
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                      {profile.role}
-                      {profile.department && `, ${profile.department}`}
-                    </p>
-                    {profile.portrait_url && profile.artist_name && (
-                      <p className="text-[11px] text-muted-foreground italic mt-1">
-                        Artist — {profile.artist_name}
+                  <div className="group relative block">
+                    <Link to={`/gallery/${profile.slug}`} className="block">
+                      <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-shadow">
+                        {profile.portrait_url ? (
+                          <img
+                            src={profile.portrait_url}
+                            alt={profile.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-gradient-to-br from-muted to-card p-6 text-center">
+                            <span className="font-display text-6xl opacity-30 mb-3">
+                              {profile.name[0]}
+                            </span>
+                            <p className="text-xs uppercase tracking-widest text-secondary font-semibold">
+                              Portrait in progress
+                            </p>
+                            <p className="text-[11px] text-muted-foreground italic mt-1">
+                              A hand-drawn portrait is being prepared
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <h2 className="font-display text-xl text-foreground group-hover:text-secondary transition-colors">
+                        {profile.name}
+                      </h2>
+                      <p className="text-muted-foreground text-sm">
+                        {profile.role}
+                        {profile.department && `, ${profile.department}`}
                       </p>
-                    )}
-                  </Link>
+                      {profile.portrait_url && profile.artist_name && (
+                        <p className="text-[11px] text-muted-foreground italic mt-1">
+                          Artist — {profile.artist_name}
+                        </p>
+                      )}
+                    </Link>
+                    <div className="absolute top-3 right-3 z-10">
+                      <AppreciateButton
+                        profileId={profile.id}
+                        personName={profile.name}
+                        compact
+                      />
+                    </div>
+                  </div>
                 </AnimatedSection>
               ))}
             </div>
