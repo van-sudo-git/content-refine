@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaCarouselType, EmblaEventType } from "embla-carousel";
 import { Link } from "react-router-dom";
+import AppreciateButton from "@/components/AppreciateButton";
 
 export interface CoverflowProfile {
   id: string;
@@ -108,33 +109,44 @@ export const CoverflowCarousel = ({ profiles }: { profiles: CoverflowProfile[] }
               key={p.id}
               className="flex-[0_0_60%] sm:flex-[0_0_42%] md:flex-[0_0_32%] lg:flex-[0_0_26%] pl-4 min-w-0"
             >
-              <Link to={p.href ?? `/gallery/${p.slug}`} className="coverflow-card block transition-[transform,opacity] duration-200 ease-out will-change-transform origin-center">
-                <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-lg">
-                  {p.portrait_url ? (
-                    <img
-                      src={p.portrait_url}
-                      alt={`${p.name}, hand-drawn portrait`}
-                      loading="lazy"
-                      draggable={false}
-                      className="w-full h-full object-cover select-none"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-card">
-                      <span className="font-display text-6xl opacity-30">{p.name[0]}</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="font-display text-base text-foreground mt-3 text-center truncate">{p.name}</h3>
-                <p className="text-muted-foreground text-xs text-center truncate px-2">
-                  {p.role}
-                  {p.department && `, ${p.department}`}
-                </p>
-                {p.school_name && (
-                  <p className="text-[10px] text-muted-foreground/70 text-center truncate px-2 mt-0.5">
-                    {p.school_name}
+              <div className="coverflow-card relative block transition-[transform,opacity] duration-200 ease-out will-change-transform origin-center">
+                <Link to={p.href ?? `/gallery/${p.slug}`} className="block">
+                  <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-lg">
+                    {p.portrait_url ? (
+                      <img
+                        src={p.portrait_url}
+                        alt={`${p.name}, hand-drawn portrait`}
+                        loading="lazy"
+                        draggable={false}
+                        className="w-full h-full object-cover select-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-card">
+                        <span className="font-display text-6xl opacity-30">{p.name[0]}</span>
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="font-display text-base text-foreground mt-3 text-center truncate">{p.name}</h3>
+                  <p className="text-muted-foreground text-xs text-center truncate px-2">
+                    {p.role}
+                    {p.department && `, ${p.department}`}
                   </p>
+                  {p.school_name && (
+                    <p className="text-[10px] text-muted-foreground/70 text-center truncate px-2 mt-0.5">
+                      {p.school_name}
+                    </p>
+                  )}
+                </Link>
+                {p.id !== "evaan-creator" && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <AppreciateButton
+                      profileId={p.id}
+                      personName={p.name}
+                      compact
+                    />
+                  </div>
                 )}
-              </Link>
+              </div>
             </div>
           ))}
         </div>
