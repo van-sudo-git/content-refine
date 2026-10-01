@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 interface AppreciateButtonProps {
   profileId: string;
   personName: string;
+  compact?: boolean;
 }
 
 interface AppreciationState {
@@ -30,6 +31,7 @@ const getVisitorId = () => {
 const AppreciateButton = ({
   profileId,
   personName,
+  compact = false,
 }: AppreciateButtonProps) => {
   const [count, setCount] = useState(0);
   const [appreciated, setAppreciated] = useState(false);
@@ -116,6 +118,34 @@ const AppreciateButton = ({
       setUpdating(false);
     }
   };
+
+  if (compact) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={handleToggle}
+        disabled={loading || updating}
+        aria-pressed={appreciated}
+        aria-label={
+          appreciated
+            ? `Remove appreciation for ${personName}`
+            : `Appreciate ${personName}`
+        }
+        className={
+          appreciated
+            ? "h-9 w-9 rounded-full bg-white/90 text-secondary border-secondary shadow-sm hover:bg-white"
+            : "h-9 w-9 rounded-full bg-white/90 text-foreground border-border shadow-sm hover:bg-white"
+        }
+      >
+        <Heart
+          size={17}
+          fill={appreciated ? "currentColor" : "none"}
+        />
+      </Button>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3">
