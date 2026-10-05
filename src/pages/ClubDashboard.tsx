@@ -121,6 +121,7 @@ const ClubDashboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [myRoles, setMyRoles] = useState<MyRole[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [nominations, setNominations] = useState<AssignedNomination[]>([]);
   const [profiles, setProfiles] = useState<Record<string, LinkedProfile>>({});
   const [assets, setAssets] = useState<Record<string, AssignmentImage[]>>({});
@@ -154,10 +155,21 @@ const ClubDashboard = () => {
         return;
       }
 
-      const { data: roles } = await supabase
-        .from("club_roles")
-        .select("id, role, school_id")
-        .eq("user_id", user.id);
+      const [rolesResult, adminResult] = await Promise.all([
+        supabase
+          .from("club_roles")
+          .select("id, role, school_id")
+          .eq("user_id", user.id),
+        supabase
+          .from("school_admins")
+          .select("id")
+          .eq("email", user.email.toLowerCase())
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const roles = rolesResult.data;
+      setIsAdmin(Boolean(adminResult.data));
 
       if (!roles || roles.length === 0) {
         // AdminLogin should normally keep non-club users out, but guard anyway.
@@ -554,7 +566,16 @@ const ClubDashboard = () => {
             </div>
 
             <div className="flex gap-2">
-              {hasPrRole && (
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/admin")}
+                >
+                  Back to Admin Dashboard
+                </Button>
+              )}
+
+              {!isAdmin && hasPrRole && (
                 <Button
                   variant="outline"
                   onClick={() => navigate("/admin")}
