@@ -76,21 +76,25 @@ const AdminLogin = () => {
   const { user, isReady } = useAuthReady();
 
   useEffect(() => {
+    setIsSignUp(inviteSignUp);
+  }, [inviteSignUp]);
+  
+  useEffect(() => {
     if (!isReady || !user?.email) return;
-
+  
     let cancelled = false;
-
+  
     const checkSession = async () => {
       try {
         const destination = await resolveDestination();
-
+  
         if (cancelled) return;
-
+  
         if (destination) {
           navigate(destination, { replace: true });
           return;
         }
-
+  
         await supabase.auth.signOut();
         toast({
           title: "Access denied",
@@ -101,18 +105,14 @@ const AdminLogin = () => {
         if (!cancelled) setLoading(false);
       }
     };
-
-    useEffect(() => {
-      setIsSignUp(inviteSignUp);
-    }, [inviteSignUp]);
-
+  
     checkSession();
-
+  
     return () => {
       cancelled = true;
     };
   }, [isReady, navigate, user]);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
