@@ -59,10 +59,13 @@ The goal is not just to archive people after they leave. It is to help a communi
 - **Consent-based publishing** so a staff member is not publicly profiled without approval
 - **Appreciation wall** where students and staff can leave written messages that are moderated before publication
 - **One-tap appreciation** for visitors who want to show support without writing a message
+- **Appreciation directly from profile cards** so visitors can react from the home carousel or school gallery without opening the full profile
 - **QR codes** connecting physical portraits and flyers to digital profiles
 - **Tracked QR redirects** so printed QR codes can keep working even if their destination changes later
 - **Profile sharing** through the native mobile share sheet with a desktop clipboard fallback
-- **Staff Reflections** that can be added after publication, once the recognized person has experienced the portrait and recognition
+- **Staff Reflections** that capture what the recognition meant to the person after they experienced it, with reflection quotes and videos surfaced on profiles and across the public site
+- **Why It Matters** page that brings together staff reflections and shows what recognition meant to the people who received it
+- **Reflection highlights on the home page** so the recognized person's own voice is visible before a visitor enters an individual profile
 - **Public nominations** for future staff members
 
 ### For a student chapter
@@ -74,6 +77,14 @@ The goal is not just to archive people after they leave. It is to help a communi
 - **Administrator review and publishing**
 - **Tracked QR generation**
 - **Print-ready Flyer Generator**
+
+### For administrators
+
+- **Per-profile traffic trends** with selectable time ranges and comparison with the previous period
+- **Per-profile appreciation counts** alongside page-view and QR activity
+- **School-scoped analytics** so each chapter can understand how its profiles are being seen and appreciated
+- **Dual-role navigation** so an administrator who is also a Journalist, Artist, or Photographer can move between administrator tools and assigned club work without signing out
+- **Clear profile creation paths** that separate nomination-linked profiles from exceptional standalone profiles
 
 ### For expansion
 
@@ -182,6 +193,12 @@ I redesigned the platform around separate student responsibilities:
 | Administrator | Review nominations, assign roles, review work, and publish |
 
 Students sign in through the same authentication system but are routed according to their permissions.
+
+New role members receive an invitation email that takes them directly into account creation. The invitation uses the signup mode of the shared Club and Admin login page, while ordinary visits still default to Sign In. After confirming and signing in, the application claims the pending invitation and routes the user according to their permissions.
+
+People can hold more than one responsibility. An administrator who is also assigned as a Journalist, Artist, or Photographer can open **My Club Assignments** from the Profiles area and return to the full administrator dashboard from the Club Dashboard. This keeps nomination-linked work in the club workflow without forcing dual-role users to sign out or maintain separate accounts.
+
+The administrator Profiles area also distinguishes **Create Standalone Profile** from nomination-linked work. A profile for a nominated staff member should be started from the assigned nomination so the story, creative assets, workflow state, and contributor roles remain connected.
 
 ### Journalist workflow
 
@@ -450,15 +467,21 @@ The main application handles:
 - staff profiles
 - nominations
 - appreciation messages
+- one-tap profile appreciation
+- profile-card appreciation
 - student role assignments
 - school administrators
 - school/chapter data
 - profile and nomination media
+- staff reflections
+- Why It Matters reflection aggregation
 - QR generation
 - QR analytics
 - profile page analytics
+- per-profile traffic trends
+- per-profile appreciation analytics
 - public galleries
-- publishing
+- consent-based publishing
 
 A separate Next.js project, [`heros-redirect`](https://github.com/van-sudo-git/heros-redirect), continues to support QR codes created earlier in the project.
 
@@ -475,6 +498,7 @@ The administrator analytics dashboard combines information from both QR systems.
 | `nominations` | Nomination state and assigned creative roles |
 | `profile_images` | Portrait and supporting media |
 | `appreciations` | Moderated appreciation messages |
+| `profile_reactions` | One-tap profile appreciation reactions |
 | `redirects` | QR identifier to destination mapping |
 | `redirect_events_daily` | Daily QR scan totals |
 | `page_views` | Profile page-view counts |
@@ -499,6 +523,20 @@ Appreciation messages are moderated before they can appear publicly.
 
 This is especially important because the application is being used around real staff members in a school.
 
+### Profile appreciation reactions
+
+The one-tap appreciation feature is stored separately from written appreciation messages.
+
+Visitors can react without creating an account, while the database keeps the action lightweight and privacy-aware.
+
+The full profile shows the appreciation state and count. Public profile cards use a compact heart in the top-right corner of the portrait without displaying the count, keeping the gallery visually clean while reducing friction for visitors who want to respond.
+
+The same underlying appreciation state is also available to administrator analytics.
+
+Design details:
+
+[`docs/profile-appreciation-design.md`](./docs/profile-appreciation-design.md)
+
 ### QR redirects
 
 `supabase/functions/qr-redirect`
@@ -521,6 +559,7 @@ The public chapter structure is:
 /galleries
 /galleries/:schoolSlug
 /gallery/:profileSlug
+/why-it-matters
 ```
 
 `/galleries` lists public chapters.
@@ -530,6 +569,8 @@ A school only appears there after it has at least one published profile.
 Creating a school in the administrator dashboard does not automatically make it look like a live chapter.
 
 Individual staff profiles remain on the original singular `/gallery/:profileSlug` route so existing physical QR codes do not break when the chapter navigation changes.
+
+`/why-it-matters` brings together staff reflections and gives visitors a direct place to hear what the recognition meant to the people who received it.
 
 ---
 
@@ -610,6 +651,19 @@ The administrator dashboard works on mobile, although some dense admin screens a
 Full test history:
 
 [`test.md`](./test.md)
+
+### October workflow fixes
+
+Additional October testing covered the newer role and navigation paths:
+
+- invitation links opening the shared login page in account-creation mode
+- ordinary `/admin/login` visits continuing to default to Sign In
+- the signup-mode hook running at component level rather than inside another React hook
+- administrator users with Journalist, Artist, or Photographer roles seeing **My Club Assignments**
+- nomination-linked profiles continuing to start from Club Dashboard assignments
+- standalone profile creation remaining available for exceptional manual cases
+- dual-role users returning from the Club Dashboard to the full administrator dashboard
+- one-tap appreciation from home and gallery profile cards
 
 ### Automated checks
 
@@ -699,6 +753,7 @@ nowweseeyou/
 │   ├── club-roles-spec.md
 │   ├── flyer-generator.md
 │   ├── multi-school-admin.md
+│   ├── profile-appreciation-design.md
 │   ├── retrospective-one-person-to-club.md
 │   ├── retrospective-qr-redirect.md
 │   ├── share-button.md
@@ -738,8 +793,27 @@ Production keys and service-role credentials should never be committed.
 
 ## Development history
 
+### October 2026
+
+- Added Why It Matters to footer navigation
+- Expanded one-tap appreciation to profile cards on the home page and school galleries
+- Added a compact heart interaction to profile cards and removed visible appreciation counts from cards
+- Improved role-assignment onboarding so invited members are directed to account creation
+- Added signup-mode support to the shared Club and Admin login
+- Fixed the signup-mode React hook placement that caused an invalid-hook runtime error
+- Clarified nomination-linked profiles versus standalone profile creation
+- Added My Club Assignments for administrators who also hold Journalist, Artist, or Photographer roles
+- Added Back to Admin Dashboard for dual-role users
+
 ### September 2026
 
+- Added one-tap profile appreciation
+- Added per-profile traffic trend expansion to administrator analytics
+- Added per-profile appreciation counts to administrator analytics
+- Added a public Why It Matters page that reads published staff reflections from profile data
+- Added reflection cards with videos and profile links
+- Surfaced staff reflections on the home page under Why It Matters
+- Added Why It Matters to the main public navigation
 - Completed end-to-end chapter testing using a temporary second school
 - Tested Journalist, Photographer, Artist, and Community Outreach permissions
 - Tested nomination, role assignment, draft creation, media contribution, administrator review, and publishing
@@ -806,7 +880,11 @@ The software now supports the process end to end.
 
 The next stage is learning whether a Journalist, Artist, Photographer, and Community Outreach student can coordinate through it without relying on me to explain every step.
 
+I also want to test the workflow with people who hold overlapping responsibilities, such as an administrator who is also a Journalist or Artist. The application now supports moving between those views, but real use will show whether the boundaries and labels remain intuitive.
+
 That will show me where the chapter workflow is confusing and what needs to change before another real school uses it.
+
+I also want to learn whether making appreciation easier changes participation. Visitors can now appreciate someone directly from a profile card, while written messages remain a deeper action on the full profile. Staff reflections provide another feedback loop: they show not only whether people viewed or reacted to a profile, but what the recognition actually meant to the person receiving it.
 
 If that works, Now We See You can become more than a project at one school.
 
