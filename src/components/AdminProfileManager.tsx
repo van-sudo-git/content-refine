@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Upload, X, Save, Eye, Trash2, Plus, ArrowLeft, Image as ImageIcon, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,7 @@ const buildBio = (story: string, featuredQuote: string) => {
 };
 
 const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [editing, setEditing] = useState<Profile | null>(null);
   const [isNew, setIsNew] = useState(false);
@@ -108,6 +110,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   const [consentEmail, setConsentEmail] = useState("");
   const [requestingConsent, setRequestingConsent] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
+  const [hasClubRole, setHasClubRole] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     slug: "",
@@ -131,6 +134,38 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       .then(({ data }) => {
         if (data) setProfiles(data as Profile[]);
       });
+  }, [schoolId]);
+
+  useEffect(() => {
+    if (!schoolId) {
+      setHasClubRole(false);
+      return;
+    }
+
+    const loadClubRole = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const email = user?.email?.toLowerCase();
+
+      if (!email) {
+        setHasClubRole(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("club_roles")
+        .select("id")
+        .eq("school_id", schoolId)
+        .eq("email", email)
+        .in("role", ["journalist", "photographer", "artist"])
+        .limit(1);
+
+      setHasClubRole(Boolean(data && data.length > 0));
+    };
+
+    loadClubRole();
   }, [schoolId]);
 
   const loadProfiles = async () => {
@@ -892,13 +927,27 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   // List view
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm">
-          Create and manage gallery profiles. QR codes are auto-generated on save.
-        </p>
-        <Button onClick={startNew} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-          <Plus size={14} /> New Profile
-        </Button>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-muted-foreground text-sm">
+            Manage gallery profiles. QR codes are auto-generated on save.
+          </p>
+          {hasClubRole && (
+            <p className="text-muted-foreground text-xs mt-1">
+              For nominated staff, use My Club Assignments so your work stays linked to the nomination.
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {hasClubRole && (
+            <Button variant="outline" onClick={() => navigate("/club")}>
+              My Club Assignments
+            </Button>
+          )}
+          <Button onClick={startNew} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+            <Plus size={14} /> Create Standalone Profile
+          </Button>
+        </div>
       </div>
 
       {profiles.length === 0 ? (
