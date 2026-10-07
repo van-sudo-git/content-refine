@@ -255,6 +255,8 @@ Deno.serve(async (req) => {
           {
             run_id: payload.run_id,
             to: payload.to,
+            cc: Array.isArray(payload.cc) ? payload.cc : undefined,
+            reply_to: payload.reply_to || undefined,
             from: payload.from,
             sender_domain: payload.sender_domain,
             subject: payload.subject,
