@@ -108,9 +108,10 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [consentEmail, setConsentEmail] = useState("");
+  const [personalMessage, setPersonalMessage] = useState("");
   const [requestingConsent, setRequestingConsent] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
-  const [hasClubRole, setHasClubRole] = useState(false);
+  const [isJournalist, setIsJournalist] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     slug: "",
@@ -138,11 +139,11 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
 
   useEffect(() => {
     if (!schoolId) {
-      setHasClubRole(false);
+      setIsJournalist(false);
       return;
     }
 
-    const loadClubRole = async () => {
+    const loadJournalistRole = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -150,7 +151,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       const email = user?.email?.toLowerCase();
 
       if (!email) {
-        setHasClubRole(false);
+        setIsJournalist(false);
         return;
       }
 
@@ -158,14 +159,15 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
         .from("club_roles")
         .select("id")
         .eq("school_id", schoolId)
+        .eq("role", "journalist")
         .eq("email", email)
-        .in("role", ["journalist", "photographer", "artist"])
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
-      setHasClubRole(Boolean(data && data.length > 0));
+      setIsJournalist(Boolean(data));
     };
 
-    loadClubRole();
+    loadJournalistRole();
   }, [schoolId]);
 
   const loadProfiles = async () => {
@@ -191,6 +193,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     setEditing(null);
     setImages([]);
     setConsentEmail("");
+    setPersonalMessage("");
     setForm({
       name: "",
       slug: "",
@@ -208,6 +211,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     setIsNew(false);
     setEditing(profile);
     setConsentEmail("");
+    setPersonalMessage("");
 
     const { featuredQuote, story } = splitBio(profile.bio);
 
@@ -405,6 +409,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
       setIsNew(false);
       setImages([]);
       setConsentEmail("");
+      setPersonalMessage("");
       loadProfiles();
     } catch (error: any) {
       toast({
@@ -442,12 +447,12 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     }
   };
 
-  const requestPublicationPermission = async () => {
+  const requestPublicationPermission = async (reusePreviousEmail = false) => {
     if (!editing) return;
 
     const email = consentEmail.trim();
 
-    if (!email) {
+    if (!reusePreviousEmail && !email) {
       toast({
         title: "Email required",
         description: "Enter the staff member's email address.",
@@ -465,7 +470,9 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           body: {
             profileId: editing.id,
             mode: "email",
-            email,
+            email: reusePreviousEmail ? undefined : email,
+            reusePreviousEmail,
+            personalMessage: personalMessage.trim() || undefined,
           },
         },
       );
@@ -485,17 +492,24 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           : current,
       );
 
-      setConsentEmail("");
+      if (!reusePreviousEmail) setConsentEmail("");
+      setPersonalMessage("");
 
       toast({
-        title: "Permission requested",
-        description: `A private review link was sent to ${email}.`,
+        title: reusePreviousEmail
+          ? "Updated profile sent for review"
+          : "Permission requested",
+        description: data?.recipientEmail
+          ? `A private review link was sent to ${data.recipientEmail}.`
+          : "A private review link was sent.",
       });
 
       await loadProfiles();
     } catch (error: any) {
       toast({
-        title: "Could not request permission",
+        title: reusePreviousEmail
+          ? "Could not resend updated profile"
+          : "Could not request permission",
         description: error.message,
         variant: "destructive",
       });
@@ -624,7 +638,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     return (
       <div className="space-y-6">
         <button
-          onClick={() => { setEditing(null); setIsNew(false); setImages([]); setConsentEmail(""); }}
+          onClick={() => { setEditing(null); setIsNew(false); setImages([]); setConsentEmail(""); setPersonalMessage(""); }}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
         >
           <ArrowLeft size={14} /> Back to profiles
@@ -791,8 +805,30 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
                   </div>
                 )}
 
+                {editing.consent_status === "requested" && (
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      onClick={() => requestPublicationPermission(true)}
+                      disabled={requestingConsent || recordingConsent}
+                      className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    >
+                      {requestingConsent
+                        ? "Sending..."
+                        : "Resend Updated Profile for Review"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Use this after making requested changes. The previous review link will stop working and a fresh 7-day review link will be sent to the same staff email.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label>Staff Member Email</Label>
+                  <Label>
+                    {editing.consent_status === "requested"
+                      ? "Send to a Different Staff Email"
+                      : "Staff Member Email"}
+                  </Label>
                   <Input
                     type="email"
                     value={consentEmail}
@@ -800,23 +836,46 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
                     placeholder="name@example.com"
                   />
                   <p className="text-xs text-muted-foreground">
-                    They will receive a private link to review the profile. Opening the link does not approve it.
+                    The requesting administrator is the Reply-To contact. Assigned Journalist, Artist, and Photographer emails are copied when available so the staff member can use Reply All.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Personal Message (optional)</Label>
+                  <Textarea
+                    value={personalMessage}
+                    onChange={(e) => setPersonalMessage(e.target.value)}
+                    placeholder={`Hi ${form.name.split(" ")[0] || "there"}, thank you for taking the time to review this. Please let us know if you would like anything changed before approving it.`}
+                    className="min-h-[100px]"
+                    maxLength={1200}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This note appears near the top of the permission email. It is not saved to the public profile.
                   </p>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button
-                    type="button"
-                    onClick={requestPublicationPermission}
-                    disabled={requestingConsent || recordingConsent || !consentEmail.trim()}
-                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                  >
-                    {requestingConsent
-                      ? "Sending..."
-                      : editing.consent_status === "requested"
-                        ? "Send New Review Link"
-                        : "Request Permission"}
-                  </Button>
+                  {editing.consent_status !== "requested" && (
+                    <Button
+                      type="button"
+                      onClick={() => requestPublicationPermission(false)}
+                      disabled={requestingConsent || recordingConsent || !consentEmail.trim()}
+                      className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    >
+                      {requestingConsent ? "Sending..." : "Request Permission"}
+                    </Button>
+                  )}
+
+                  {editing.consent_status === "requested" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => requestPublicationPermission(false)}
+                      disabled={requestingConsent || recordingConsent || !consentEmail.trim()}
+                    >
+                      Send Review Link to This Email
+                    </Button>
+                  )}
 
                   <Button
                     type="button"
@@ -916,7 +975,7 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           <Button onClick={saveProfile} disabled={saving} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
             <Save size={14} /> {saving ? "Saving..." : "Save Profile"}
           </Button>
-          <Button variant="outline" onClick={() => { setEditing(null); setIsNew(false); setImages([]); setConsentEmail(""); }}>
+          <Button variant="outline" onClick={() => { setEditing(null); setIsNew(false); setImages([]); setConsentEmail(""); setPersonalMessage(""); }}>
             Cancel
           </Button>
         </div>
@@ -932,16 +991,16 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
           <p className="text-muted-foreground text-sm">
             Manage gallery profiles. QR codes are auto-generated on save.
           </p>
-          {hasClubRole && (
+          {isJournalist && (
             <p className="text-muted-foreground text-xs mt-1">
-              For nominated staff, use My Club Assignments so your work stays linked to the nomination.
+              For nominated staff, start or edit the profile from your Journalist assignments so it stays linked to the nomination.
             </p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {hasClubRole && (
+          {isJournalist && (
             <Button variant="outline" onClick={() => navigate("/club")}>
-              My Club Assignments
+              My Journalist Assignments
             </Button>
           )}
           <Button onClick={startNew} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
