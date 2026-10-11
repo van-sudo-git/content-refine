@@ -91,7 +91,10 @@ const Nominate = () => {
         .from("schools")
         .select("id, name")
         .eq("accepting_nominations", true)
-        .order("name");
+        .eq("archived", false)
+        .order("display_order")
+        .order("name")
+        .order("id");
 
       if (error) {
         toast({
