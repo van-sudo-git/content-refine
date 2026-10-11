@@ -663,21 +663,27 @@ export type Database = {
       schools: {
         Row: {
           accepting_nominations: boolean
+          archived: boolean
           created_at: string
+          display_order: number
           district: string
           id: string
           name: string
         }
         Insert: {
           accepting_nominations?: boolean
+          archived?: boolean
           created_at?: string
+          display_order?: number
           district?: string
           id?: string
           name: string
         }
         Update: {
           accepting_nominations?: boolean
+          archived?: boolean
           created_at?: string
+          display_order?: number
           district?: string
           id?: string
           name?: string
@@ -761,6 +767,11 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      reorder_schools: { Args: { p_ids: string[] }; Returns: undefined }
+      set_school_archived: {
+        Args: { p_archived: boolean; p_school_id: string }
+        Returns: undefined
       }
       toggle_profile_appreciation: {
         Args: { p_profile_id: string; p_visitor_id: string }
