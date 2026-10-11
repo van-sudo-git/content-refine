@@ -44,7 +44,10 @@ const Galleries = () => {
         .from("schools")
         .select("id, name, district")
         .in("id", schoolIds)
-        .order("name");
+        .eq("archived", false)
+        .order("display_order")
+        .order("name")
+        .order("id");
 
       setSchools((schoolData || []) as ChapterSchool[]);
       setLoading(false);
