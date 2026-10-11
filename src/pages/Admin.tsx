@@ -20,6 +20,7 @@ import { useAuthReady } from "@/hooks/use-auth-ready";
 import AdminProfileManager from "@/components/AdminProfileManager";
 import DemoProfileManager from "@/components/DemoProfileManager";
 import SchoolSettings from "@/components/SchoolSettings";
+import ManageSchools from "@/components/ManageSchools";
 import AdminAnalytics from "@/components/AdminAnalytics";
 import AdminFlyer from "@/pages/AdminFlyer";
 import SchoolOnboarding from "@/components/SchoolOnboarding";
@@ -210,7 +211,10 @@ const Admin = () => {
         const { data: schools } = await supabase
           .from("schools")
           .select("id, name")
-          .order("name");
+          .eq("archived", false)
+          .order("display_order")
+          .order("name")
+          .order("id");
 
         if (schools && schools.length > 0) {
           setAllSchools(schools);
@@ -238,6 +242,27 @@ const Admin = () => {
 
     init();
   }, [isReady, navigate, user, isDemo]);
+
+  const refreshManagedSchools = async () => {
+    const { data, error } = await supabase
+      .from("schools")
+      .select("id, name")
+      .eq("archived", false)
+      .order("display_order").order("name").order("id");
+    if (error) throw error;
+    const schools = data ?? [];
+    setAllSchools(schools);
+    const nextId = schools.some(s => s.id === selectedSchoolId)
+      ? selectedSchoolId : schools[0]?.id ?? null;
+    setSelectedSchoolId(nextId);
+    setSchoolId(nextId);
+    setSelectedNomination(null);
+    if (nextId) await loadData(nextId);
+    else {
+      setNominations([]); setAdmins([]);
+      setJournalists([]); setPhotographers([]); setArtists([]);
+    }
+  };
 
   const handleSchoolSwitch = async (newSchoolId: string) => {
     if (isDemo) return;
@@ -965,7 +990,10 @@ const Admin = () => {
 
           {activeTab === "admins" && (
             <div className="space-y-6">
-              <SchoolSettings schoolId={schoolId} isDemo={isDemo} />
+              {isGlobalAdmin && (
+                <ManageSchools isDemo={isDemo} onChanged={refreshManagedSchools} />
+              )}
+              {schoolId && <SchoolSettings schoolId={schoolId} isDemo={isDemo} />}
               <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-display text-xl text-foreground mb-4">
                   School Admins{" "}
@@ -1105,14 +1133,7 @@ const Admin = () => {
                 <SchoolOnboarding
                   isDemo={isDemo}
                   onSchoolCreated={async () => {
-                    if (isDemo) return;
-
-                    const { data: schools } = await supabase
-                      .from("schools")
-                      .select("id, name")
-                      .order("name");
-
-                    if (schools) setAllSchools(schools);
+                    if (!isDemo) await refreshManagedSchools();
                   }}
                 />
               )}
