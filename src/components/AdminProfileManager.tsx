@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, X, Save, Eye, Trash2, Plus, ArrowLeft, Image as ImageIcon, QrCode } from "lucide-react";
+import { Upload, X, Save, Eye, Trash2, Plus, ArrowLeft, Image as ImageIcon, QrCode, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -631,6 +631,15 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
     loadProfiles();
   };
 
+  const openProfilePreview = (profile: Profile) => {
+    const path =
+      profile.status === "published"
+        ? `/gallery/${encodeURIComponent(profile.slug)}`
+        : `/admin/profiles/${encodeURIComponent(profile.id)}/preview`;
+
+    window.open(path, "_blank", "noopener,noreferrer");
+  };
+
   // Editor view
   if (isNew || editing) {
     const hasQR = images.some((img) => img.image_type === "qr");
@@ -1041,6 +1050,13 @@ const AdminProfileManager = ({ schoolId }: AdminProfileManagerProps) => {
               <p className="text-muted-foreground text-sm truncate">{profile.role} · /gallery/{profile.slug}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openProfilePreview(profile)}
+              >
+                <ExternalLink size={14} /> Preview
+              </Button>
               <Button size="sm" variant="outline" onClick={() => startEdit(profile)}>
                 Edit
               </Button>
