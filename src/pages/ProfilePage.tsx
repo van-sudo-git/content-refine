@@ -48,6 +48,10 @@ interface ProfileContributor {
   contribution_type: "journalist" | "photographer" | "artist" | "pr";
 }
 
+interface ProfilePageProps {
+  previewProfileId?: string;
+}
+
 const CONTRIBUTOR_TRACKING_STARTED = "2026-08-20T00:00:00Z";
 
 const formatReflectionDate = (date: string | null) => {
@@ -108,9 +112,10 @@ const getReflectionEmbedUrl = (videoUrl: string | null) => {
 const isDirectVideoUrl = (videoUrl: string) =>
   /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl);
 
-const ProfilePage = () => {
+const ProfilePage = ({ previewProfileId }: ProfilePageProps = {}) => {
   const { hash } = useLocation();
   const { slug } = useParams<{ slug: string }>();
+  const isAdminPreview = Boolean(previewProfileId);
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [images, setImages] = useState<ProfileImage[]>([]);
@@ -140,21 +145,72 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (!slug) return;
+      if (!slug && !previewProfileId) return;
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, slug, name, role, department, bio, nomination_id, school_id, reflection_quote, reflection_video_url, reflection_recorded_date, created_at"
-        )
-        .eq("slug", slug)
-        .eq("status", "published")
-        .single();
+      let profileData: ProfileData | null = null;
 
-      if (error || !profileData) {
-        setNotFound(true);
-        setLoading(false);
-        return;
+      if (previewProfileId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const adminEmail = user?.email?.trim().toLowerCase();
+
+        if (!adminEmail) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        const { data: adminRow } = await supabase
+          .from("school_admins")
+          .select("school_id, is_global_admin")
+          .eq("email", adminEmail)
+          .limit(1)
+          .maybeSingle();
+
+        if (!adminRow) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        const { data: previewData, error: previewError } = await supabase
+          .from("profiles")
+          .select(
+            "id, slug, name, role, department, bio, nomination_id, school_id, reflection_quote, reflection_video_url, reflection_recorded_date, created_at"
+          )
+          .eq("id", previewProfileId)
+          .maybeSingle();
+
+        if (
+          previewError ||
+          !previewData ||
+          (!adminRow.is_global_admin && adminRow.school_id !== previewData.school_id)
+        ) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        profileData = previewData as ProfileData;
+      } else {
+        const { data: publishedData, error } = await supabase
+          .from("profiles")
+          .select(
+            "id, slug, name, role, department, bio, nomination_id, school_id, reflection_quote, reflection_video_url, reflection_recorded_date, created_at"
+          )
+          .eq("slug", slug!)
+          .eq("status", "published")
+          .single();
+
+        if (error || !publishedData) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        profileData = publishedData as ProfileData;
       }
 
       const typedProfile = profileData as ProfileData;
@@ -208,7 +264,10 @@ const ProfilePage = () => {
         ]);
       }
 
-      if (schoolData?.name) {
+      if (isAdminPreview) {
+        setGalleryPath("/admin");
+        setGalleryName("Admin Dashboard");
+      } else if (schoolData?.name) {
         setGalleryPath(schoolGalleryPath(schoolData.name));
         setGalleryName(`${schoolData.name} Gallery`);
       }
@@ -217,7 +276,7 @@ const ProfilePage = () => {
     };
 
     load();
-  }, [slug]);
+  }, [slug, previewProfileId, isAdminPreview]);
 
   const additionalPhotos = images.filter(
     (image) => image.image_type === "additional"
@@ -231,7 +290,7 @@ const ProfilePage = () => {
         "story",
         ...(additionalPhotos.length > 0 ? ["photos"] : []),
         ...(profile.reflection_quote ? ["from-them"] : []),
-        "appreciation",
+        ...(!isAdminPreview ? ["appreciation"] : []),
       ];
 
       const scrollMarker = window.scrollY + 180;
@@ -250,6 +309,7 @@ const ProfilePage = () => {
       }
 
       if (
+        !isAdminPreview &&
         window.innerHeight + window.scrollY >=
         document.documentElement.scrollHeight - 8
       ) {
@@ -274,6 +334,7 @@ const ProfilePage = () => {
     loading,
     profile,
     additionalPhotos.length,
+    isAdminPreview,
   ]);
 
   const goToPreviousAdditionalPhoto = () => {
@@ -392,14 +453,16 @@ const ProfilePage = () => {
             </h1>
 
             <p className="text-muted-foreground mb-6">
-              This person may not have a published profile yet.
+              {isAdminPreview
+                ? "This profile could not be loaded for preview."
+                : "This person may not have a published profile yet."}
             </p>
 
             <Link
-              to="/galleries"
+              to={isAdminPreview ? "/admin" : "/galleries"}
               className="text-secondary hover:underline"
             >
-              Back to Galleries
+              {isAdminPreview ? "Back to Admin Dashboard" : "Back to Galleries"}
             </Link>
           </div>
         </section>
@@ -510,72 +573,92 @@ const ProfilePage = () => {
     <Layout>
       <Helmet>
         <title>
-          {`${profile.name}, ${profile.role} | Now We See You`}
+          {`${isAdminPreview ? "Preview: " : ""}${profile.name}, ${profile.role} | Now We See You`}
         </title>
+
+        {isAdminPreview && (
+          <meta name="robots" content="noindex,nofollow" />
+        )}
 
         <meta
           name="description"
           content={description}
         />
 
-        <link
-          rel="canonical"
-          href={canonical}
-        />
-
-        <meta
-          property="og:type"
-          content="profile"
-        />
-
-        <meta
-          property="og:title"
-          content={`${profile.name}, ${profile.role}`}
-        />
-
-        <meta
-          property="og:description"
-          content={description}
-        />
-
-        <meta
-          property="og:url"
-          content={canonical}
-        />
-
-        {portrait && (
-          <meta
-            property="og:image"
-            content={portrait.image_url}
+        {!isAdminPreview && (
+          <link
+            rel="canonical"
+            href={canonical}
           />
         )}
 
-        <meta
-          name="twitter:card"
-          content="summary_large_image"
-        />
+        {!isAdminPreview && (
+          <>
+            <meta
+              property="og:type"
+              content="profile"
+            />
 
-        <meta
-          name="twitter:title"
-          content={`${profile.name}, ${profile.role}`}
-        />
+            <meta
+              property="og:title"
+              content={`${profile.name}, ${profile.role}`}
+            />
 
-        <meta
-          name="twitter:description"
-          content={description}
-        />
+            <meta
+              property="og:description"
+              content={description}
+            />
 
-        {portrait && (
-          <meta
-            name="twitter:image"
-            content={portrait.image_url}
-          />
+            <meta
+              property="og:url"
+              content={canonical}
+            />
+
+            {portrait && (
+              <meta
+                property="og:image"
+                content={portrait.image_url}
+              />
+            )}
+
+            <meta
+              name="twitter:card"
+              content="summary_large_image"
+            />
+
+            <meta
+              name="twitter:title"
+              content={`${profile.name}, ${profile.role}`}
+            />
+
+            <meta
+              name="twitter:description"
+              content={description}
+            />
+
+            {portrait && (
+              <meta
+                name="twitter:image"
+                content={portrait.image_url}
+              />
+            )}
+
+            <script type="application/ld+json">
+              {JSON.stringify(personLd)}
+            </script>
+          </>
         )}
-
-        <script type="application/ld+json">
-          {JSON.stringify(personLd)}
-        </script>
       </Helmet>
+
+      {isAdminPreview && (
+        <div className="border-b border-amber-200 bg-amber-50">
+          <div className="container mx-auto px-6 py-3">
+            <p className="text-sm font-medium text-amber-900">
+              Admin preview. This profile is not public until it is published.
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className="py-24">
         <div className="container mx-auto px-6">
@@ -630,16 +713,18 @@ const ProfilePage = () => {
                   </a>
                 )}
 
-                <a
-                  href="#appreciation"
-                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                    activeSection === "appreciation"
-                      ? "border-secondary bg-secondary text-secondary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
-                  }`}
-                >
-                  Appreciation
-                </a>
+                {!isAdminPreview && (
+                  <a
+                    href="#appreciation"
+                    className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                      activeSection === "appreciation"
+                        ? "border-secondary bg-secondary text-secondary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-secondary"
+                    }`}
+                  >
+                    Appreciation
+                  </a>
+                )}
               </div>
             </nav>
           </div>
@@ -690,14 +775,18 @@ const ProfilePage = () => {
                   </p>
                 </div>
 
-                <ShareButton
-                  name={profile.name}
-                  slug={profile.slug}
-                />
-                <AppreciateButton
-                  profileId={profile.id}
-                  personName={profile.name}
-                />
+                {!isAdminPreview && (
+                  <>
+                    <ShareButton
+                      name={profile.name}
+                      slug={profile.slug}
+                    />
+                    <AppreciateButton
+                      profileId={profile.id}
+                      personName={profile.name}
+                    />
+                  </>
+                )}
                 {contributorRows.length > 0 && (
                   <div>
                     <p className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
@@ -894,14 +983,20 @@ const ProfilePage = () => {
                 )}
 
                 <p className="text-xs text-muted-foreground pt-6">
-                  Published with permission. See{" "}
-                  <Link
-                    to="/privacy"
-                    className="text-secondary hover:underline"
-                  >
-                    Privacy, Consent & Ethics
-                  </Link>
-                  .
+                  {isAdminPreview ? (
+                    "Admin preview. Publication permission and status are managed from the Admin dashboard."
+                  ) : (
+                    <>
+                      Published with permission. See{" "}
+                      <Link
+                        to="/privacy"
+                        className="text-secondary hover:underline"
+                      >
+                        Privacy, Consent & Ethics
+                      </Link>
+                      .
+                    </>
+                  )}
                 </p>
               </div>
             </AnimatedSection>
@@ -976,25 +1071,27 @@ const ProfilePage = () => {
                     </a>
                   )}
 
-                  <a
-                    href="#appreciation"
-                    className={`flex items-center gap-3 transition-colors ${
-                      activeSection === "appreciation"
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-secondary"
-                    }`}
-                  >
-                    <span
-                      className={
+                  {!isAdminPreview && (
+                    <a
+                      href="#appreciation"
+                      className={`flex items-center gap-3 transition-colors ${
                         activeSection === "appreciation"
-                          ? "text-secondary text-base leading-none"
-                          : "text-muted-foreground text-base leading-none"
-                      }
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-secondary"
+                      }`}
                     >
-                      {activeSection === "appreciation" ? "♥" : "♡"}
-                    </span>
-                    Appreciation
-                  </a>
+                      <span
+                        className={
+                          activeSection === "appreciation"
+                            ? "text-secondary text-base leading-none"
+                            : "text-muted-foreground text-base leading-none"
+                        }
+                      >
+                        {activeSection === "appreciation" ? "♥" : "♡"}
+                      </span>
+                      Appreciation
+                    </a>
+                  )}
                 </div>
 
                 {reflectionTeaser && (
@@ -1074,15 +1171,17 @@ const ProfilePage = () => {
             </div>
           )}
 
-          <div
-            id="appreciation"
-            className="max-w-6xl mt-8 scroll-mt-28"
-          >
-            <AppreciationWall
-              profileSlug={profile.slug}
-              personName={firstName}
-            />
-          </div>
+          {!isAdminPreview && (
+            <div
+              id="appreciation"
+              className="max-w-6xl mt-8 scroll-mt-28"
+            >
+              <AppreciationWall
+                profileSlug={profile.slug}
+                personName={firstName}
+              />
+            </div>
+          )}
           </div>
         </div>
       </section>
