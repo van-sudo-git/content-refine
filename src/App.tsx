@@ -18,6 +18,7 @@ import ClubDashboard from "./pages/ClubDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PageViewTracker from "./components/PageViewTracker.tsx";
 import ProfileConsent from "./pages/ProfileConsent";
+import AdminProfilePreview from "./pages/AdminProfilePreview";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,10 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/profiles/:profileId/preview"
+            element={<AdminProfilePreview />}
+          />
           <Route path="/club" element={<ClubDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
