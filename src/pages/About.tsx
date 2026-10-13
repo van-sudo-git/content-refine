@@ -5,9 +5,8 @@ import { MapPin, Sparkles, ArrowRight, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 import qrCode from "@/assets/about-qr.jpeg";
-import cardboardSelfPortrait from "@/assets/Self-Portrait on a Cardboard Box.jpg";
-import cardboardSelfPortraitFace from "@/assets/Self-Portrait on a Cardboard Box (detail) - Face.jpg";
-import cardboardSelfPortraitAlternate from "@/assets/Self-Portrait on a Cardboard Box (detail) - Alternate View.jpg";
+import cardboardSelfPortrait from "@/assets/self-portrait-box.jpg";
+import cardboardSelfPortraitAlternate from "@/assets/self-portrait-box-alternate.jpg";
 
 const CHAPTER_CONTACT_EMAIL = "evaanahlawat@gmail.com";
 
