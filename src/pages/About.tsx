@@ -5,6 +5,9 @@ import { MapPin, Sparkles, ArrowRight, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import evaanPortrait from "@/assets/evaan-portrait.jpeg";
 import qrCode from "@/assets/about-qr.jpeg";
+import cardboardSelfPortrait from "@/assets/Self-Portrait on a Cardboard Box.jpg";
+import cardboardSelfPortraitFace from "@/assets/Self-Portrait on a Cardboard Box (detail) - Face.jpg";
+import cardboardSelfPortraitAlternate from "@/assets/Self-Portrait on a Cardboard Box (detail) - Alternate View.jpg";
 
 const CHAPTER_CONTACT_EMAIL = "evaanahlawat@gmail.com";
 
@@ -138,6 +141,50 @@ const About = () => {
                       most often overlooked.
                     </p>
                     <p className="text-foreground font-medium">— Evaan Ahlawat</p>
+                  </div>
+
+                  {/* Cardboard self-portrait */}
+                  <div className="pt-4 border-t border-border space-y-6">
+                    <div>
+                      <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-xs">
+                        Why cardboard?
+                      </p>
+                      <blockquote className="font-display text-xl md:text-2xl italic text-foreground leading-relaxed">
+                        “I draw on cardboard, a practical choice, cheap and available. I grew
+                        attached to its provisional quality: a material that carried something
+                        important and was then set aside. I like devoting meticulous work to a
+                        surface ordinarily treated as disposable.”
+                      </blockquote>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-[1.35fr_0.65fr] gap-4">
+                      <div className="rounded-2xl overflow-hidden border border-border shadow-sm bg-muted">
+                        <img
+                          src={cardboardSelfPortrait}
+                          alt="Self-portrait drawn across the corner of a cardboard box"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="rounded-2xl overflow-hidden border border-border shadow-sm bg-muted">
+                        <img
+                          src={cardboardSelfPortraitAlternate}
+                          alt="Alternate view of the cardboard box self-portrait"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-secondary font-semibold mb-2 tracking-wide uppercase text-xs">
+                        Seeing from another angle
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        This self-portrait was drawn across the corner of a cardboard box so the
+                        image changes depending on where the viewer stands. It reflects an idea
+                        that became central to Now We See You: seeing someone differently often
+                        begins by changing where and how we look.
+                      </p>
+                    </div>
                   </div>
 
                   {/* QR card */}
