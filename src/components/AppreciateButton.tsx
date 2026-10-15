@@ -166,18 +166,12 @@ const AppreciateButton = ({
             : ""
         }
       >
-        <Heart
-          size={17}
-          fill={appreciated ? "currentColor" : "none"}
-        />
+      <Heart
+        size={17}
+        fill={appreciated ? "currentColor" : "none"}
+      />
 
-        {appreciated ? "Appreciated" : "Appreciate"}
-
-        {!loading && (
-          <span className="tabular-nums">
-            {count}
-          </span>
-        )}
+      {appreciated ? "Appreciated" : "Appreciate"}
       </Button>
 
       <p className="text-xs text-muted-foreground">
