@@ -17,6 +17,7 @@ export interface StaffReflection {
 export async function fetchReflections(signal?: AbortSignal): Promise<StaffReflection[]> {
   const reflections: StaffReflection[] = [];
   const pageSize = 200;
+
   // Page through the public records instead of relying on Supabase's row cap.
   for (let offset = 0; ; offset += pageSize) {
     let request = supabase.from("profiles")
@@ -28,24 +29,40 @@ export async function fetchReflections(signal?: AbortSignal): Promise<StaffRefle
       .order("created_at", { ascending: false })
       .order("id")
       .range(offset, offset + pageSize - 1);
+
     if (signal) request = request.abortSignal(signal);
+
     const { data, error } = await request;
     if (error) throw error;
+
     for (const profile of data ?? []) {
       const quote = profile.reflection_quote?.trim() || null;
       const videoUrl = parseReflectionVideo(profile.reflection_video_url)
-        ? profile.reflection_video_url : null;
+        ? profile.reflection_video_url
+        : null;
+
       if (!quote && !videoUrl) continue;
+
       const portraits = (profile.profile_images ?? [])
         .filter(image => image.image_type === "portrait")
         .sort((a, b) => a.sort_order - b.sort_order);
-      reflections.push({ id: profile.id, slug: profile.slug, name: profile.name,
-        role: profile.role, school: profile.schools?.name ?? null, quote, videoUrl,
+
+      reflections.push({
+        id: profile.id,
+        slug: profile.slug,
+        name: profile.name,
+        role: profile.role,
+        school: profile.schools?.name ?? null,
+        quote,
+        videoUrl,
         recordedDate: profile.reflection_recorded_date,
-        portraitUrl: portraits[0]?.image_url ?? null });
+        portraitUrl: portraits[0]?.image_url ?? null,
+      });
     }
+
     if (!data || data.length < pageSize) break;
   }
+
   return reflections;
 }
 
@@ -53,11 +70,13 @@ export function useReflections() {
   return useQuery({
     queryKey: ["public-staff-reflections"],
     queryFn: ({ signal }) => fetchReflections(signal),
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
-    refetchInterval: 60_000,
-    refetchIntervalInBackground: false,
+
+    // Reflections are editorial content, not real-time data.
+    // Reuse cached results when moving between Home and Why It Matters.
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     retry: 1,
   });
 }
