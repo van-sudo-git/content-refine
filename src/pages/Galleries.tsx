@@ -19,43 +19,52 @@ const Galleries = () => {
 
   useEffect(() => {
     const loadSchools = async () => {
-      // A school becomes a public chapter once it has at least one
-      // published profile. No frontend code change is needed for new schools.
-      const { data: publishedProfiles } = await supabase
-        .from("profiles")
-        .select("school_id")
-        .eq("status", "published");
-
-      const schoolIds = Array.from(
-        new Set(
-          (publishedProfiles || [])
-            .map((profile) => profile.school_id)
-            .filter((id): id is string => Boolean(id))
-        )
-      );
-
-      if (schoolIds.length === 0) {
+      try {
+        const { data: publishedProfiles, error: profilesError } =
+          await supabase
+            .from("profiles")
+            .select("school_id")
+            .eq("status", "published");
+  
+        if (profilesError) throw profilesError;
+  
+        const schoolIds = Array.from(
+          new Set(
+            (publishedProfiles || [])
+              .map((profile) => profile.school_id)
+              .filter((id): id is string => Boolean(id))
+          )
+        );
+  
+        if (schoolIds.length === 0) {
+          setSchools([]);
+          return;
+        }
+  
+        const { data: schoolData, error: schoolsError } =
+          await supabase
+            .from("schools")
+            .select("id, name, district")
+            .in("id", schoolIds)
+            .eq("archived", false)
+            .order("display_order")
+            .order("name")
+            .order("id");
+  
+        if (schoolsError) throw schoolsError;
+  
+        setSchools((schoolData || []) as ChapterSchool[]);
+      } catch (error) {
+        console.error("Failed to load galleries", error);
         setSchools([]);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data: schoolData } = await supabase
-        .from("schools")
-        .select("id, name, district")
-        .in("id", schoolIds)
-        .eq("archived", false)
-        .order("display_order")
-        .order("name")
-        .order("id");
-
-      setSchools((schoolData || []) as ChapterSchool[]);
-      setLoading(false);
     };
-
+  
     loadSchools();
   }, []);
-
+  
   return (
     <Layout>
       <Helmet>
