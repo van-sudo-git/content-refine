@@ -84,6 +84,8 @@ const Media = () => {
                     <img
                       src="/media/kac/evaan-exhibit.jpg"
                       alt="Evaan Ahlawat standing beside Brad Fisher's Now We See You portrait and QR placard at Kirkland Arts Center"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-auto block"
                     />
                   </div>
@@ -152,6 +154,7 @@ const Media = () => {
                         src={photo.src}
                         alt={photo.alt}
                         loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
