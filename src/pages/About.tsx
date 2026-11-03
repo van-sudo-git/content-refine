@@ -161,6 +161,8 @@ const About = () => {
                         <img
                           src={cardboardSelfPortrait}
                           alt="Self-portrait drawn across the corner of a cardboard box"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                         />
                       </div>
