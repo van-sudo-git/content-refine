@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,45 @@ const AppreciateButton = ({
   personName,
   compact = false,
 }: AppreciateButtonProps) => {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [count, setCount] = useState(0);
   const [appreciated, setAppreciated] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(!compact);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
+  // Compact heart buttons can appear many times on Home and Gallery pages.
+  // Only fetch a visitor's state when a button is near the viewport.
   useEffect(() => {
+    if (!compact || shouldLoad) return;
+
+    const node = buttonRef.current;
+
+    if (!node || !("IntersectionObserver" in window)) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [compact, shouldLoad]);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
+
+    let active = true;
+
     const load = async () => {
       try {
         const visitorId = getVisitorId();
@@ -55,26 +88,31 @@ const AppreciateButton = ({
 
         const state = data?.[0] as AppreciationState | undefined;
 
-        if (state) {
+        if (active && state) {
           setCount(Number(state.appreciation_count) || 0);
           setAppreciated(Boolean(state.appreciated));
         }
       } catch (error) {
         console.error("Failed to load appreciation state", error);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     load();
-  }, [profileId]);
+
+    return () => {
+      active = false;
+    };
+  }, [profileId, shouldLoad]);
 
   const handleToggle = async () => {
     if (updating) return;
 
+    // If the user gets here before the near-viewport fetch finishes,
+    // still allow the action and let the RPC return the authoritative state.
     const previousCount = count;
     const previousAppreciated = appreciated;
-
     const nextAppreciated = !appreciated;
 
     setUpdating(true);
@@ -122,11 +160,13 @@ const AppreciateButton = ({
   if (compact) {
     return (
       <Button
+        ref={buttonRef}
         type="button"
         variant="outline"
         size="icon"
         onClick={handleToggle}
-        disabled={loading || updating}
+        disabled={updating}
+        aria-busy={loading}
         aria-pressed={appreciated}
         aria-label={
           appreciated
@@ -166,12 +206,12 @@ const AppreciateButton = ({
             : ""
         }
       >
-      <Heart
-        size={17}
-        fill={appreciated ? "currentColor" : "none"}
-      />
+        <Heart
+          size={17}
+          fill={appreciated ? "currentColor" : "none"}
+        />
 
-      {appreciated ? "Appreciated" : "Appreciate"}
+        {appreciated ? "Appreciated" : "Appreciate"}
       </Button>
 
       <p className="text-xs text-muted-foreground">
