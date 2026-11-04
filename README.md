@@ -434,6 +434,14 @@ Adding student roles affected authentication, nominations, draft creation, media
 
 This became one of the largest architectural changes in the project.
 
+### Performance
+
+As the number of profiles and images grew, I optimized the public site for faster loading.
+
+Profile photos are converted into smaller WebP versions for different uses, images are lazy-loaded, major pages are loaded only when needed, and repeated reflection and appreciation requests were reduced.
+
+This keeps the site responsive while lowering unnecessary network and database traffic.
+
 ---
 
 ## Tech stack
@@ -792,6 +800,16 @@ Production keys and service-role credentials should never be committed.
 ---
 
 ## Development history
+
+### November 2026
+
+- Added route-level lazy loading so major pages load only when needed
+- Optimized profile images into smaller WebP variants for thumbnail, card, and full-size use
+- Updated home and gallery profile cards to use smaller card-sized images
+- Added lazy and asynchronous image loading across public pages
+- Reduced repeated reflection requests by caching reflection data and removing frequent polling
+- Deferred profile-card appreciation requests until cards are near the viewport
+- Reviewed backend resource usage after a service interruption and confirmed database storage, memory, and connection usage were within normal limits
 
 ### October 2026
 
