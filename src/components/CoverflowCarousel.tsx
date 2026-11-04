@@ -3,6 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaCarouselType, EmblaEventType } from "embla-carousel";
 import { Link } from "react-router-dom";
 import AppreciateButton from "@/components/AppreciateButton";
+import { getProfileImageVariantUrl } from "@/lib/profileImageVariants";
 
 export interface CoverflowProfile {
   id: string;
@@ -114,9 +115,10 @@ export const CoverflowCarousel = ({ profiles }: { profiles: CoverflowProfile[] }
                   <div className="aspect-[3/4] bg-card rounded-2xl overflow-hidden border border-border shadow-lg">
                     {p.portrait_url ? (
                       <img
-                        src={p.portrait_url}
+                        src={getProfileImageVariantUrl(p.portrait_url, "card")}
                         alt={`${p.name}, hand-drawn portrait`}
                         loading="lazy"
+                        decoding="async"
                         draggable={false}
                         className="w-full h-full object-cover select-none"
                       />
