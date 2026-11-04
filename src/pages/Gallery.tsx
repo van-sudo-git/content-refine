@@ -7,6 +7,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import AppreciateButton from "@/components/AppreciateButton";
 import { supabase } from "@/integrations/supabase/client";
 import { schoolToGallerySlug } from "@/lib/schoolGallery";
+import { getProfileImageVariantUrl } from "@/lib/profileImageVariants";
 
 interface GalleryProfile {
   id: string;
@@ -274,7 +275,7 @@ const Gallery = () => {
                       <div className="aspect-[3/4] bg-muted rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-shadow">
                         {profile.portrait_url ? (
                           <img
-                            src={profile.portrait_url}
+                            src={getProfileImageVariantUrl(profile.portrait_url, "card")}
                             alt={profile.name}
                             loading="lazy"
                             decoding="async"
